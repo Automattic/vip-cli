@@ -324,10 +324,16 @@ These checks do not install the CLI on the Buildkite host.
 
 #### Provisioning the Developer ID Installer certificate
 
-Apple restricts creating Developer ID certificates to the **Account Holder**;
-an App Store Connect API key cannot do it, so this cannot be automated from CI.
-Someone with that access creates the certificate, then imports the `.cer` and
-`.p12` into match storage (the command prompts for both paths):
+App Store Connect's API does not model this certificate type at all:
+`filter[certificateType]=DEVELOPER_ID_INSTALLER` is rejected as an invalid
+value, and the accepted list contains `DEVELOPER_ID_APPLICATION` and
+`DEVELOPER_ID_KEXT` but no installer entry. No API-driven inventory can
+therefore report whether the team already holds one; check
+<https://developer.apple.com/account/resources/certificates> directly. Creating
+one is Account Holder only and cannot be automated from CI.
+
+Import the `.cer` and `.p12` into match storage (the command prompts for both
+paths):
 
 ```sh
 bundle exec fastlane match import \
@@ -337,8 +343,13 @@ bundle exec fastlane match import \
   --storage_mode s3 \
   --s3_bucket a8c-fastlane-match \
   --s3_region us-east-2 \
-  --skip_provisioning_profiles true
+  --skip_provisioning_profiles true \
+  --skip_certificate_matching true
 ```
+
+`--skip_certificate_matching true` is required, not optional: without it
+`match import` looks the certificate up on the portal by type to recover its
+ID, which fails on the same rejected filter value.
 
 Note the asymmetry: `match import` handles `developer_id_installer` as a
 top-level `--type`, but `match` itself does not. Fetching it requires
