@@ -241,9 +241,10 @@ Actions. See `.buildkite/pipeline.yml` and the per-platform scripts.
 - **macOS certs:** fastlane `match` (`fastlane/Fastfile` →
   `configure_code_signing`), `type: developer_id`, stored in S3
   (`a8c-fastlane-match`), in readonly mode. The separate
-  `configure_installer_signing` lane fetches only `developer_id_installer`. Signing and notarization are the
-  `sign_and_notarize` lane: Developer ID Application, identifier
-  `com.automattic.vip-cli`, no staple on a bare Mach-O.
+  `configure_installer_signing` lane adds the Developer ID Installer
+  certificate through match's `additional_cert_types`. Signing and
+  notarization are the `sign_and_notarize` lane: Developer ID Application,
+  identifier `com.automattic.vip-cli`, no staple on a bare Mach-O.
 - **macOS artifacts:** per-arch `.tar.gz` of `vip-next` + `go-search-replace`,
   both signed and notarized (online-verified), plus a signed, notarized,
   stapled `.pkg` for each architecture.
@@ -297,11 +298,10 @@ credentials. Uninstall first if deliberately moving to an older version.
 - **macOS:** `configure_code_signing` retrieves only the **Developer ID Application**
   certificate. The installer job separately calls `configure_installer_signing`
   for the **Developer ID Installer** certificate. Both use the existing fastlane
-  match S3 storage in readonly mode. The Installer certificate/private key is
-  currently unavailable and must be added through the team's existing
-  certificate provisioning process before PKGs can be produced. Builds do not
-  create or renew certificates. Xcode command-line tools provide `pkgbuild`,
-  `productbuild`, `productsign`, `notarytool`, and `stapler`.
+  match S3 storage in readonly mode. Builds never create or renew certificates.
+  The Installer certificate is not yet in match storage, so the installer job
+  fails until it is provisioned (see below). Xcode command-line tools provide
+  `pkgbuild`, `productbuild`, `productsign`, `notarytool`, and `stapler`.
 - **Windows:** the build uses .NET SDK 8 and pinned WiX 5.0.2, with a matching
   UI extension, as build-only tools. WiX is restored into a temporary build
   directory. This pin does not adopt WiX 6+ sponsorship requirements. Existing
@@ -321,6 +321,30 @@ Authenticode signatures. Before checksumming/uploading, macOS expands the final
 PKG and Windows performs a temporary administrative extraction of the signed
 MSI to verify the packaged executable hashes, license, and ownership metadata.
 These checks do not install the CLI on the Buildkite host.
+
+#### Provisioning the Developer ID Installer certificate
+
+Apple restricts creating Developer ID certificates to the **Account Holder**;
+an App Store Connect API key cannot do it, so this cannot be automated from CI.
+Someone with that access creates the certificate, then imports the `.cer` and
+`.p12` into match storage (the command prompts for both paths):
+
+```sh
+bundle exec fastlane match import \
+  --type developer_id_installer \
+  --platform macos \
+  --team_id PZYM8XX95Q \
+  --storage_mode s3 \
+  --s3_bucket a8c-fastlane-match \
+  --s3_region us-east-2 \
+  --skip_provisioning_profiles true
+```
+
+Note the asymmetry: `match import` handles `developer_id_installer` as a
+top-level `--type`, but `match` itself does not. Fetching it requires
+`additional_cert_types`, as `configure_installer_signing` does — passing it as
+match's top-level `type` silently installs an Apple Distribution certificate
+instead and reports success.
 
 #### Package version ordering
 
