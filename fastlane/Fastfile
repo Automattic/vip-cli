@@ -87,6 +87,8 @@ lane :configure_installer_signing do
     readonly: true,
     **CODE_SIGNING_STORAGE_OPTIONS
   )
+
+  verify_installer_identity!
 end
 
 # The PKG has its own signing identity and stapled notarization ticket. Fetch
@@ -185,6 +187,15 @@ end
 # relative to the repo root would otherwise resolve one level too deep.
 def resolve_from_project_root(path)
   File.absolute_path(path, PROJECT_ROOT_FOLDER)
+end
+
+# `match` reports success for whatever certificate storage happens to hold, so the identity
+# `productsign` needs is verified rather than assumed.
+def verify_installer_identity!
+  identities = sh('security', 'find-identity', '-v', log: false)
+  return if identities.include?(INSTALLER_SIGNING_IDENTITY)
+
+  UI.user_error!("No '#{INSTALLER_SIGNING_IDENTITY}' identity in the keychain:\n#{identities}")
 end
 
 def require_env_vars!(*names)

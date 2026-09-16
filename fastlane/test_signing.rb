@@ -11,6 +11,12 @@ module FastlaneCore
   end
 end
 
+module UI
+  def self.user_error!(message)
+    raise message
+  end
+end
+
 class SigningConfigurationTest < Minitest::Test
   def setup
     @lanes = {}
@@ -54,5 +60,24 @@ class SigningConfigurationTest < Minitest::Test
 
     assert_equal true, @calls.last[:readonly]
     assert_nil @calls.last[:api_key]
+  end
+
+  def test_identity_check_accepts_the_installer_identity
+    stub_identities('  1) ABC123 "Developer ID Installer: Automattic, Inc. (PZYM8XX95Q)"')
+
+    @dsl.send(:verify_installer_identity!)
+  end
+
+  def test_identity_check_rejects_a_substituted_certificate
+    stub_identities('  1) ABC123 "Apple Distribution: Automattic, Inc. (PZYM8XX95Q)"')
+
+    error = assert_raises(RuntimeError) { @dsl.send(:verify_installer_identity!) }
+    assert_includes error.message, 'Developer ID Installer: Automattic, Inc. (PZYM8XX95Q)'
+  end
+
+  private
+
+  def stub_identities(output)
+    @dsl.define_singleton_method(:sh) { |*_args, **_options| output }
   end
 end
