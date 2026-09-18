@@ -2,7 +2,9 @@ package releasepromotion
 
 import (
 	"fmt"
+	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -18,6 +20,12 @@ const (
 var prereleaseVersionPattern = regexp.MustCompile(`^5\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)-(alpha|beta|rc)\.(0|[1-9][0-9]*)$`)
 
 var expectedArtifactPaths = []string{
+	"dist/vip-next-darwin-amd64.pkg",
+	"dist/vip-next-darwin-amd64.pkg.sha256",
+	"dist/vip-next-darwin-arm64.pkg",
+	"dist/vip-next-darwin-arm64.pkg.sha256",
+	"dist/vip-next-windows-amd64.msi",
+	"dist/vip-next-windows-amd64.msi.sha256",
 	"dist/vip-next-darwin-amd64.tar.gz",
 	"dist/vip-next-darwin-amd64.tar.gz.sha256",
 	"dist/vip-next-darwin-arm64.tar.gz",
@@ -88,7 +96,16 @@ func ValidateArtifactManifest(artifacts []Artifact) (map[string]Artifact, error)
 	var missing []string
 	for _, artifactPath := range expectedArtifactPaths {
 		if _, ok := manifest[artifactPath]; !ok {
-			missing = append(missing, artifactPath)
+			// Portable binaries are mandatory. Installers are optional, but a
+			// package and its checksum must always be present together.
+			companion := strings.TrimSuffix(artifactPath, ".sha256")
+			if companion == artifactPath {
+				companion += ".sha256"
+			}
+			_, paired := manifest[companion]
+			if strings.Contains(artifactPath, ".tar.gz") || paired {
+				missing = append(missing, artifactPath)
+			}
 		}
 	}
 
@@ -114,4 +131,35 @@ func ValidateArtifactManifest(artifacts []Artifact) (map[string]Artifact, error)
 	}
 
 	return manifest, nil
+}
+
+// localArtifactPaths applies the same contract to downloads before upload. It
+// also rejects unknown files and non-regular entries instead of publishing them.
+func localArtifactPaths(root string) ([]string, error) {
+	entries, err := os.ReadDir(root)
+	if err != nil {
+		return nil, err
+	}
+	var artifacts []Artifact
+	for _, entry := range entries {
+		info, err := entry.Info()
+		if err != nil {
+			return nil, err
+		}
+		if !info.Mode().IsRegular() {
+			return nil, fmt.Errorf("replacement asset %q is not a regular file", entry.Name())
+		}
+		artifacts = append(artifacts, Artifact{Path: "dist/" + entry.Name(), State: "finished"})
+	}
+	manifest, err := ValidateArtifactManifest(artifacts)
+	if err != nil {
+		return nil, err
+	}
+	paths := make([]string, 0, len(manifest))
+	for _, p := range expectedArtifactPaths {
+		if _, ok := manifest[p]; ok {
+			paths = append(paths, filepath.Base(p))
+		}
+	}
+	return paths, nil
 }

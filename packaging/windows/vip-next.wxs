@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"
+     RequiredVersion="5.0.2">
+  <Package Name="VIP CLI"
+           Manufacturer="Automattic"
+           Version="$(NumericVersion)"
+           ProductCode="$(ProductCode)"
+           UpgradeCode="{9D089A27-73D9-4A31-91E1-A21A37ED94F1}"
+           Language="1033"
+           Scope="perMachine"
+           InstallerVersion="500"
+           Compressed="yes">
+    <SummaryInformation Description="WordPress VIP command-line interface"
+                        Manufacturer="Automattic" />
+    <MajorUpgrade AllowDowngrades="no"
+                  AllowSameVersionUpgrades="no"
+                  DowngradeErrorMessage="A newer version of VIP CLI is already installed."
+                  Schedule="afterInstallInitialize" />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="AutomatticFolder" Name="Automattic">
+        <Directory Id="INSTALLFOLDER" Name="VIP CLI">
+          <Component Id="VipNextExecutable" Bitness="always64">
+            <File Id="VipNextExecutableFile"
+                  Name="vip-next.exe"
+                  Source="$(StageDir)\vip-next.exe"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="SearchReplaceExecutable" Bitness="always64">
+            <File Id="SearchReplaceExecutableFile"
+                  Name="go-search-replace.exe"
+                  Source="$(StageDir)\go-search-replace.exe"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="InstallerMarker" Bitness="always64">
+            <File Id="InstallerMarkerFile"
+                  Name=".vip-next-installer.json"
+                  Source="$(StageDir)\.vip-next-installer.json"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="LicenseFile" Bitness="always64">
+            <File Id="LicenseTextFile"
+                  Name="LICENSE.txt"
+                  Source="$(StageDir)\LICENSE.txt"
+                  KeyPath="yes" />
+          </Component>
+          <Component Id="SystemPathEntry" Bitness="always64">
+            <Environment Id="VipCliSystemPath"
+                         Name="PATH"
+                         Value="[INSTALLFOLDER]"
+                         Action="set"
+                         Part="last"
+                         System="yes"
+                         Permanent="no" />
+            <RegistryValue Root="HKLM"
+                           Key="Software\Automattic\VIP CLI"
+                           Name="InstallLocation"
+                           Type="string"
+                           Value="[INSTALLFOLDER]"
+                           KeyPath="yes" />
+          </Component>
+        </Directory>
+      </Directory>
+    </StandardDirectory>
+
+    <Feature Id="Complete" Title="VIP CLI" Level="1">
+      <ComponentRef Id="VipNextExecutable" />
+      <ComponentRef Id="SearchReplaceExecutable" />
+      <ComponentRef Id="InstallerMarker" />
+      <ComponentRef Id="LicenseFile" />
+      <ComponentRef Id="SystemPathEntry" />
+    </Feature>
+
+    <ui:WixUI Id="WixUI_Minimal" />
+    <WixVariable Id="WixUILicenseRtf" Value="$(LicenseRtf)" />
+  </Package>
+</Wix>
