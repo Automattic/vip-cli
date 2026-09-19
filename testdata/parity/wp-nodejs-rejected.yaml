@@ -1,0 +1,13 @@
+name: wp-nodejs-rejected
+description: |
+  WPEnvInfo returns typeId:3 (Node.js environment). The command must reject
+  with "WP-CLI commands are not supported on Node.js environments." and exit 1.
+  TriggerWPCLICommand must NOT fire.
+argv: ["@parityapp.develop", "wp", "site", "list"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+recording: wp-nodejs-rejected
+expect:
+  exit_code: 1

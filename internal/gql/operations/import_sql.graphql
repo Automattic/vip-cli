@@ -1,0 +1,135 @@
+# Import-sql operations. Node sources:
+#   appQuery            — src/bin/vip-import-sql.js:41
+#   StartImport         — src/bin/vip-import-sql.js:69
+#   AppMultiSiteCheck   — src/lib/validations/is-multi-site.ts:27
+#   AppMappedDomains    — src/lib/validations/is-multisite-domain-mapped.ts:82
+#   App (import status) — src/lib/site-import/status.ts:27
+
+query ImportSQLEnvInfo($appId: Int!, $envId: Int!) {
+  app(id: $appId) {
+    id
+    name
+    typeId
+    environments(id: $envId) {
+      id
+      appId
+      type
+      name
+      launched
+      isK8sResident
+      primaryDomain {
+        name
+      }
+      importStatus {
+        dbOperationInProgress
+        importInProgress
+      }
+      wpSitesSDS {
+        nodes {
+          homeUrl
+          id
+        }
+      }
+    }
+  }
+}
+
+# The startImport server resolver calls input.searchReplace.filter(...) and
+# expects urlHeaders to be present, so empty arrays must be sent as [] rather
+# than omitted. Disable genqlient's default omitempty on these list fields to
+# match the Node CLI (which always sends searchReplace: []). The $input variable
+# is on its own line so the for-directives attach to the operation, not $input.
+# @genqlient(for: "AppEnvironmentImportInput.searchReplace", omitempty: false)
+# @genqlient(for: "AppEnvironmentImportInput.urlHeaders", omitempty: false)
+#
+# `--search-replace="a"` (no comma) leaves arr[1] undefined in Node
+# (vip-import-sql.js:821-827), and JSON.stringify drops undefined properties,
+# so the pair goes over the wire as {from:"a"} with NO `to` key. Sending
+# to:"" instead means "replace every occurrence of a with nothing" — silent
+# data destruction. omitempty lets a nil *string reproduce Node's omission;
+# a non-nil pointer to "" (from a trailing comma, "a,") still serializes.
+# @genqlient(for: "AppEnvironmentImportSearchReplace.to", omitempty: true)
+mutation StartImport(
+  $input: AppEnvironmentImportInput
+) {
+  startImport(input: $input) {
+    app {
+      id
+      name
+    }
+    message
+    success
+  }
+}
+
+query AppMultiSiteCheck($appId: Int, $envId: Int) {
+  app(id: $appId) {
+    id
+    name
+    repo
+    environments(id: $envId) {
+      id
+      appId
+      name
+      type
+      isMultisite
+      isSubdirectoryMultisite
+    }
+  }
+}
+
+query AppMappedDomains($appId: Int, $envId: Int) {
+  app(id: $appId) {
+    id
+    name
+    environments(id: $envId) {
+      uniqueLabel
+      isMultisite
+      domains {
+        nodes {
+          name
+          isPrimary
+        }
+      }
+    }
+  }
+}
+
+query ImportSQLProgress($appId: Int, $envId: Int) {
+  app(id: $appId) {
+    environments(id: $envId) {
+      id
+      isK8sResident
+      launched
+      jobs(types: ["sql_import"]) {
+        id
+        type
+        completedAt
+        createdAt
+        progress {
+          status
+          steps {
+            id
+            name
+            status
+          }
+        }
+      }
+      importStatus {
+        dbOperationInProgress
+        importInProgress
+        progress {
+          started_at
+          steps {
+            name
+            started_at
+            finished_at
+            result
+            output
+          }
+          finished_at
+        }
+      }
+    }
+  }
+}

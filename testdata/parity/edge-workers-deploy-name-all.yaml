@@ -1,0 +1,8 @@
+name: edge-workers-deploy-name-all
+description: edge workers deploy name all
+argv: ["edge-workers", "deploy", "headers", "--all", "--app=42", "--env=develop"]
+env:
+  NO_COLOR: "1"
+  VIP_NON_INTERACTIVE: "1"
+expect:
+  exit_code: 1

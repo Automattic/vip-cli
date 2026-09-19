@@ -1,0 +1,13 @@
+name: app-list-json
+description: |
+  `vip app list --format=json` against a mock GraphQL server returning two
+  apps. Verifies Node-parity JSON column ordering (id, name, repo).
+argv: ["app", "list", "--format=json"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+recording: app-list-json
+expect:
+  exit_code: 0
+normalize:
+  stdout: []

@@ -1,0 +1,20 @@
+name: envvar-set-invalid-name
+description: |
+  `bad-name-with-dash` fails ValidateName (the dash strips out and the
+  result no longer round-trips). Exit 1. The mutation must not fire.
+argv:
+  - "@parityapp.develop"
+  - "config"
+  - "envvar"
+  - "set"
+  - "bad-name-with-dash"
+  - "--from-file=../../testdata/parity/recordings/envvar-set-invalid-name/value.txt"
+  - "--skip-confirmation"
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+recording: envvar-set-invalid-name
+expect:
+  exit_code: 1
+normalize:
+  stdout: []

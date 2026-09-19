@@ -1,0 +1,8 @@
+name: local-parker-envvar-list-table
+description: Compare Node and Go table environment-variable names for the discovered local Parker environment.
+argv: ['@{{app_name}}.{{env_identifier}}', 'config', 'envvar', 'list']
+expect:
+  exit_code: 0
+normalize:
+  stdout: []
+  stderr: []

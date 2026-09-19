@@ -1,0 +1,26 @@
+schema: schema.gql
+operations:
+  - operations/*.graphql
+generated: generated.go
+package: gql
+use_struct_references: true
+optional: pointer
+bindings:
+  Date:
+    type: string
+  CreateEdgeWorkerInput:
+    type: github.com/Automattic/vip/internal/gql/edgeworkerinput.Create
+  UpdateEdgeWorkerInput:
+    type: github.com/Automattic/vip/internal/gql/edgeworkerinput.Update
+  Int:
+    type: int64
+  ID:
+    type: string
+  BigInt:
+    type: int64
+  JSON:
+    type: encoding/json.RawMessage
+  # Free-form {ext: type-label} map returned by mediaImportConfig
+  # (media-import/config.ts) — same raw-JSON treatment as JSON.
+  MediaImportAllowedFileTypes:
+    type: encoding/json.RawMessage

@@ -1,0 +1,24 @@
+name: phpmyadmin-error
+description: |
+  `vip @parityapp.develop db phpmyadmin --print` against an environment
+  whose status is unknown (no status.json in the recording), so the flow
+  enters the enable branch — and the enable mutation returns a GraphQL
+  error (e.g. Unauthorized). The CLI must exit non-zero and surface a
+  sensible error message on stderr.
+argv: ["@parityapp.develop", "db", "phpmyadmin", "--print"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+recording: phpmyadmin-error
+expect:
+  exit_code: 1
+expected_drift:
+  signature: "574bd9a5ca09ffbbe366a192669e62efcd01849318d28fd11b06aa22cac38f85"
+  reason: >-
+    parity register 1.10 and 1.26 (KEEP): vip-next sends phpMyAdmin progress to
+    stderr and emits a clean error without Node's runtime Debug line; both map
+    the backend failure to a stable customer-facing message.
+normalize:
+  stdout:
+    - '(?m)^Debug:.*$ -> Debug: <RUNTIME>'
+  stderr: []

@@ -26,13 +26,12 @@ jobs:
           - { name: Lint, tool: lint }
           - { name: Type Checker, tool: check-types }
           - { name: Check formatting, tool: 'format:check' }
-          - { name: Check shrinkwrap, tool: 'check:shrinkwrap' }
     steps:
       - name: Check out the source code
         uses: actions/checkout@v7
 
       - name: Set up Node.js environment
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 'lts/*'
           cache: npm
@@ -44,12 +43,6 @@ jobs:
       - name: Run ${{ matrix.config.tool }}
         run: npm run '${{ matrix.config.tool }}'
 
-  dependaban:
-    name: Dependaban
-    runs-on: ubuntu-latest
-    steps:
-      - uses: Automattic/vip-actions/dependaban@438cd00aac2463a2dbfb4a747ad7b1ac67a2575a # trunk
-
   audit:
     name: Verify signatures and provenance statements
     runs-on: ubuntu-latest
@@ -58,7 +51,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Set up Node.js environment
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: lts/*
           cache: npm
@@ -85,7 +78,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Set up Node.js environment
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node-version }}
           cache: npm

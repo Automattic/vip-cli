@@ -1,0 +1,15 @@
+name: logs-format-json
+description: |
+  `vip @parityapp.develop logs --format=json` emits a top-level JSON
+  array of {timestamp, message} objects. Verifies Node-parity JSON
+  encoding (insertion-ordered keys, no header wrapper, no `__typename`).
+argv: ["@parityapp.develop", "logs", "--format=json"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+recording: logs-format-json
+expect:
+  exit_code: 0
+normalize:
+  stdout: []

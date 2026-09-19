@@ -1,0 +1,24 @@
+name: logs-limit-100
+description: |
+  `vip @parityapp.develop logs --limit=100` requests a smaller batch.
+  The mock returns exactly two entries; the test verifies the limit
+  flag is forwarded as the GraphQL `limit` argument and that the
+  rendering path is unaffected.
+argv: ["@parityapp.develop", "logs", "--limit=100"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+recording: logs-limit-100
+expect:
+  exit_code: 0
+expected_drift:
+  signature: "0ea2758da6aa36c4caad4bbae2394dea10c5051f11ad5c9a3b7dff8c937a2d21"
+  reason: >-
+    parity register section 3 (KEEP): `vip logs` renders lowercase "timestamp"
+    / "message" headers via the shared table renderer, where Node hand-rolls the
+    table in src/bin/vip-logs.js with head [ "Timestamp", "Message" ]. Frame,
+    widths, wrapping and cell contents match byte-for-byte; only the header
+    casing differs.
+normalize:
+  stdout: []

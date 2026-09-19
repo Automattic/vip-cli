@@ -51,8 +51,6 @@ A few steps should be completed before releasing:
 
 1. You have completed [final testing before deployment](TESTING.md#final-testing-before-releasing).
 
-1. Run the release smoke tests to verify high-risk CLI parser/dispatch commands. First ensure the binaries are built (`npm run build`), then run `npm run smoke:release`. This tests option parsing, short-option equals syntax, and command routing against the built binaries.
-
 1. The pre-publish [script](https://github.com/Automattic/vip-cli/blob/trunk/helpers/prepublishOnly.js) has been run. This script performs some confidence checks to avoid common mistakes.
 
 1. Finally, release your changes as a [new minor or major NPM version](#releasing-a-new-version).
@@ -72,15 +70,56 @@ gh pr list --search "is:merged sort:updated-desc closed:>$LAST_RELEASE_DATE" | s
 
 You can release either using GitHub Actions or locally.
 
+### VIP CLI 5 Go prereleases
+
+VIP CLI 5 releases contain only the Go `vip-next` and `go-search-replace`
+binaries. The Node/npm CLI remains on 4.x and this workflow does not build or
+publish it.
+
+Before the first run, complete the
+[Buildkite prerelease promotion setup](BUILD-SIGNING.md#github-prerelease-promotion-setup).
+To publish a prerelease:
+
+1. Open the
+   [`Publish VIP Next prerelease` workflow](https://github.com/Automattic/vip-cli/actions/workflows/vip-next-prerelease.yml).
+2. Select `trunk` in the **Run workflow** branch selector.
+3. Enter an unprefixed version such as `5.0.0-beta.1`, then run the workflow.
+4. The workflow creates the tag at the selected full commit and creates a draft
+   release. The tag triggers Buildkite's native signing jobs.
+5. Wait while the workflow finds the Buildkite build with that exact tag and
+   commit, downloads all five archives and checksums, validates the archive
+   contents, and uploads the verified files.
+6. The release becomes public only after all verification and uploads succeed.
+
+If a run fails, its tag and draft release remain in place. Fix the cause and
+rerun the same version from the same commit. Never move the tag or reuse that
+version for another commit. The helper rejects a tag that resolves elsewhere
+and refuses to modify a published release.
+
+After publication, download the archive and checksum for one native platform,
+verify the checksum, and run the binary:
+
+```bash
+# macOS example
+test "$(shasum -a 256 vip-next-darwin-arm64.tar.gz | awk '{print $1}')" = \
+  "$(awk '{print $1}' vip-next-darwin-arm64.tar.gz.sha256)"
+tar -xzf vip-next-darwin-arm64.tar.gz
+./vip-next --version
+
+# Linux example
+test "$(sha256sum vip-next-linux-amd64.tar.gz | awk '{print $1}')" = \
+  "$(awk '{print $1}' vip-next-linux-amd64.tar.gz.sha256)"
+tar -xzf vip-next-linux-amd64.tar.gz
+./vip-next --version
+```
+
+The reported version must exactly match the prerelease tag. Windows users can
+verify with `Get-FileHash -Algorithm SHA256` before extracting and running
+`vip-next.exe --version`.
+
 ### Publishing via GitHub Actions (preferred)
 
 This is the preferred method for pushing out the latest release. The workflow runs a bunch of validations, generates a build, bump versions + tags, pushes out to npm, and bumps to the next dev version.
-
-The repository uses `package-lock.json` for npm 12 development and CI installs. An identical
-`npm-shrinkwrap.json` is published with npm 11 so npm 11 and older consumers retain a locked CLI
-dependency tree. Run `npm run sync:shrinkwrap` after changing `package-lock.json`; CI rejects drift
-between the two files. The publish workflows intentionally use npm 11 because npm 12 excludes
-`npm-shrinkwrap.json` from package tarballs.
 
 Please keep in mind internal guidelines before releasing.
 
@@ -125,7 +164,7 @@ To publish locally, follow these steps:
 1. Push the tag to GitHub (`git push --tags`)
 1. Push the trunk branch `git push`
 1. Make sure you're part of the Automattic organization in npm
-1. Use npm 11 and publish the release (`npx --yes --package=npm@11 npm publish --access public`). The script will do some extra checks (
+1. Publish the release to npm (`npm publish --access public`) the script will do some extra checks (
    node version, branch, etc) to ensure everything is correct. If all looks good, the new version
    will be published and you can proceed.
 1. Edit [the release on GitHub](https://github.com/Automattic/vip-cli/releases) to include a description
@@ -143,8 +182,8 @@ In order to do that, please follow this:
 
 <summary><details>
 
-1. Set the dev version with npm 11 so both lockfiles remain synchronized. Example: `npx --yes --package=npm@11 npm version --no-git-tag-version 1.4.0-dev1`.
-1. Run `npx --yes --package=npm@11 npm publish --tag next` (When `--tag` is specified, we bypass the usual branch protection that doesn't allow you to publish form a brunch other than `trunk`).
+1. Manually change the version in `package.json` and `package-lock.json` to a dev version. Example: `1.4.0-dev1`
+1. Run `npm publish --tag next` (When `--tag` is specified, we bypass the usual branch protection that doesn't allow you to publish form a brunch other than `trunk`).
 
 You can repeat this with every new version until you're happy with your version and ready to a public release. We currently don't support multiple branches for multiple versions. When it's the case, this process needs to be done for every version in every branch.
 

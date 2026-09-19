@@ -1,0 +1,23 @@
+name: import-validate-sql-clean
+description: |
+  validate-sql against a clean WP single-site dump. The handler emits
+  the per-check info block ("CREATE TABLE was found N times."). Node emits
+  no separate clean-summary line. No multi-site detection and no dangerous
+  statement findings. Exit 0.
+argv:
+  - "import"
+  - "validate-sql"
+  - "../../testdata/parity/recordings/import-validate-sql-clean/clean.sql"
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+recording: import-validate-sql-clean
+expect:
+  exit_code: 0
+expected_drift:
+  signature: "a164dcbf1fa5daa501c89072df773892e19609886e3411dab68a752848d05a5e"
+  reason: >-
+    parity register 1.25 (KEEP): Node counts a phantom trailing line in SQL
+    files that end with a newline; vip-next reports the physical line count.
+normalize:
+  stdout: []

@@ -1,0 +1,53 @@
+fragment EdgeWorkerFields on EdgeWorker {
+  id
+  name
+  location { operator value }
+  phases
+  onFailure
+  active
+  createdAt
+  updatedAt
+}
+
+query EdgeWorkers($appId: Int!, $envId: Int!) {
+  app(id: $appId) {
+    environments(id: $envId) {
+      id
+      edgeWorkers { ...EdgeWorkerFields }
+    }
+  }
+}
+
+query EdgeWorkerDetail($appId: Int!, $envId: Int!) {
+  app(id: $appId) {
+    environments(id: $envId) {
+      id
+      edgeWorkers { ...EdgeWorkerFields }
+    }
+  }
+}
+
+query EdgeWorkerDetailWithSource($appId: Int!, $envId: Int!) {
+  app(id: $appId) {
+    environments(id: $envId) {
+      id
+      edgeWorkers { ...EdgeWorkerFields source }
+    }
+  }
+}
+
+mutation CreateEdgeWorker($input: CreateEdgeWorkerInput!) {
+  createEdgeWorker(input: $input) { ...EdgeWorkerFields }
+}
+mutation UpdateEdgeWorker($input: UpdateEdgeWorkerInput!) {
+  updateEdgeWorker(input: $input) { ...EdgeWorkerFields }
+}
+mutation SetEdgeWorkerActive($input: SetEdgeWorkerActiveInput!) {
+  setEdgeWorkerActive(input: $input) { ...EdgeWorkerFields }
+}
+mutation DeleteEdgeWorker($input: DeleteEdgeWorkerInput!) {
+  deleteEdgeWorker(input: $input)
+}
+mutation ValidateEdgeWorker($input: ValidateEdgeWorkerInput!) {
+  validateEdgeWorker(input: $input) { valid phases errors }
+}

@@ -1,0 +1,14 @@
+name: backup-db-completed
+description: |
+  Full backup flow: no job -> trigger -> lock held -> lock clears with
+  status success. "Generating a new database backup..." +
+  "New database backup created" (backup-db.ts:154,223). Exit 0.
+argv: ["@parityapp.develop", "backup", "db"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+  VIP_BACKUP_DB_INTERVAL_MS: "5"
+recording: backup-db-completed
+expect:
+  exit_code: 0

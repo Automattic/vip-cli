@@ -1,6 +1,26 @@
-import { formatBytes, formatDuration, requoteArgs, table } from '../../../src/lib/cli/format';
+import {
+	formatBytes,
+	formatData,
+	formatDuration,
+	requoteArgs,
+	table,
+} from '../../../src/lib/cli/format';
 
 describe( 'utils/cli/format', () => {
+	it( 'formats an empty JSON collection as a valid array', () => {
+		expect( formatData( [], 'json' ) ).toBe( '[]' );
+	} );
+
+	it( 'JSON-escapes terminal controls without changing parsed data', () => {
+		const data = [ { value: 'safe\u007f\u009b[31m' } ];
+
+		const formatted = formatData( data, 'json' );
+
+		expect( formatted ).not.toMatch( /[\u007f-\u009f]/ );
+		expect( formatted ).toContain( String.raw`\u007f\u009b` );
+		expect( JSON.parse( formatted ) ).toEqual( data );
+	} );
+
 	describe( 'requoteArgs', () => {
 		it.each( [
 			{

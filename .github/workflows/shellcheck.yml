@@ -1,0 +1,26 @@
+name: ShellCheck
+
+on:
+  pull_request:
+  push:
+    branches:
+      - develop
+      - trunk
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  shellcheck:
+    name: Lint shell scripts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the source code
+        uses: actions/checkout@v7
+
+      # `-S warning` drops the `info` level, which is otherwise dominated by
+      # SC1091 for the `shared-pipeline-vars` file the build scripts source at
+      # runtime. ShellCheck ships preinstalled on the runner image.
+      - name: Run ShellCheck
+        run: git ls-files '*.sh' | xargs --no-run-if-empty shellcheck -S warning

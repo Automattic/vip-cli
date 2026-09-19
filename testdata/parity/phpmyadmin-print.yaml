@@ -1,0 +1,22 @@
+name: phpmyadmin-print
+description: |
+  `vip @parityapp.develop db phpmyadmin --print`. The recorded status is
+  already "running", so Node's maybeEnablePhpMyAdmin short-circuits
+  (src/commands/phpmyadmin.ts:213-222): status → generate, with NO enable
+  mutation. vip-next keeps stdout URL-only for scripting; Node's progress
+  tracker writes its warning and frames to stdout before `console.log( url )`.
+argv: ["@parityapp.develop", "db", "phpmyadmin", "--print"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+recording: phpmyadmin-print
+expect:
+  exit_code: 0
+expected_drift:
+  signature: "879aafb8109cb49122e457224e5e9359dce7ab6b810e81d86360d6e41fb4f2f5"
+  reason: >-
+    parity register 1.26 (KEEP): vip-next keeps --print stdout URL-only and
+    sends human progress to stderr; Node interleaves progress and the URL on
+    stdout.
+normalize:
+  stdout: []

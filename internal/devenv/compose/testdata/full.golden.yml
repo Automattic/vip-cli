@@ -1,0 +1,265 @@
+name: example
+services:
+    database:
+        image: mysql:8.4
+        command: docker-entrypoint.sh mysqld --sql-mode=ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION --max_allowed_packet=67M --mysql-native-password=ON
+        environment:
+            LANDO_NEEDS_EXEC: "1"
+            LANDO_NO_SCRIPTS: "1"
+            LANDO_NO_USER_PERMS: "1"
+            MYSQL_ALLOW_EMPTY_PASSWORD: "true"
+            MYSQL_DATABASE: wordpress
+            MYSQL_PASSWORD: wordpress
+            MYSQL_USER: wordpress
+        ports:
+            - :3306
+        volumes:
+            - database_data:/var/lib/mysql
+        networks:
+            - default
+    demo-app-code:
+        image: ghcr.io/automattic/vip-container-images/skeleton:latest
+        command: /bin/sh -c "exit 0"
+        environment:
+            LANDO_HOST_GID: ${LANDO_HOST_GROUP_ID}
+            LANDO_HOST_UID: ${LANDO_HOST_USER_ID}
+        volumes:
+            - clientcode_clientmuPlugins:/clientcode/client-mu-plugins
+            - clientcode_images:/clientcode/images
+            - clientcode_languages:/clientcode/languages
+            - clientcode_plugins:/clientcode/plugins
+            - clientcode_private:/clientcode/private
+            - clientcode_themes:/clientcode/themes
+            - clientcode_vipconfig:/clientcode/vip-config
+        networks:
+            - default
+    memcached:
+        image: memcached:1.6-alpine
+        command: memcached -m 64
+        environment:
+            LANDO_NEEDS_EXEC: "1"
+            LANDO_NO_SCRIPTS: "1"
+            LANDO_NO_USER_PERMS: "1"
+        networks:
+            - default
+    nginx:
+        image: ghcr.io/automattic/vip-container-images/nginx:latest
+        entrypoint: /usr/sbin/nginx -g "daemon off;"
+        depends_on:
+            php:
+                condition: service_started
+        volumes:
+            - ./nginx/extra.conf:/etc/nginx/conf.extra/extra.conf
+            - ./wordpress:/wp
+            - ./config:/wp/config
+            - ./log:/wp/log
+            - ./uploads:/wp/wp-content/uploads
+            - ./integrations-config:/wp/config/integrations-config
+            - type: volume
+              source: mu-plugins
+              target: /wp/wp-content/mu-plugins
+              volume:
+                nocopy: true
+            - type: volume
+              source: clientcode_clientmuPlugins
+              target: /wp/wp-content/client-mu-plugins
+              volume:
+                nocopy: true
+            - type: volume
+              source: clientcode_images
+              target: /wp/wp-content/images
+              volume:
+                nocopy: true
+            - type: volume
+              source: clientcode_languages
+              target: /wp/wp-content/languages
+              volume:
+                nocopy: true
+            - type: volume
+              source: clientcode_plugins
+              target: /wp/wp-content/plugins
+              volume:
+                nocopy: true
+            - type: volume
+              source: clientcode_private
+              target: /wp/wp-content/private
+              volume:
+                nocopy: true
+            - type: volume
+              source: clientcode_themes
+              target: /wp/wp-content/themes
+              volume:
+                nocopy: true
+            - type: volume
+              source: clientcode_vipconfig
+              target: /wp/vip-config
+              volume:
+                nocopy: true
+        labels:
+            traefik.enable: "true"
+            traefik.http.routers.nginx-example-secured.entrypoints: https
+            traefik.http.routers.nginx-example-secured.rule: HostRegexp(`example.vipdev.site`)
+            traefik.http.routers.nginx-example-secured.service: nginx-example-secured-service
+            traefik.http.routers.nginx-example-secured.tls: "true"
+            traefik.http.routers.nginx-example.entrypoints: http
+            traefik.http.routers.nginx-example.rule: HostRegexp(`example.vipdev.site`)
+            traefik.http.routers.nginx-example.service: nginx-example-service
+            traefik.http.services.nginx-example-secured-service.loadbalancer.server.port: "80"
+            traefik.http.services.nginx-example-service.loadbalancer.server.port: "80"
+        networks:
+            - default
+            - vip-dev-env
+    php:
+        image: ghcr.io/automattic/vip-container-images/php-fpm:8.2
+        command: run.sh
+        working_dir: /wp
+        env_file:
+            - .env
+        environment:
+            LANDO_APP_NAME: example
+            LANDO_NEEDS_EXEC: "1"
+            LANDO_NO_USER_PERMS: enable
+            XDEBUG: disable
+        depends_on:
+            database:
+                condition: service_started
+            demo-app-code:
+                condition: service_completed_successfully
+            memcached:
+                condition: service_started
+            vip-mu-plugins:
+                condition: service_started
+            wordpress:
+                condition: service_completed_successfully
+        volumes:
+            - type: volume
+              source: devtools
+              target: /dev-tools
+              volume:
+                nocopy: true
+            - type: volume
+              source: scripts
+              target: /scripts
+              volume:
+                nocopy: true
+            - ./wordpress:/wp
+            - ./config:/wp/config
+            - ./log:/wp/log
+            - ./uploads:/wp/wp-content/uploads
+            - ./integrations-config:/wp/config/integrations-config
+            - type: volume
+              source: mu-plugins
+              target: /wp/wp-content/mu-plugins
+              volume:
+                nocopy: true
+            - type: volume
+              source: clientcode_clientmuPlugins
+              target: /wp/wp-content/client-mu-plugins
+              volume:
+                nocopy: true
+            - type: volume
+              source: clientcode_images
+              target: /wp/wp-content/images
+              volume:
+                nocopy: true
+            - type: volume
+              source: clientcode_languages
+              target: /wp/wp-content/languages
+              volume:
+                nocopy: true
+            - type: volume
+              source: clientcode_plugins
+              target: /wp/wp-content/plugins
+              volume:
+                nocopy: true
+            - type: volume
+              source: clientcode_private
+              target: /wp/wp-content/private
+              volume:
+                nocopy: true
+            - type: volume
+              source: clientcode_themes
+              target: /wp/wp-content/themes
+              volume:
+                nocopy: true
+            - type: volume
+              source: clientcode_vipconfig
+              target: /wp/vip-config
+              volume:
+                nocopy: true
+        networks:
+            - default
+    phpmyadmin:
+        image: phpmyadmin:5
+        command: /docker-entrypoint.sh apache2-foreground
+        environment:
+            LANDO_NEEDS_EXEC: "1"
+            LANDO_NO_USER_PERMS: "1"
+            MYSQL_ROOT_PASSWORD: ""
+            PMA_HOSTS: database
+            PMA_PASSWORD: ""
+            PMA_PORT: "3306"
+            PMA_USER: root
+            UPLOAD_LIMIT: 4G
+        ports:
+            - 127.0.0.1::80
+        volumes:
+            - pma_www:/var/www/html
+        labels:
+            traefik.enable: "true"
+            traefik.http.routers.pma-example-secured.entrypoints: https
+            traefik.http.routers.pma-example-secured.rule: HostRegexp(`example-pma.vipdev.site`)
+            traefik.http.routers.pma-example-secured.service: pma-example-secured-service
+            traefik.http.routers.pma-example-secured.tls: "true"
+            traefik.http.routers.pma-example.entrypoints: http
+            traefik.http.routers.pma-example.rule: HostRegexp(`example-pma.vipdev.site`)
+            traefik.http.routers.pma-example.service: pma-example-service
+            traefik.http.services.pma-example-secured-service.loadbalancer.server.port: "80"
+            traefik.http.services.pma-example-service.loadbalancer.server.port: "80"
+        networks:
+            - default
+            - vip-dev-env
+    vip-mu-plugins:
+        image: ghcr.io/automattic/vip-container-images/mu-plugins:0.1
+        command: /bin/sh /run.sh
+        environment:
+            LANDO_HOST_GID: ${LANDO_HOST_GROUP_ID}
+            LANDO_HOST_UID: ${LANDO_HOST_USER_ID}
+            LANDO_NEEDS_EXEC: "1"
+            LANDO_NO_SCRIPTS: "1"
+        volumes:
+            - mu-plugins:/shared
+            - type: volume
+              source: scripts
+              target: /scripts
+              volume:
+                nocopy: true
+        networks:
+            - default
+    wordpress:
+        image: ghcr.io/automattic/vip-container-images/wordpress:trunk
+        entrypoint: /bin/sh -c '/usr/bin/rsync -ac --delete --chown=${LANDO_HOST_USER_ID}:${LANDO_HOST_GROUP_ID} /wp/ /shared/; /usr/bin/rsync -ac --chown=${LANDO_HOST_USER_ID}:${LANDO_HOST_GROUP_ID} --delete /dev-tools-orig/ /dev-tools/'
+        volumes:
+            - ./wordpress:/shared
+            - devtools:/dev-tools
+            - scripts:/scripts
+        networks:
+            - default
+volumes:
+    clientcode_clientmuPlugins: {}
+    clientcode_images: {}
+    clientcode_languages: {}
+    clientcode_plugins: {}
+    clientcode_private: {}
+    clientcode_themes: {}
+    clientcode_vipconfig: {}
+    database_data: {}
+    devtools: {}
+    mu-plugins: {}
+    pma_www: {}
+    scripts: {}
+networks:
+    default: {}
+    vip-dev-env:
+        external: true
+        name: vip-dev-env

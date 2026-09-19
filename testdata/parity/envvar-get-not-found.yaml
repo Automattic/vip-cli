@@ -1,0 +1,17 @@
+name: envvar-get-not-found
+description: |
+  `vip @parityapp.develop config envvar get MISSING` when MISSING is not
+  in the env-var set. Verifies Node-parity yellow stdout message and
+  exit 0 (Node calls process.exit() with no arg → exit 0). The not-found
+  name is wrapped in JSON.stringify on the Node side, which renders the
+  exact byte sequence `"MISSING"` (matching Go's %q).
+argv: ["@parityapp.develop", "config", "envvar", "get", "MISSING"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+recording: envvar-get-not-found
+expect:
+  exit_code: 0
+normalize:
+  stdout: []

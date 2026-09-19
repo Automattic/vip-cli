@@ -1,0 +1,53 @@
+# vip config software operations. Node source: src/lib/config/software.ts
+# (appQuery/appQueryFragments, updateSoftwareMutation, updateJobQuery).
+
+fragment SoftwareNode on AppEnvironmentSoftwareSettingsSoftware {
+  name
+  slug
+  pinned
+  current { version default deprecated unstable compatible latestRelease private }
+  options { version default deprecated unstable compatible latestRelease private }
+}
+
+query SoftwareSettings($appId: Int!, $envId: Int!) {
+  app(id: $appId) {
+    id
+    name
+    typeId
+    environments(id: $envId) {
+      id
+      appId
+      type
+      name
+      softwareSettings {
+        wordpress { ...SoftwareNode }
+        php { ...SoftwareNode }
+        muplugins { ...SoftwareNode }
+        nodejs { ...SoftwareNode }
+      }
+    }
+  }
+}
+
+mutation UpdateSoftwareSettings($appId: Int!, $envId: Int!, $component: String!, $version: String!) {
+  updateSoftwareSettings(input: {appId: $appId, environmentId: $envId, softwareName: $component, softwareVersion: $version}) {
+    wordpress { ...SoftwareNode }
+    php { ...SoftwareNode }
+    muplugins { ...SoftwareNode }
+    nodejs { ...SoftwareNode }
+  }
+}
+
+query SoftwareUpdateJob($appId: Int!, $envId: Int!) {
+  app(id: $appId) {
+    environments(id: $envId) {
+      jobs(types: ["upgrade_php", "upgrade_wordpress", "upgrade_muplugins", "upgrade_nodejs"]) {
+        type
+        completedAt
+        createdAt
+        inProgressLock
+        progress { status steps { step name status } }
+      }
+    }
+  }
+}

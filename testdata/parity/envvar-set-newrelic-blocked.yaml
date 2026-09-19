@@ -1,0 +1,21 @@
+name: envvar-set-newrelic-blocked
+description: |
+  Lowercase `new_relic_license_key` is uppercased to NEW_RELIC_LICENSE_KEY
+  BEFORE the block check (Node parity). Must exit 1. add.json is omitted
+  so a mutation attempt would 500 — the block must fire first.
+argv:
+  - "@parityapp.develop"
+  - "config"
+  - "envvar"
+  - "set"
+  - "new_relic_license_key"
+  - "--from-file=../../testdata/parity/recordings/envvar-set-newrelic-blocked/value.txt"
+  - "--skip-confirmation"
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+recording: envvar-set-newrelic-blocked
+expect:
+  exit_code: 1
+normalize:
+  stdout: []

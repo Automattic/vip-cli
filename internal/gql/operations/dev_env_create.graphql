@@ -1,0 +1,38 @@
+# dev-env create @app.env pre-population. Node source:
+#   getApplicationInformation — src/lib/dev-environment/dev-environment-core.ts:735
+#   getOptionsFromAppInfo     — src/lib/dev-environment/dev-environment-cli.ts:257
+# Fetches all environments (no useful server-side filter; the env is picked
+# client-side by type) with the fields that seed the wizard defaults.
+query DevEnvAppInfo($appId: Int!) {
+  app(id: $appId) {
+    id
+    name
+    environments {
+      id
+      appId
+      name
+      type
+      isMultisite
+      primaryDomain {
+        name
+      }
+      environmentVariables {
+        nodes {
+          name
+        }
+      }
+      softwareSettings {
+        php {
+          current {
+            version
+          }
+        }
+        wordpress {
+          current {
+            version
+          }
+        }
+      }
+    }
+  }
+}

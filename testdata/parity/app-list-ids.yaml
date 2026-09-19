@@ -1,0 +1,26 @@
+name: app-list-ids
+description: |
+  `vip app list --format=ids` against the app-list-baseline payload.
+
+  Node (src/lib/cli/format.ts `ids()`) accepts the format and prints the id
+  column space-separated, exit 0. vip-next rejects `ids` on platform commands
+  and exits 1.
+
+  The repo owner has decided that rejection is intentional and shipping (parity
+  register 1.3, KEEP), so this scenario records the divergence rather than
+  demanding it be fixed. expect.exit_code records NODE's behaviour, which is
+  what a parity fixture asserts.
+argv: ["app", "list", "--format=ids"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+recording: app-list-baseline
+expect:
+  exit_code: 0
+expected_drift:
+  signature: "03eacb38e8fbeb4b5d51768597ca0ecb04f339dfe6e7ed93416ea39076d149cf"
+  reason: >-
+    parity register 1.3 (KEEP): vip-next deliberately rejects --format ids on
+    platform commands, where Node prints the id column and exits 0.
+normalize:
+  stdout: []

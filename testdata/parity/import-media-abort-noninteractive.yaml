@@ -1,0 +1,19 @@
+name: import-media-abort-noninteractive
+description: |
+  `vip import media abort` without --skip-confirmation under
+  VIP_NON_INTERACTIVE=1: the requireConfirm gate declines, the
+  AbortMediaImport mutation MUST NOT fire, exit 0 (the M6
+  WithRequireConfirm cancel path).
+argv:
+  - "@parityapp.develop"
+  - "import"
+  - "media"
+  - "abort"
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+  VIP_NON_INTERACTIVE: "1"
+recording: import-media-abort-noninteractive
+expect:
+  exit_code: 0

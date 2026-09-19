@@ -1,0 +1,6 @@
+mutation PurgePageCache($input: PurgePageCacheInput!) {
+  purgePageCache(input: $input) {
+    success
+    urls
+  }
+}

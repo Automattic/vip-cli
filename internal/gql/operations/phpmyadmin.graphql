@@ -1,0 +1,21 @@
+mutation EnablePhpMyAdmin($input: EnablePhpMyAdminInput!) {
+  enablePHPMyAdmin(input: $input) {
+    success
+  }
+}
+
+query PhpMyAdminStatus($appId: Int!, $envId: Int!) {
+  app(id: $appId) {
+    environments(id: $envId) {
+      phpMyAdminStatus {
+        status
+      }
+    }
+  }
+}
+
+mutation GeneratePhpMyAdminAccess($input: GeneratePhpMyAdminAccessInput!) {
+  generatePHPMyAdminAccess(input: $input) {
+    url
+  }
+}

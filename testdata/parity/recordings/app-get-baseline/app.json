@@ -1,0 +1,11 @@
+{"data":{"apps":{"edges":[{
+  "id":42,"name":"example-app","repo":"wpcomvip/example-app",
+  "environments":[
+    {"id":7,"appId":42,"name":"develop","type":"develop","branch":"main",
+     "currentCommit":"abcdef1234567890","primaryDomain":{"name":"dev.example.com"},
+     "launched":false,"deploymentStrategy":"git"},
+    {"id":8,"appId":42,"name":"production","type":"production","branch":"main",
+     "currentCommit":"deadbee9999","primaryDomain":{"name":"www.example.com"},
+     "launched":true,"deploymentStrategy":"git"}
+  ]
+}]}}}

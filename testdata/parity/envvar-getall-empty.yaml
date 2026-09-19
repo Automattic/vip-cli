@@ -1,0 +1,15 @@
+name: envvar-getall-empty
+description: |
+  `vip @parityapp.develop config envvar get-all` with zero env vars
+  present. Verifies the Node-parity yellow "There are no environment
+  variables" stdout line + exit 0.
+argv: ["@parityapp.develop", "config", "envvar", "get-all"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+recording: envvar-getall-empty
+expect:
+  exit_code: 0
+normalize:
+  stdout: []

@@ -1,0 +1,61 @@
+# Media-import operations. Node sources:
+#   StartMediaImport   — src/bin/vip-import-media.js:37
+#   AbortMediaImport   — src/bin/vip-import-media-abort.js:33
+#   progress query     — src/lib/media-import/status.ts:28
+#   MediaImportConfig  — src/lib/media-import/config.ts:8
+
+mutation StartMediaImport($input: AppEnvironmentStartMediaImportInput) {
+  startMediaImport(input: $input) {
+    applicationId
+    environmentId
+    mediaImportStatus {
+      importId
+      siteId
+      status
+    }
+  }
+}
+
+mutation AbortMediaImport($input: AppEnvironmentAbortMediaImportInput) {
+  abortMediaImport(input: $input) {
+    applicationId
+    environmentId
+    mediaImportStatusChange {
+      importId
+      siteId
+      statusFrom
+      statusTo
+    }
+  }
+}
+
+query MediaImportProgress($appId: Int, $envId: Int) {
+  app(id: $appId) {
+    environments(id: $envId) {
+      id
+      name
+      type
+      repo
+      mediaImportStatus {
+        importId
+        siteId
+        status
+        filesTotal
+        filesProcessed
+        failureDetails {
+          previousStatus
+          globalErrors
+          fileErrorsUrl
+        }
+      }
+    }
+  }
+}
+
+query MediaImportConfig {
+  mediaImportConfig {
+    fileNameCharCount
+    fileSizeLimitInBytes
+    allowedFileTypes
+  }
+}

@@ -1,0 +1,12 @@
+name: import-media-help
+description: |
+  `vip import media --help` renders the flag set
+  (exportFileErrorsToJson, saveErrorLog, overwriteExistingFiles,
+  importIntermediateImages) plus the status/abort subcommands. Exit 0.
+argv: ["import", "media", "--help"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+expect:
+  exit_code: 0

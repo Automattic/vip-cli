@@ -1,0 +1,12 @@
+name: wp-help
+description: |
+  `vip help wp` prints the wp command's help text. No network round-trips.
+  Exit 0. (Note: `vip wp --help` passes --help as a raw WP-CLI arg due to
+  DisableFlagParsing; `vip help wp` uses cobra's built-in help path instead.)
+argv: ["help", "wp"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+expect:
+  exit_code: 0

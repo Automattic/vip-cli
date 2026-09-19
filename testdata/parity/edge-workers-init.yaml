@@ -1,0 +1,8 @@
+name: edge-workers-init
+description: edge workers init
+argv: ["edge-workers", "init"]
+env:
+  NO_COLOR: "1"
+  VIP_NON_INTERACTIVE: "1"
+expect:
+  exit_code: 0

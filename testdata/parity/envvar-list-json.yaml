@@ -1,0 +1,14 @@
+name: envvar-list-json
+description: |
+  `vip @parityapp.develop config envvar list --format=json` returns the
+  same three names rendered as a JSON array. Verifies Node-parity JSON
+  encoding (insertion-ordered keys, top-level array, no header wrapper).
+argv: ["@parityapp.develop", "config", "envvar", "list", "--format=json"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+recording: envvar-list-json
+expect:
+  exit_code: 0
+normalize:
+  stdout: []

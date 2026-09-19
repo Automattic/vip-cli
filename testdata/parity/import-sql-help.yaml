@@ -1,0 +1,12 @@
+name: import-sql-help
+description: |
+  `vip import sql --help` renders the full flag set (skip-validate,
+  search-replace, in-place, output, skip-maintenance-mode, md5, header,
+  skip-backup) plus the status subcommand. No network. Exit 0.
+argv: ["import", "sql", "--help"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+expect:
+  exit_code: 0

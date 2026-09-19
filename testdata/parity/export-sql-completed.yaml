@@ -1,0 +1,14 @@
+name: export-sql-completed
+description: |
+  Full export flow with --skip-download (parity scenarios avoid writing
+  into the repo): create export job -> poll preflight + upload_backup ->
+  download link. Exit 0.
+argv: ["@parityapp.develop", "export", "sql", "--skip-download"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+  VIP_EXPORT_SQL_INTERVAL_MS: "5"
+recording: export-sql-completed
+expect:
+  exit_code: 0

@@ -1,0 +1,16 @@
+{
+  "siteSlug": "legacy",
+  "wpTitle": "Legacy",
+  "multisite": false,
+  "wordpress": { "mode": "image", "tag": "trunk" },
+  "muPlugins": { "mode": "image" },
+  "mediaRedirectDomain": "",
+  "phpmyadmin": false,
+  "xdebug": false,
+  "php": "php:8.2",
+  "mailpit": false,
+  "photon": false,
+  "cron": false,
+  "enterpriseSearchEnabled": true,
+  "clientCode": { "mode": "local", "dir": "/srv/legacy" }
+}

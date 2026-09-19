@@ -1,0 +1,14 @@
+name: version-smoke
+description: |
+  Self-diff smoke test: run vip-next --version against two builds with
+  different version metadata and assert identical normalized output and
+  exit code. Proves the harness pipeline works end-to-end before M2
+  introduces real Node-vs-Go diffs.
+argv: ["--version"]
+env:
+  DO_NOT_TRACK: "1"
+expect:
+  exit_code: 0
+normalize:
+  stdout:
+    - "vip-next [^ ]+ \\(commit [^)]+\\) -> vip-next <VERSION> (commit <COMMIT>)"

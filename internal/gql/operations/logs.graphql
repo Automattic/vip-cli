@@ -1,0 +1,22 @@
+query GetAppLogs(
+  $appId: Int!
+  $envId: Int!
+  $logType: AppEnvironmentLogType!
+  $limit: Int!
+  $after: String
+) {
+  app(id: $appId) {
+    id
+    environments(id: $envId) {
+      id
+      logs(type: $logType, limit: $limit, after: $after) {
+        nodes {
+          timestamp
+          message
+        }
+        nextCursor
+        pollingDelaySeconds
+      }
+    }
+  }
+}

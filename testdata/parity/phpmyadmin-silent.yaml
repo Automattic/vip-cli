@@ -1,0 +1,16 @@
+name: phpmyadmin-silent
+description: |
+  `vip @parityapp.develop db phpmyadmin --print --silent`. The URL must
+  still land on stdout (it's the documented output channel for --print),
+  but the progress lines and the yellow "read-only" warning must be
+  suppressed on stderr.
+argv: ["@parityapp.develop", "db", "phpmyadmin", "--print", "--silent"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+recording: phpmyadmin-silent
+expect:
+  exit_code: 0
+normalize:
+  stdout: []
+  stderr: []

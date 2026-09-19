@@ -1,0 +1,15 @@
+name: logs-empty
+description: |
+  `vip @parityapp.develop logs` against a server returning zero log
+  entries. Verifies the Node-parity behavior: "No logs found" on stderr
+  (Node uses console.error) + exit 0, no stdout output.
+argv: ["@parityapp.develop", "logs"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+recording: logs-empty
+expect:
+  exit_code: 0
+normalize:
+  stdout: []

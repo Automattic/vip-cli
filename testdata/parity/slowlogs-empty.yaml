@@ -1,0 +1,17 @@
+name: slowlogs-empty
+description: |
+  `vip @parityapp.develop slowlogs` against a server returning zero
+  slow-query entries. Verifies the Node-parity behavior: "No logs
+  found" on stderr (Node uses console.error) + exit 0, no stdout
+  output. Yes — the wording says "logs" rather than "slowlogs"; that
+  matches src/bin/vip-slowlogs.ts.
+argv: ["@parityapp.develop", "slowlogs"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+recording: slowlogs-empty
+expect:
+  exit_code: 0
+normalize:
+  stdout: []

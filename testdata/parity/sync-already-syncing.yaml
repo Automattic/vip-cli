@@ -1,0 +1,20 @@
+name: sync-already-syncing
+description: |
+  `vip @parityapp.develop sync --skip-confirmation` when the server
+  rejects the mutation with "Site is already syncing". The handler
+  recognizes the sentinel error, prints the yellow Note, and proceeds
+  to polling — which terminates on success and exits 0 (Node parity:
+  the GraphQL error is NOT fatal in this specific case).
+argv:
+  - "@parityapp.develop"
+  - "sync"
+  - "--skip-confirmation"
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  VIP_SYNC_INTERVAL_MS: "5"
+recording: sync-already-syncing
+expect:
+  exit_code: 0
+normalize:
+  stdout: []

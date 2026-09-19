@@ -1,0 +1,18 @@
+name: slowlogs-baseline
+description: |
+  `vip @parityapp.develop slowlogs` against a mock GraphQL server
+  returning two slow-query entries. Diff stdout/stderr/exit-code between
+  Node vip and Go vip-next. Verifies Node-parity table output with the
+  default limit=500 + format=table inputs and the slowlog-specific
+  column ordering (timestamp, rowsSent, rowsExamined, queryTime,
+  requestUri, query).
+argv: ["@parityapp.develop", "slowlogs"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+recording: slowlogs-baseline
+expect:
+  exit_code: 0
+normalize:
+  stdout: []

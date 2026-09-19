@@ -1,0 +1,26 @@
+name: import-sql-bad-extension
+description: |
+  `vip @parityapp.develop import sql file.txt` fails the extension gate:
+  "Invalid file extension. Please provide a .sql or .gz file."
+  (Node sql.ts:101). The StartImport mutation MUST NOT fire. Exit 1.
+argv:
+  - "@parityapp.develop"
+  - "import"
+  - "sql"
+  - "../../testdata/parity/recordings/import-sql-bad-extension/file.txt"
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+recording: import-sql-bad-extension
+expect:
+  exit_code: 1
+expected_drift:
+  signature: "bd2d07a09b4fc40bcac829385394ce4f76dcc392c628282abe998c159145b122"
+  reason: >-
+    parity register 1.10 (KEEP): vip-next emits a clean one-line error on
+    stderr; Node adds a second space after Error and a runtime Debug line on
+    stdout.
+normalize:
+  stdout:
+    - '(?m)^Debug:.*$ -> Debug: <RUNTIME>'

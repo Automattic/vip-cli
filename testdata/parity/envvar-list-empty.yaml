@@ -1,0 +1,15 @@
+name: envvar-list-empty
+description: |
+  `vip @parityapp.develop config envvar list` against a server returning
+  zero env vars. Verifies the Node-parity "There are no environment
+  variables" yellow stdout line + exit 0 (NO_COLOR=1 strips ANSI).
+argv: ["@parityapp.develop", "config", "envvar", "list"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+recording: envvar-list-empty
+expect:
+  exit_code: 0
+normalize:
+  stdout: []

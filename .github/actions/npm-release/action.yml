@@ -1,0 +1,45 @@
+name: Publish VIP CLI npm release
+description: Build, test, stage and publish the exact validated package tarball.
+inputs:
+  mode:
+    description: stable or prerelease
+    required: true
+  npm-tag:
+    description: npm tag for prereleases
+    default: next
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v7
+      with:
+        node-version: 'lts/*'
+        registry-url: https://registry.npmjs.org/
+    - name: Prepare release tools
+      shell: bash
+      run: |
+        npm install --global npm@11
+        git config --global user.name 'WordPress VIP Bot'
+        git config --global user.email '<22917138+wpcomvip-bot@users.noreply.github.com>'
+        # Keep tools from this workflow revision when the stable script changes branches.
+        tools_dir=$(mktemp -d "$RUNNER_TEMP/vip-release-tools.XXXXXXXX")
+        cp -R "$GITHUB_WORKSPACE/.github/scripts/npm-release/." "$tools_dir/"
+        printf 'VIP_RELEASE_TOOLS=%s\n' "$tools_dir" >> "$GITHUB_ENV"
+    - name: Validate and publish release
+      shell: bash
+      env:
+        RELEASE_MODE: ${{ inputs.mode }}
+        NPM_TAG: ${{ inputs.npm-tag }}
+        GH_TOKEN: ${{ github.token }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        PR_HEAD_REF: ${{ github.head_ref }}
+        PR_ASSIGNEE: ${{ github.actor }}
+        USE_TRUSTED_PUBLISHING: 'true'
+        PROVENANCE: 'true'
+        CONVENTIONAL_COMMITS: 'true'
+        SMOKE_SCRIPT: smoke:release
+      run: |
+        case "$RELEASE_MODE" in
+          stable) bash "$VIP_RELEASE_TOOLS/publish.sh" ;;
+          prerelease) bash "$VIP_RELEASE_TOOLS/publish-prerelease.sh" ;;
+          *) echo 'Unsupported release mode' >&2; exit 1 ;;
+        esac

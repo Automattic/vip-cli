@@ -1,0 +1,19 @@
+name: envvar-delete-baseline
+description: |
+  `vip @parityapp.develop config envvar delete MY_VAR --skip-confirmation`.
+  Non-prod + skip-confirmation = no prompt → mutation succeeds → exit 0.
+argv:
+  - "@parityapp.develop"
+  - "config"
+  - "envvar"
+  - "delete"
+  - "MY_VAR"
+  - "--skip-confirmation"
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+recording: envvar-delete-baseline
+expect:
+  exit_code: 0
+normalize:
+  stdout: []

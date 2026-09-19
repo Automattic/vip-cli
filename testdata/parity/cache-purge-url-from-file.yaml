@@ -1,0 +1,21 @@
+name: cache-purge-url-from-file
+description: |
+  `--from-file=<path>` reads URLs from a file (one per line, trimmed,
+  empty lines dropped) and IGNORES any positional URLs. The fixture
+  includes a positional URL that must NOT appear in the response or
+  wire body — the runner asserts this via the mutation-mux body checks
+  on the per-scenario test setup (test asserts file URLs are returned).
+argv:
+  - "@parityapp.develop"
+  - "cache"
+  - "purge-url"
+  - "https://example.com/IGNORED"
+  - "--from-file=../../testdata/parity/recordings/cache-purge-url-from-file/urls.txt"
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+recording: cache-purge-url-from-file
+expect:
+  exit_code: 0
+normalize:
+  stdout: []

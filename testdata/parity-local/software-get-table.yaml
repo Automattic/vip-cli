@@ -1,0 +1,8 @@
+name: local-parker-software-get-table
+description: Compare Node and Go table software metadata for the discovered local Parker environment.
+argv: ['@{{app_name}}.{{env_identifier}}', 'config', 'software', 'get']
+expect:
+  exit_code: 0
+normalize:
+  stdout: []
+  stderr: []

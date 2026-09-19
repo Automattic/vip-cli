@@ -1,0 +1,8 @@
+name: local-parker-app-list-json
+description: Compare Node and Go JSON app-list output for local Parker user 10000.
+argv: ['app', 'list', '--format=json']
+expect:
+  exit_code: 0
+normalize:
+  stdout: []
+  stderr: []

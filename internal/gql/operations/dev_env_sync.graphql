@@ -1,0 +1,15 @@
+query DevEnvSyncSites($appId: Int!, $environmentId: Int!, $after: String, $first: Int!) {
+  app(id: $appId) {
+    environments(id: $environmentId) {
+      wpSitesSDS(after: $after, first: $first) {
+        total
+        nextCursor
+        nodes {
+          blogId
+          homeUrl
+          siteUrl
+        }
+      }
+    }
+  }
+}

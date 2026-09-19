@@ -197,6 +197,17 @@ describe( 'utils/cli/command', () => {
 	} );
 
 	describe( 'option parsing', () => {
+		it( 'prints valid empty JSON from the real formatted command wrapper', async () => {
+			const cmd = command( { format: true, requiredArgs: 0 } );
+
+			await cmd.argv(
+				[ process.execPath, '/path/to/vip-edge-workers-list.js', '--format=json' ],
+				async () => []
+			);
+
+			expect( console.log ).toHaveBeenCalledWith( '[]' );
+		} );
+
 		it( 'does not duplicate defaults when an explicit value matches the default', async () => {
 			const cmd = command( { requiredArgs: 0 } ).option( 'type', 'Log type', 'app' );
 

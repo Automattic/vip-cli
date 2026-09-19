@@ -1,0 +1,44 @@
+name: envvar-delete-typed-mismatch
+description: |
+  `vip @parityapp.develop config envvar delete MY_VAR` WITHOUT
+  --skip-confirmation, with VIP_NON_INTERACTIVE=1 forcing appctx.Input to
+  return ErrNonInteractive in the typed-name confirm gate. Handler treats
+  it as decline -> yellow "Command cancelled by user." to stdout -> exit 0.
+  The DeleteEnvironmentVariable mutation MUST NOT fire (wire-level
+  assertion via envvarCancelScenarios in envvar_mutation_scenario_test.go).
+argv:
+  - "@parityapp.develop"
+  - "config"
+  - "envvar"
+  - "delete"
+  - "MY_VAR"
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+  VIP_NON_INTERACTIVE: "1"
+recording: envvar-delete-typed-mismatch
+expect:
+  exit_code: 0
+expected_drift:
+  signature: "744bc383afa791a55bbf6e6f06829fe988367d0659e3838a5df07fcbe9312f03"
+  reason: >-
+    parity register 1.24 (KEEP): in a non-TTY vip-next explicitly cancels the
+    typed-name gate without mutating; Node emits enquirer's raw ANSI prompt
+    before its unresolved prompt exits without mutating.
+normalize:
+  # Node renders this prompt through enquirer, which writes it to stdout with
+  # colour and cursor control. Those sequences differ between macOS and a
+  # headless Linux runner, so without stripping them the drift signature below
+  # is platform-specific and can only ever match on one of the two.
+  #
+  # enquirer also picks its pointer glyph by platform: U+203A on macOS,
+  # U+2023 on Linux. That is the difference that actually broke this scenario
+  # in CI; the ANSI rule above alone was not enough.
+  #
+  # The prompt's text survives, so the divergence this scenario exists to
+  # record - Node prompting where vip-next refuses to - is still compared.
+  stdout:
+    - '\x1b\[[0-9;?]*[a-zA-Z] -> '
+    - '[\x{2023}\x{203A}] -> <POINTER>'
+  stderr: []

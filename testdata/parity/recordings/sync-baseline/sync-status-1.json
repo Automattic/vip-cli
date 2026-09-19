@@ -1,0 +1,1 @@
+{"data":{"app":{"id":42,"environments":[{"id":7,"syncProgress":{"status":"running","sync":99,"steps":[{"name":"Backup","status":"running","step":"backup"},{"name":"Restore","status":"pending","step":"restore"}]}}]}}}

@@ -29,9 +29,13 @@ import {
 	BackupLiveCopyType,
 } from '../lib/live-backup-copy';
 import { retry } from '../lib/retry';
-import { getAbsolutePath, pollUntil } from '../lib/utils';
+import UserError from '../lib/user-error';
+import { getAbsolutePath, pollUntil, parseApiError } from '../lib/utils';
 
 const EXPORT_SQL_PROGRESS_POLL_INTERVAL = 1000;
+
+// Maximum allowed size for a live backup copy configuration file (500 KB).
+const MAX_LIVE_BACKUP_CONFIG_SIZE_BYTES = 500 * 1024;
 
 const BACKUP_AND_JOB_STATUS_QUERY = gql`
 	query AppBackupAndJobStatus($appId: Int!, $envId: Int!) {
@@ -569,11 +573,11 @@ export class ExportSQLCommand {
 
 	private async generateLiveBackupCopy() {
 		if ( ! this.liveBackupCopyCLIOptions ) {
-			throw new Error( 'Configuration file is required for live backup copy.' );
+			throw new UserError( 'Configuration file is required for live backup copy.' );
 		}
 
 		if ( ! this.app.id || ! this.env.id ) {
-			throw new Error( 'App ID and Environment ID are required to start live backup copy.' );
+			throw new UserError( 'App ID and Environment ID are required to start live backup copy.' );
 		}
 
 		const config = this.getLiveBackupConfigFromCLIOptions();
@@ -601,7 +605,7 @@ export class ExportSQLCommand {
 
 			return result;
 		} catch ( err ) {
-			const message = err instanceof Error ? err.message : 'Unknown error';
+			const message = parseApiError( err ) ?? 'Unknown error';
 
 			await this.track( 'error', {
 				error_type: 'live_backup_copy',
@@ -645,19 +649,35 @@ export class ExportSQLCommand {
 	}
 
 	private loadLiveBackupCopyConfig( configFile: string ): DBLiveCopyConfig {
-		if ( ! fs.existsSync( configFile ) ) {
-			throw new Error( `Configuration file not found: ${ configFile }` );
-		}
-
 		try {
-			return JSON.parse( fs.readFileSync( configFile, 'utf-8' ) ) as DBLiveCopyConfig;
-		} catch ( err ) {
-			const errMessage = err instanceof Error ? err.message : 'Unknown error';
-			if ( err instanceof SyntaxError ) {
-				throw new Error( `Invalid JSON in configuration file: ${ configFile } - ${ errMessage }` );
+			// Read the file once to avoid a check-then-use race condition.
+			const fileContents = fs.readFileSync( configFile, 'utf-8' );
+
+			const size = Buffer.byteLength( fileContents );
+			if ( size > MAX_LIVE_BACKUP_CONFIG_SIZE_BYTES ) {
+				throw new UserError(
+					`Configuration file is too large (${ formatBytes(
+						size
+					) }); the maximum allowed size is ${ formatBytes(
+						MAX_LIVE_BACKUP_CONFIG_SIZE_BYTES
+					) }. For large or complex exports, use the \`--wpcli-command\` option instead.`
+				);
 			}
 
-			throw new Error( `Error reading configuration file: ${ configFile } - ${ errMessage }` );
+			return JSON.parse( fileContents ) as DBLiveCopyConfig;
+		} catch ( err ) {
+			if ( err instanceof UserError ) {
+				throw err;
+			}
+
+			const errMessage = err instanceof Error ? err.message : 'Unknown error';
+			if ( err instanceof SyntaxError ) {
+				throw new UserError(
+					`Invalid JSON in configuration file: ${ configFile } - ${ errMessage }`
+				);
+			}
+
+			throw new UserError( `Error reading configuration file: ${ configFile } - ${ errMessage }` );
 		}
 	}
 }

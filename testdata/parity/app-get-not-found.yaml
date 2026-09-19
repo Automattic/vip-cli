@@ -1,0 +1,13 @@
+name: app-get-not-found
+description: |
+  `vip app ghost` against a mock that returns an empty edges list. Node-parity
+  behavior: print "App ghost was not found" to stdout and exit 0 (no stderr).
+argv: ["app", "ghost"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+recording: app-get-not-found
+expect:
+  exit_code: 0
+normalize:
+  stdout: []

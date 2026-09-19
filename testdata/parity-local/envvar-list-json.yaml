@@ -1,0 +1,8 @@
+name: local-parker-envvar-list-json
+description: Compare Node and Go JSON environment-variable names for the discovered local Parker environment.
+argv: ['@{{app_name}}.{{env_identifier}}', 'config', 'envvar', 'list', '--format=json']
+expect:
+  exit_code: 0
+normalize:
+  stdout: []
+  stderr: []

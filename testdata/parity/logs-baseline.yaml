@@ -1,0 +1,24 @@
+name: logs-baseline
+description: |
+  `vip @parityapp.develop logs` against a mock GraphQL server returning
+  two app log entries. Diff stdout/stderr/exit-code between Node vip and
+  Go vip-next. Verifies Node-parity table output with the default
+  type=app + limit=500 + format=table inputs.
+argv: ["@parityapp.develop", "logs"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+recording: logs-baseline
+expect:
+  exit_code: 0
+expected_drift:
+  signature: "fdf5d1142e99bc66bd9d56f4bb27dd88232b54ca98e4e19f74f44205344072ad"
+  reason: >-
+    parity register section 3 (KEEP): `vip logs` renders lowercase "timestamp"
+    / "message" headers via the shared table renderer, where Node hand-rolls the
+    table in src/bin/vip-logs.js with head [ "Timestamp", "Message" ]. Frame,
+    widths, wrapping and cell contents match byte-for-byte; only the header
+    casing differs.
+normalize:
+  stdout: []

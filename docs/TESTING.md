@@ -64,19 +64,4 @@ VIP_PROXY="" API_HOST=http://localhost:4000 node ./dist/bin/vip -- wp option get
 
 ## Final testing before releasing
 
-Before releasing a new version, run the release smoke tests to verify high-risk CLI commands:
-
-```bash
-npm run smoke:release
-```
-
-This script tests critical parser/dispatch paths for commands like `logs`, `slowlogs`, `wp`, and `dev-env shell`. It verifies:
-
-- Short-option equals syntax (e.g., `-l=10`)
-- Default value explicit matches
-- Option-only and separator/subcommand handling
-- Command routing without requiring credentials, API access, or Docker/Lando
-
-The tests target the built `dist/bin/*.js` binaries, so ensure `npm run build` has been run first. All tests use `--help` or other non-executing forms to avoid side effects.
-
-Exit code 0 indicates all tests passed; non-zero indicates failures that should be reviewed before release.
+TODO: How should final testing before releasing be done?

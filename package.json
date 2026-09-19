@@ -1,6 +1,6 @@
 {
   "name": "@automattic/vip",
-  "version": "4.1.0",
+  "version": "4.1.4-dev.0",
   "description": "The VIP Javascript library & CLI",
   "main": "index.js",
   "bin": {
@@ -52,6 +52,17 @@
     "vip-dev-env-stop": "dist/bin/vip-dev-env-stop.js",
     "vip-dev-env-logs": "dist/bin/vip-dev-env-logs.js",
     "vip-dev-env-purge": "dist/bin/vip-dev-env-purge.js",
+    "vip-edge-workers": "dist/bin/vip-edge-workers.js",
+    "vip-edge-workers-init": "dist/bin/vip-edge-workers-init.js",
+    "vip-edge-workers-new": "dist/bin/vip-edge-workers-new.js",
+    "vip-edge-workers-build": "dist/bin/vip-edge-workers-build.js",
+    "vip-edge-workers-validate": "dist/bin/vip-edge-workers-validate.js",
+    "vip-edge-workers-list": "dist/bin/vip-edge-workers-list.js",
+    "vip-edge-workers-get": "dist/bin/vip-edge-workers-get.js",
+    "vip-edge-workers-deploy": "dist/bin/vip-edge-workers-deploy.js",
+    "vip-edge-workers-enable": "dist/bin/vip-edge-workers-enable.js",
+    "vip-edge-workers-disable": "dist/bin/vip-edge-workers-disable.js",
+    "vip-edge-workers-delete": "dist/bin/vip-edge-workers-delete.js",
     "vip-export": "dist/bin/vip-export.js",
     "vip-export-sql": "dist/bin/vip-export-sql.js",
     "vip-dev-env-sync": "dist/bin/vip-dev-env-sync.js",
@@ -84,20 +95,16 @@
     "check-types": "tsc",
     "postinstall": "node ./helpers/check-version.js",
     "build": "babel src -d dist --extensions=\".js,.ts\"",
-    "build:sea": "node ./helpers/build-sea.js",
     "build:watch": "babel src -d dist --watch --source-maps --extensions=\".js,.ts\"",
     "format": "npm run cmd:format -- --write",
     "format:check": "npm run cmd:format -- --check",
-    "check:shrinkwrap": "node ./helpers/sync-shrinkwrap.js --check",
-    "sync:shrinkwrap": "node ./helpers/sync-shrinkwrap.js",
     "jest": "jest --testPathIgnorePatterns __tests__/devenv-e2e/",
     "jest:debug": "NODE_ENV=test node --inspect-brk=0.0.0.0:9252 ./node_modules/.bin/jest --forceExit --runInBand --testTimeout=100000000",
     "lint": "npm run cmd:lint .",
     "lint:fix": "npm run cmd:lint . -- --fix",
     "publish-please": "publish-please",
     "prepublishOnly": "node ./helpers/prepublishOnly.js",
-    "smoke:release": "node ./helpers/release-smoke-test.js",
-    "version": "npm run sync:shrinkwrap"
+    "smoke:release": "node ./helpers/release-smoke-test.js"
   },
   "repository": {
     "type": "git",
@@ -143,16 +150,15 @@
     "@types/xml2js": "^0.4.14",
     "dockerode": "^5.0.0",
     "jest": "^30.0.0",
-    "postject": "^1.0.0-alpha.6",
     "prettier": "npm:wp-prettier@3.0.3",
     "typescript": "^6.0.2"
   },
   "dependencies": {
-    "@apollo/client": "4.2.5",
+    "@apollo/client": "4.3.0",
     "@automattic/vip-search-replace": "^2.0.0",
     "@json2csv/plainjs": "^7.0.3",
     "@wwa/single-line-log": "^1.1.4",
-    "chalk": "^5.6.2",
+    "chalk": "^6.0.0",
     "check-disk-space": "3.4.0",
     "cli-columns": "^4.0.0",
     "cli-table3": "^0.6.3",
@@ -161,17 +167,18 @@
     "debug": "4.4.3",
     "ejs": "^6.0.1",
     "enquirer": "2.4.1",
-    "esbuild": "^0.28.0",
     "fetch-retry": "^6.0.0",
     "graphql": "17.0.2",
     "graphql-tag": "2.12.7",
+    "graphql-ws": "^6.2.0",
     "https-proxy-agent": "^9.0.0",
     "js-yaml": "^5.0.0",
     "jwt-decode": "4.0.0",
     "lando": "github:automattic/lando-cli#78d382fcf40357c4a4cebe4a3cfaef032eab743a",
-    "node-stream-zip": "1.15.0",
+    "node-stream-zip": "1.16.0",
     "open": "^11.0.0",
     "proxy-from-env": "^2.0.0",
+    "rxjs": "^7.8.2",
     "semver": "7.8.5",
     "shelljs": "^0.10.0",
     "socket.io-client": "^4.5.3",
@@ -189,8 +196,12 @@
   "publishConfig": {
     "access": "public"
   },
+  "bundleDependencies": true,
   "allowScripts": {
     "ssh2@1.17.0": true,
-    "@github/keytar@7.10.6": true
+    "@github/keytar@7.10.6": true,
+    "cpu-features@0.0.10": true,
+    "protobufjs@7.6.5": true,
+    "unrs-resolver@1.11.1": true
   }
 }

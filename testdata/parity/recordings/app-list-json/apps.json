@@ -1,0 +1,1 @@
+{"data":{"apps":{"total":2,"nextCursor":null,"edges":[{"id":42,"name":"example-app","repo":"wpcomvip/example-app"},{"id":43,"name":"example-multisite","repo":"wpcomvip/example-multisite"}]}}}

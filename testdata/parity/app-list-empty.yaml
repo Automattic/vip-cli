@@ -1,0 +1,13 @@
+name: app-list-empty
+description: |
+  `vip app list` against a mock GraphQL server returning zero apps.
+  Verifies the Node-parity "No apps found" stdout line + exit 0.
+argv: ["app", "list"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+recording: app-list-empty
+expect:
+  exit_code: 0
+normalize:
+  stdout: []

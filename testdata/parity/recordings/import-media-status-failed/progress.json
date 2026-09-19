@@ -1,0 +1,1 @@
+{"data":{"app":{"environments":[{"id":7,"name":"develop","type":"develop","repo":"r","mediaImportStatus":{"importId":1,"siteId":7,"status":"FAILED","filesTotal":10,"filesProcessed":3,"failureDetails":{"previousStatus":"RUNNING","globalErrors":["disk full"],"fileErrorsUrl":null}}}]}}}

@@ -9,6 +9,7 @@ VIP-CLI is a tool for interacting with and managing your [WordPress VIP applicat
 - [CONTRIBUTING.md](https://github.com/Automattic/vip-cli/blob/trunk/docs/CONTRIBUTING.md) for information on how to contribute patches and features, also issue and pull request labels.
 - [DEBUGGING.md](https://github.com/Automattic/vip-cli/blob/trunk/docs/DEBUGGING.md) for information on how to debug the software.
 - [TESTING.md](https://github.com/Automattic/vip-cli/blob/trunk/docs/TESTING.md) for details on testing the software and individual tasks.
+- [EDGE-WORKERS.md](https://github.com/Automattic/vip-cli/blob/trunk/docs/EDGE-WORKERS.md) for the edge-worker scaffold, validation, deployment, and operational safety contract.
 - [RELEASING.md](https://github.com/Automattic/vip-cli/blob/trunk/docs/RELEASING.md) for details on deploying a new release.
 - [SECURITY.md](https://github.com/Automattic/vip-cli/blob/trunk/docs/SECURITY.md) for information if you **found a security issue**.
 

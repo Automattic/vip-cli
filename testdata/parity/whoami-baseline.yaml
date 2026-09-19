@@ -1,0 +1,14 @@
+name: whoami-baseline
+description: |
+  Run `whoami` against a mock GraphQL server that returns a fixed Me
+  response. Diff stdout/stderr/exit-code between Node vip and Go vip-next.
+  First real Node-vs-Go parity scenario.
+argv: ["whoami"]
+env:
+  NODE_ENV: test
+  DO_NOT_TRACK: "1"
+recording: whoami-baseline
+expect:
+  exit_code: 0
+normalize:
+  stdout: []

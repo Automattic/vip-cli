@@ -1,0 +1,21 @@
+name: app-deploy-validate-missing-themes
+description: |
+  Archive without a themes/ directory under the root folder fails with
+  "Missing `themes` directory from root folder."
+  (validations/custom-deploy.ts:15). Exit 1.
+argv: ["app", "deploy", "validate", "../../testdata/parity/recordings/app-deploy-validate/no-themes.tar.gz"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+expect:
+  exit_code: 1
+expected_drift:
+  signature: "d58b6d209238d63ec79caea8d755ce93c8ce6fb7b6cfb0aa905a2bbe84cb018e"
+  reason: >-
+    parity register 1.10 (KEEP): vip-next emits a clean one-line error on
+    stderr; Node adds a second space after Error and a runtime Debug line on
+    stdout.
+normalize:
+  stdout:
+    - '(?m)^Debug:.*$ -> Debug: <RUNTIME>'

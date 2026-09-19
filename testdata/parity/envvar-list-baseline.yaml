@@ -1,0 +1,15 @@
+name: envvar-list-baseline
+description: |
+  `vip @parityapp.develop config envvar list` against a mock GraphQL server
+  returning three env-var names. Diff stdout/stderr/exit-code between Node
+  vip and Go vip-next. Verifies Node-parity table output ordering on the
+  default format.
+argv: ["@parityapp.develop", "config", "envvar", "list"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+recording: envvar-list-baseline
+expect:
+  exit_code: 0
+normalize:
+  stdout: []

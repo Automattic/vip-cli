@@ -1,0 +1,20 @@
+name: import-sql-noninteractive-abort
+description: |
+  Clean dump passes gates + validation + playbook, then the
+  type-the-domain confirm cannot prompt under VIP_NON_INTERACTIVE=1 and
+  aborts: "The input did not match the expected environment label.
+  Import aborted." (vip-import-sql.js:349). StartImport MUST NOT fire.
+  Exit 1.
+argv:
+  - "@parityapp.develop"
+  - "import"
+  - "sql"
+  - "../../testdata/parity/recordings/import-sql-noninteractive-abort/clean.sql"
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+  VIP_NON_INTERACTIVE: "1"
+recording: import-sql-noninteractive-abort
+expect:
+  exit_code: 1

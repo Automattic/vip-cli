@@ -1,0 +1,1 @@
+{"data":{"app":{"id":42,"environments":[{"id":7,"logs":{"nodes":[{"timestamp":"2024-01-01T00:00:00.000000000Z","message":"json line one"},{"timestamp":"2024-01-01T00:00:01.000000000Z","message":"json line two"}],"nextCursor":null,"pollingDelaySeconds":30}}]}}}

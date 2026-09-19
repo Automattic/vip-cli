@@ -8,12 +8,6 @@ import { prompt } from 'enquirer';
 
 import command, { containsAppEnvArgument } from '../lib/cli/command';
 import config from '../lib/cli/config';
-import { loadInternalBin } from '../lib/cli/internal-bin-loader';
-import {
-	rewriteArgvForInternalBin,
-	resolveInternalBinFromArgv,
-	isSeaRuntime,
-} from '../lib/cli/sea-dispatch';
 import tokenCache from '../lib/rechallenge/token-cache';
 import Token from '../lib/token';
 import { aliasUser, trackEvent } from '../lib/tracker';
@@ -31,28 +25,6 @@ if ( config && config.environment !== 'production' ) {
 const tokenURL = 'https://dashboard.wpvip.com/me/cli/token';
 const customDeployToken = process.env.WPVIP_DEPLOY_TOKEN;
 
-async function maybeExecuteSeaTargetCommand() {
-	const targetBin = process.env.VIP_CLI_TARGET_BIN;
-	if ( ! isSeaRuntime() || ! targetBin || targetBin === 'vip' ) {
-		return false;
-	}
-
-	const start = Number( process.env.VIP_CLI_TARGET_START ?? '0' );
-	const length = Number( process.env.VIP_CLI_TARGET_LENGTH ?? '0' );
-	const resolution = {
-		start: Number.isInteger( start ) ? start : 0,
-		length: Number.isInteger( length ) ? length : 0,
-	};
-
-	process.argv = rewriteArgvForInternalBin( process.argv, resolution );
-	const loaded = await loadInternalBin( targetBin );
-	if ( ! loaded ) {
-		throw new Error( `Unable to load SEA command target "${ targetBin }"` );
-	}
-
-	return true;
-}
-
 const runCmd = async function () {
 	const cmd = command();
 	cmd
@@ -65,6 +37,7 @@ const runCmd = async function () {
 		.command( 'cache', 'Manage page cache for an environment.' )
 		.command( 'config', 'Manage environment configurations.' )
 		.command( 'dev-env', 'Create and manage VIP Local Development Environments.' )
+		.command( 'edge-workers', 'Scaffold, compile, and deploy WASM edge workers.' )
 		.command( 'export', 'Export a copy of data associated with an environment.' )
 		.command( 'import', 'Import media or SQL database files to an environment.' )
 		.command( 'logs', 'Retrieve Runtime Logs from an environment.' )
@@ -184,15 +157,6 @@ async function runLoginFlow() {
 }
 
 const rootCmd = async function () {
-	if ( isSeaRuntime() && ! process.env.VIP_CLI_TARGET_BIN ) {
-		const resolution = resolveInternalBinFromArgv( process.argv );
-		if ( resolution.bin !== 'vip' ) {
-			process.env.VIP_CLI_TARGET_BIN = resolution.bin;
-			process.env.VIP_CLI_TARGET_START = String( resolution.start );
-			process.env.VIP_CLI_TARGET_LENGTH = String( resolution.length );
-		}
-	}
-
 	let token = await Token.get();
 
 	const isHelpCommand = doesArgvHaveAtLeastOneParam( process.argv, [ 'help', '-h', '--help' ] );
@@ -216,9 +180,6 @@ const rootCmd = async function () {
 			token?.valid() ||
 			isCustomDeployCmdWithKey )
 	) {
-		if ( await maybeExecuteSeaTargetCommand() ) {
-			return;
-		}
 		await runCmd();
 	} else {
 		token = await runLoginFlow();
@@ -230,10 +191,6 @@ const rootCmd = async function () {
 			console.log( 'You are now logged in - see `vip -h` for a list of available commands.' );
 
 			process.exit();
-		}
-
-		if ( await maybeExecuteSeaTargetCommand() ) {
-			return;
 		}
 
 		await runCmd();

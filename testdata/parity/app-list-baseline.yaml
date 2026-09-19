@@ -1,0 +1,14 @@
+name: app-list-baseline
+description: |
+  `vip app list` against a mock GraphQL server returning two apps. Diff
+  stdout/stderr/exit-code between Node vip and Go vip-next. First read-only
+  command parity scenario of M5.
+argv: ["app", "list"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+recording: app-list-baseline
+expect:
+  exit_code: 0
+normalize:
+  stdout: []

@@ -1,0 +1,37 @@
+# vip wp operations. Node sources:
+#   TriggerWPCLICommand — src/bin/vip-wp.js:127 / src/commands/wp-ssh.ts:41
+#   WPEnvInfo (wpcliStrategy + primaryDomain + typeId) — src/bin/vip-wp.js:26
+
+mutation TriggerWPCLICommand($input: AppEnvironmentTriggerWPCLICommandInput) {
+  triggerWPCLICommandOnAppEnvironment(input: $input) {
+    inputToken
+    command {
+      guid
+    }
+    sshAuthentication {
+      host
+      port
+      username
+      privateKey
+      passphrase
+    }
+  }
+}
+
+query WPEnvInfo($appId: Int!, $envId: Int!) {
+  app(id: $appId) {
+    id
+    name
+    typeId
+    environments(id: $envId) {
+      id
+      appId
+      type
+      name
+      wpcliStrategy
+      primaryDomain {
+        name
+      }
+    }
+  }
+}

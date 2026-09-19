@@ -1,0 +1,23 @@
+name: import-validate-sql-multisite-warn
+description: |
+  validate-sql against a dump containing `CREATE TABLE wp_2_options`,
+  which trips Node's SQL_CREATE_TABLE_IS_MULTISITE_REGEX. The handler reports
+  the `wp_n_ prefix tables found` count in the per-check info block; Node emits
+  no separate multi-site notice. Exit 0.
+argv:
+  - "import"
+  - "validate-sql"
+  - "../../testdata/parity/recordings/import-validate-sql-multisite-warn/multisite.sql"
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+recording: import-validate-sql-multisite-warn
+expect:
+  exit_code: 0
+expected_drift:
+  signature: "fe3a0981f9e4fb2bf4612dadbff33c096b8a320e5f2575ca459d69056f88f0e8"
+  reason: >-
+    parity register 1.25 (KEEP): Node counts a phantom trailing line in SQL
+    files that end with a newline; vip-next reports the physical line count.
+normalize:
+  stdout: []

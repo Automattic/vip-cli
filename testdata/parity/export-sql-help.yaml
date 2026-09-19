@@ -1,0 +1,11 @@
+name: export-sql-help
+description: |
+  `vip export sql --help` lists output/table/site-id/wpcli-command/
+  config-file/generate-backup/skip-download. Exit 0.
+argv: ["export", "sql", "--help"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+expect:
+  exit_code: 0

@@ -1,0 +1,16 @@
+name: import-validate-files-not-dir
+description: |
+  `vip import validate-files` against a file (not a directory) prints
+  the not-a-directory error to stderr and exits 0
+  (vip-import-validate-files.js:33-39).
+argv:
+  - "import"
+  - "validate-files"
+  - "../../testdata/parity/recordings/import-media-invalid-archive/file.sql"
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+recording: import-validate-files-not-dir
+expect:
+  exit_code: 0

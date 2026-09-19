@@ -1,0 +1,27 @@
+name: import-validate-sql-dangerous-stmt
+description: |
+  validate-sql against a dump containing a DROP DATABASE statement.
+  Node's `dropDB` check (sql.ts:271) flags this and the formatter emits
+  "DROP DATABASE statement on line(s) <n>." plus the "Remove these lines"
+  recommendation. Exit 1 per Node parity (validate() calls exit.withError
+  when problemsFound > 0, so CI pipelines like `vip import validate-sql
+  && deploy` short-circuit on findings).
+argv:
+  - "import"
+  - "validate-sql"
+  - "../../testdata/parity/recordings/import-validate-sql-dangerous-stmt/dangerous.sql"
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+recording: import-validate-sql-dangerous-stmt
+expect:
+  exit_code: 1
+expected_drift:
+  signature: "ef3c31869a7f42f0ccc75cba1d039bb74dcdc11bcbe6418ba67a38de4439b844"
+  reason: >-
+    parity register 1.10 and 1.25 (KEEP): vip-next reports the physical line
+    count and a clean one-space Error prefix without Node's runtime Debug line;
+    the finding body and its stderr placement otherwise match Node.
+normalize:
+  stdout:
+    - '(?m)^Debug:.*$ -> Debug: <RUNTIME>'

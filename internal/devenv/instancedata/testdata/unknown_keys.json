@@ -1,0 +1,19 @@
+{
+  "siteSlug": "example",
+  "wpTitle": "Example Dev",
+  "multisite": false,
+  "wordpress": { "mode": "image", "tag": "trunk" },
+  "muPlugins": { "mode": "image" },
+  "appCode": { "mode": "local", "dir": "/srv/example" },
+  "mediaRedirectDomain": "",
+  "phpmyadmin": true,
+  "xdebug": false,
+  "php": "ghcr.io/automattic/vip-container-images/php-fpm:8.2",
+  "mailpit": false,
+  "photon": false,
+  "cron": false,
+  "pullAfter": 1700000000000,
+  "adminPassword": "s3cret",
+  "futureKeyWeDoNotModel": { "nested": [1, 2, 3] },
+  "anotherUnknown": "keep-me"
+}

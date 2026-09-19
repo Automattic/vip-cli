@@ -1,0 +1,51 @@
+mutation SyncEnvironment($input: AppEnvironmentSyncInput!) {
+  syncEnvironment(input: $input) {
+    environment {
+      id
+    }
+  }
+}
+
+# The pre-flight Node runs before the sync mutation. Node folds these
+# fields into vip-sync.js's appQuery; vip-next resolves app/env through a
+# shared query, so the preview is fetched separately by the confirmation
+# payload (src/lib/cli/command.js:913-933).
+query SyncPreview($appId: Int!, $envId: Int!) {
+  app(id: $appId) {
+    id
+    environments(id: $envId) {
+      id
+      syncPreview {
+        canSync
+        errors {
+          message
+        }
+        backup {
+          createdAt
+        }
+        replacements {
+          from
+          to
+        }
+      }
+    }
+  }
+}
+
+query SyncProgress($appId: Int!, $envId: Int!) {
+  app(id: $appId) {
+    id
+    environments(id: $envId) {
+      id
+      syncProgress {
+        status
+        sync
+        steps {
+          name
+          status
+          step
+        }
+      }
+    }
+  }
+}

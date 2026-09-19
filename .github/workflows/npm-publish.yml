@@ -5,6 +5,16 @@ on:
     types: [closed]
   workflow_dispatch:
     inputs:
+      release_mode:
+        description: 'Publish a prerelease or recover an existing stable GitHub release'
+        type: choice
+        options:
+          - prerelease
+          - recover-stable
+        default: prerelease
+      release_version:
+        description: 'Existing stable tag to recover (for example, 4.1.2); leave blank for prereleases'
+        type: string
       npm_tag:
         description: 'NPM tag for prerelease'
         default: 'next'
@@ -14,24 +24,120 @@ jobs:
     name: Publish to npm
     runs-on: ubuntu-latest
     environment: npm-publish
+    concurrency:
+      group: npm-publish-stable
+      cancel-in-progress: false
     if: github.event_name == 'pull_request' && github.event.pull_request.merged == true && contains( github.event.pull_request.labels.*.name, '[ Type ] NPM version update' ) && startsWith( github.head_ref, 'release/')
     permissions:
       contents: write
       id-token: write
       pull-requests: write
     steps:
-      - uses: Automattic/vip-actions/npm-publish@438cd00aac2463a2dbfb4a747ad7b1ac67a2575a # v0.7.5
-        env:
-          # The action captures `npm version` stdout to build the next-dev branch name.
-          # Keep lifecycle script banners from polluting that value while still allowing
-          # the `version` script to sync npm-shrinkwrap.json.
-          NPM_CONFIG_LOGLEVEL: silent
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/npm-release
         with:
+          mode: stable
+
+  recover-stable:
+    name: Recover stable release
+    if: github.event_name == 'workflow_dispatch' && inputs.release_mode == 'recover-stable'
+    runs-on: ubuntu-latest
+    environment: npm-publish
+    concurrency:
+      group: npm-publish-stable
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      RELEASE_VERSION: ${{ inputs.release_version }}
+      NPM_CONFIG_LOGLEVEL: error
+    steps:
+      - name: Validate recovery target
+        env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          npm-version: '11'
-          USE_TRUSTED_PUBLISHING: 'true'
-          PROVENANCE: 'true'
-          CONVENTIONAL_COMMITS: 'true'
+        run: |
+          if [[ "$GITHUB_REF" != refs/heads/trunk || ! "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo '::error::Run recovery from trunk with an existing stable tag, such as 4.1.2.'
+            exit 1
+          fi
+          gh release view "$RELEASE_VERSION" --repo "$GITHUB_REPOSITORY" \
+            --json isDraft,isPrerelease,tagName > "$RUNNER_TEMP/recovery-release.json"
+          jq -e --arg version "$RELEASE_VERSION" \
+            '.tagName == $version and .isDraft == false and .isPrerelease == false' \
+            "$RUNNER_TEMP/recovery-release.json"
+
+      - name: Check out release tooling from the workflow revision
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Preserve release tooling before checking out the old tag
+        run: |
+          tools_dir=$(mktemp -d "$RUNNER_TEMP/vip-release-tools.XXXXXXXX")
+          cp -R "$GITHUB_WORKSPACE/.github/scripts/npm-release/." "$tools_dir/"
+          printf 'VIP_RELEASE_TOOLS=%s\n' "$tools_dir" >> "$GITHUB_ENV"
+
+      - uses: actions/checkout@v7
+        with:
+          ref: refs/tags/${{ inputs.release_version }}
+          persist-credentials: false
+
+      - name: Validate package and prepare local release branch
+        run: |
+          node -e 'const p = require("./package.json"); if (p.name !== "@automattic/vip" || p.version !== process.env.RELEASE_VERSION) process.exit(1);'
+          # prepublishOnly requires a branch named trunk for the latest npm tag.
+          # Keep HEAD at the existing release tag; do not fetch current trunk content.
+          git switch -C trunk
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 'lts/*'
+          registry-url: https://registry.npmjs.org/
+
+      - name: Install npm and dependencies
+        run: |
+          npm install --global npm@11
+          npm ci --ignore-scripts
+
+      - name: Refuse already published versions and downgrades
+        run: |
+          npm view @automattic/vip versions dist-tags --json > "$RUNNER_TEMP/recovery-registry.json"
+          node <<'NODE'
+          const fs = require('node:fs');
+          const semver = require('semver');
+          const registry = JSON.parse(fs.readFileSync(`${process.env.RUNNER_TEMP}/recovery-registry.json`, 'utf8'));
+          const version = process.env.RELEASE_VERSION;
+          if (registry.versions.includes(version) || !semver.gt(version, registry['dist-tags'].latest)) {
+            console.error(`Refusing recovery: ${version} is already published or does not exceed latest (${registry['dist-tags'].latest}).`);
+            process.exit(1);
+          }
+          NODE
+
+      - name: Build and test release
+        env:
+          NODE_AUTH_TOKEN: ''
+        run: |
+          npm rebuild
+          npm run prepare --if-present
+          npm test
+
+      - name: Stage, pack and validate release
+        id: package
+        run: |
+          output_dir=$(mktemp -d "$RUNNER_TEMP/npm-artifact.XXXXXXXX")
+          tarball=$(bash "$VIP_RELEASE_TOOLS/pack.sh" "$GITHUB_WORKSPACE" "$output_dir" latest smoke:release)
+          printf 'tarball=%s\n' "$tarball" >> "$GITHUB_OUTPUT"
+
+      - name: Verify publishing the staged tarball
+        env:
+          PACKAGE_TARBALL: ${{ steps.package.outputs.tarball }}
+        run: npm publish "$PACKAGE_TARBALL" --access public --tag latest --dry-run --ignore-scripts --loglevel error
+
+      - name: Publish existing release to npm
+        env:
+          PACKAGE_TARBALL: ${{ steps.package.outputs.tarball }}
+        run: npm publish "$PACKAGE_TARBALL" --access public --tag latest --provenance --ignore-scripts --loglevel error
 
   changelog:
     name: Publish docs changelog
@@ -39,7 +145,8 @@ jobs:
       contents: read
       pull-requests: read
     uses: ./.github/workflows/changelog.yml
-    needs: publish
+    needs: [publish, recover-stable]
+    if: always() && (needs.publish.result == 'success' || needs.recover-stable.result == 'success')
     secrets:
       CHANGELOG_DOCS_POST_TOKEN: ${{ secrets.CHANGELOG_DOCS_POST_TOKEN }}
 
@@ -48,7 +155,8 @@ jobs:
     permissions:
       contents: read
     uses: ./.github/workflows/publish-docs.yml
-    needs: publish
+    needs: [publish, recover-stable]
+    if: always() && (needs.publish.result == 'success' || needs.recover-stable.result == 'success')
     secrets:
       DOCS_SECRET_TOKEN: ${{ secrets.DOCS_SECRET_TOKEN }}
 
@@ -56,16 +164,14 @@ jobs:
     name: Publish prerelease
     runs-on: ubuntu-latest
     environment: npm-publish
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' && inputs.release_mode != 'recover-stable'
     permissions:
       contents: write
       id-token: write
       pull-requests: write
     steps:
-      - uses: Automattic/vip-actions/npm-publish-prerelease@438cd00aac2463a2dbfb4a747ad7b1ac67a2575a # v0.7.5
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/npm-release
         with:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          npm-version: '11'
-          USE_TRUSTED_PUBLISHING: 'true'
-          PROVENANCE: 'true'
-          NPM_TAG: ${{ inputs.npm_tag }}
+          mode: prerelease
+          npm-tag: ${{ inputs.npm_tag }}

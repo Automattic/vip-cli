@@ -1,0 +1,25 @@
+query GetAppSlowlogs(
+  $appId: Int!
+  $envId: Int!
+  $limit: Int!
+  $after: String
+) {
+  app(id: $appId) {
+    id
+    environments(id: $envId) {
+      id
+      slowlogs(limit: $limit, after: $after) {
+        nodes {
+          timestamp
+          rowsSent
+          rowsExamined
+          queryTime
+          requestUri
+          query
+        }
+        nextCursor
+        pollingDelaySeconds
+      }
+    }
+  }
+}

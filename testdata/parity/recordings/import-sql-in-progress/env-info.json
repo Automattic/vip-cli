@@ -1,0 +1,1 @@
+{"data":{"app":{"id":42,"name":"parityapp","typeId":2,"environments":[{"id":7,"appId":42,"type":"develop","name":"develop","launched":false,"isK8sResident":true,"primaryDomain":{"name":"example.com"},"importStatus":{"dbOperationInProgress":false,"importInProgress":true},"wpSitesSDS":{"nodes":[]}}]}}}

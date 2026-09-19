@@ -1,0 +1,18 @@
+name: import-media-status-failed
+description: |
+  `vip import media status` against a FAILED import prints "Import
+  failed at status: RUNNING" + global errors and exits 1
+  (media-import/status.ts:384).
+argv:
+  - "@parityapp.develop"
+  - "import"
+  - "media"
+  - "status"
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+  VIP_IMPORT_MEDIA_INTERVAL_MS: "5"
+recording: import-media-status-failed
+expect:
+  exit_code: 1

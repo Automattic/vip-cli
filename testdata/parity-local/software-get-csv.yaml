@@ -1,0 +1,8 @@
+name: local-parker-software-get-csv
+description: Compare Node and Go CSV software metadata for the discovered local Parker environment.
+argv: ['@{{app_name}}.{{env_identifier}}', 'config', 'software', 'get', '--format=csv']
+expect:
+  exit_code: 0
+normalize:
+  stdout: []
+  stderr: []

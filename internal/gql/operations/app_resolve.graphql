@@ -1,0 +1,37 @@
+query ResolveAppByName($name: String!) {
+  apps(first: 1, name: $name) {
+    edges {
+      id
+      name
+      type
+      typeId
+      environments {
+        id
+        appId
+        name
+        type
+        uniqueLabel
+        defaultDomain
+        isMultisite
+      }
+    }
+  }
+}
+
+query ResolveAppByID($id: Int!) {
+  app(id: $id) {
+    id
+    name
+    type
+    typeId
+    environments {
+      id
+      appId
+      name
+      type
+      uniqueLabel
+      defaultDomain
+      isMultisite
+    }
+  }
+}

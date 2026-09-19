@@ -1,0 +1,1 @@
+{"errors":[{"message":"Step-up required.","extensions":{"code":"elevated-permission-required","rechallenge":{"version":"v2","createSessionPath":"/parker/sessions","statusPathTemplate":"/parker/sessions/{challengeId}","exchangePathTemplate":"/parker/sessions/{challengeId}/exchange","elevatedHeaderName":"x-elevated-token"}}}]}

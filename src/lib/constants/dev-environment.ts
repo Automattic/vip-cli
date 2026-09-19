@@ -54,4 +54,4 @@ export const DEV_ENVIRONMENT_DEFAULTS = {
 	phpVersion: DEV_ENVIRONMENT_DEFAULT_PHP_VERSION,
 } as const;
 
-export const DEV_ENVIRONMENT_VERSION = '2.3.3';
+export const DEV_ENVIRONMENT_VERSION = '2.3.4';

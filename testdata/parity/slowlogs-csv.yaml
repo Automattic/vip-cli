@@ -1,0 +1,16 @@
+name: slowlogs-csv
+description: |
+  `vip @parityapp.develop slowlogs --format=csv` emits CSV with the
+  Node-parity column order (timestamp, rowsSent, rowsExamined,
+  queryTime, requestUri, query). Verifies that quoting handles SQL
+  strings containing commas and quotes.
+argv: ["@parityapp.develop", "slowlogs", "--format=csv"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+recording: slowlogs-csv
+expect:
+  exit_code: 0
+normalize:
+  stdout: []

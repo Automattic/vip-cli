@@ -1,0 +1,1 @@
+{"data":{"app":{"id":42,"environments":[{"id":7,"jobs":[{"__typename":"Job","id":1,"type":"db_backup","completedAt":"2026-06-11 10:00:00","createdAt":"2026-06-11 09:00:00","inProgressLock":false,"metadata":[{"name":"backupName","value":"backup-1"}],"progress":{"status":"success"}}]}]}}}

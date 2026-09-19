@@ -1,0 +1,5 @@
+fragment AppBasic on App {
+  id
+  name
+  repo
+}

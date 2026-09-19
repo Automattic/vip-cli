@@ -1,0 +1,16 @@
+#!/bin/sh
+# This file is `source`'d before `buildkite-agent pipeline upload`, so the
+# variables below get interpolated into pipeline.yml before it is uploaded.
+# (Same mechanism as Automattic/download's .buildkite/shared-pipeline-vars.)
+
+# a8c CI toolkit Buildkite plugin — provides install_gems, secret injection, and
+# GitHub status helpers on the macOS agent.
+export CI_TOOLKIT_PLUGIN="automattic/a8c-ci-toolkit#6.3.0"
+
+export BIN_BASE="vip-next"
+
+# The macOS VM to run on. The `mac` queue's command hook aborts when IMAGE_ID is
+# unset, and the signing step needs `codesign` and `xcrun notarytool`
+# regardless of Go being the compiler.
+XCODE_VERSION=$(grep -Ev '^[[:space:]]*(#|$)' .xcode-version | head -n1 | sed -E 's/^[[:space:]]*//; s/^~> ?//; s/[[:space:]]*$//')
+export IMAGE_ID="xcode-$XCODE_VERSION"

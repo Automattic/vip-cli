@@ -1,0 +1,14 @@
+name: app-get-custom-deploy
+description: |
+  `vip app x` against an env with deploymentStrategy=custom-deploy. The branch
+  column must render as "-" (Node parity), the original branch value must not
+  appear, and the deploymentStrategy column must be hidden.
+argv: ["app", "x"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+recording: app-get-custom-deploy
+expect:
+  exit_code: 0
+normalize:
+  stdout: []

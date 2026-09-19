@@ -1,0 +1,15 @@
+name: backup-db-already-in-progress
+description: |
+  First status fetch reports inProgressLock=true: the trigger mutation
+  MUST NOT fire and the command prints "Database backup already in
+  progress..." (backup-db.ts:151), then attaches until the lock clears.
+  Exit 0.
+argv: ["@parityapp.develop", "backup", "db"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+  VIP_BACKUP_DB_INTERVAL_MS: "5"
+recording: backup-db-already-in-progress
+expect:
+  exit_code: 0

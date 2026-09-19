@@ -1,0 +1,8 @@
+name: local-parker-app-get-table
+description: Compare Node and Go table app metadata for the discovered local Parker app.
+argv: ['app', '{{app_id}}']
+expect:
+  exit_code: 0
+normalize:
+  stdout: []
+  stderr: []
