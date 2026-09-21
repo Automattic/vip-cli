@@ -8,9 +8,26 @@ import (
 // scriptRunner returns scripted results per docker subcommand for control-flow
 // tests. runErrs is consumed in order for each `run` call (nil = success).
 type scriptRunner struct {
-	running bool    // result for IsRunning's inspect
+	running bool    // proxy container exists and is running
+	stopped bool    // proxy container exists but is stopped (orphan)
 	runErrs []error // sequential results for `run` calls
 	calls   [][]string
+}
+
+// DockerOut scripts `inspect -f {{.State.Running}}`: exit 0 with "true" or
+// "false" when the container exists (running or stopped), error when absent.
+func (s *scriptRunner) DockerOut(ctx context.Context, args ...string) ([]byte, error) {
+	s.calls = append(s.calls, args)
+	if len(args) > 0 && args[0] == "inspect" {
+		switch {
+		case s.running:
+			return []byte("true\n"), nil
+		case s.stopped:
+			return []byte("false\n"), nil
+		}
+		return nil, errDocker
+	}
+	return nil, nil
 }
 
 func (s *scriptRunner) Docker(ctx context.Context, args ...string) error {
@@ -23,11 +40,6 @@ func (s *scriptRunner) Docker(ctx context.Context, args ...string) error {
 			return e
 		}
 		return nil
-	case len(args) >= 2 && args[0] == "inspect":
-		if s.running {
-			return nil
-		}
-		return errDocker
 	}
 	return nil
 }
@@ -66,6 +78,49 @@ func TestEnsureNoopWhenAlreadyRunning(t *testing.T) {
 		if len(c) > 0 && c[0] == "run" {
 			t.Fatalf("should not run proxy when already running: %v", r.calls)
 		}
+	}
+}
+
+func TestEnsureRemovesStoppedOrphanThenStarts(t *testing.T) {
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	// A stopped proxy container exists: inspect succeeds but prints "false".
+	// Ensure must not treat it as running; it removes the orphan (docker rm
+	// without -f) and starts a fresh proxy.
+	r := &scriptRunner{stopped: true}
+	got, err := Ensure(context.Background(), r, EnsureOptions{Domain: "vipdev.lndo.site", free: func(int) bool { return true }})
+	if err != nil {
+		t.Fatalf("Ensure: %v", err)
+	}
+	if got.HTTP != 80 || got.HTTPS != 443 {
+		t.Fatalf("expected default ports, got %+v", got)
+	}
+	var sawRm, sawRun bool
+	for _, c := range r.calls {
+		switch {
+		case len(c) == 2 && c[0] == "rm" && c[1] == ProxyContainerName:
+			if sawRun {
+				t.Fatalf("orphan must be removed before run: %v", r.calls)
+			}
+			sawRm = true
+		case len(c) > 0 && c[0] == "run":
+			sawRun = true
+		}
+	}
+	if !sawRm || !sawRun {
+		t.Fatalf("expected rm then run, got calls: %v", r.calls)
+	}
+}
+
+func TestIsRunningReadsInspectOutput(t *testing.T) {
+	ctx := context.Background()
+	if IsRunning(ctx, &scriptRunner{running: true}) != true {
+		t.Fatal("running container should report true")
+	}
+	if IsRunning(ctx, &scriptRunner{stopped: true}) {
+		t.Fatal("stopped container must not report running")
+	}
+	if IsRunning(ctx, &scriptRunner{}) {
+		t.Fatal("absent container must not report running")
 	}
 }
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 )
 
 // EnsureOptions configures an Ensure call. Domain is used in Traefik env vars.
@@ -14,14 +15,35 @@ type EnsureOptions struct {
 	free   func(int) bool
 }
 
-// IsRunning reports whether the proxy container is currently running by
-// inspecting it with `docker inspect`. Because DockerRunner only surfaces an
-// error (no stdout), we treat "inspect succeeds" as "container exists and is
-// running". A *stopped* orphan container also passes this check, so callers
-// that want to replace a stopped proxy should invoke RemoveOrphan first.
+// containerState is the shared proxy container's observed state.
+type containerState int
+
+const (
+	stateAbsent  containerState = iota // no container with ProxyContainerName
+	stateStopped                       // container exists but is not running
+	stateRunning                       // container exists and is running
+)
+
+// inspectState reads the proxy container's running state via
+// `docker inspect -f {{.State.Running}}`. inspect exits 0 for a *stopped*
+// container too (printing "false"), so the exit code alone cannot tell a
+// stopped orphan from a healthy proxy: the printed value must be read.
+func inspectState(ctx context.Context, r DockerRunner) containerState {
+	out, err := r.DockerOut(ctx, "inspect", "-f", "{{.State.Running}}", ProxyContainerName)
+	if err != nil {
+		return stateAbsent
+	}
+	if strings.TrimSpace(string(out)) == "true" {
+		return stateRunning
+	}
+	return stateStopped
+}
+
+// IsRunning reports whether the proxy container exists AND is running. A
+// stopped orphan (e.g. left behind by a Docker restart or a crashed start)
+// reports false; Ensure removes it before starting a fresh proxy.
 func IsRunning(ctx context.Context, r DockerRunner) bool {
-	err := r.Docker(ctx, "inspect", "-f", "{{.State.Running}}", ProxyContainerName)
-	return err == nil
+	return inspectState(ctx, r) == stateRunning
 }
 
 // Ensure starts the shared Traefik proxy if it is not already running,
@@ -38,12 +60,19 @@ func Ensure(ctx context.Context, r DockerRunner, opts EnsureOptions) (Ports, err
 		free = ListenProbe
 	}
 
-	if IsRunning(ctx, r) {
+	switch inspectState(ctx, r) {
+	case stateRunning:
 		// Already running — load whatever ports were persisted last time.
 		// A missing state file yields zero Ports (no error); the caller treats
 		// that as "ports unknown".
 		ports, err := LoadPorts(PortsStatePath())
 		return ports, err
+	case stateStopped:
+		// A stopped orphan holds the container name (and its old port
+		// bindings), so `docker run --name` below would fail. Remove it and
+		// fall through to start a fresh proxy (parity: Node's
+		// ensureNoOrphantProxyContainer).
+		_ = RemoveOrphan(ctx, r)
 	}
 
 	if err := EnsureNetwork(ctx, r); err != nil {

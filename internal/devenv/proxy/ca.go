@@ -42,14 +42,20 @@ func CAHostPath() string {
 
 // EnsureCA runs a one-shot container that idempotently generates the CA
 // (lndo.site.pem / lndo.site.key) in the shared certs volume.
+//
+// Both one-shot runs here override the image entrypoint with sh: the stock
+// Traefik entrypoint.sh probes whether $1 is a Traefik subcommand and, when it
+// is not, prints "= 'sh' is not a Traefik command: assuming shell execution."
+// to stderr before exec'ing anyway. Bypassing it drops that noise.
 func EnsureCA(ctx context.Context, r DockerRunner) error {
 	// Intentionally omits proxy_config: no CERT_BASENAME/CERT_SANS are passed,
 	// so the script's leaf-cert and Traefik YAML section is skipped entirely.
 	return r.Docker(ctx,
 		"run", "--rm",
+		"--entrypoint", "sh",
 		"-v", ProxyCertsVolume+":/certs",
 		ProxyImage,
-		"sh", "-c", genCertsScript,
+		"-c", genCertsScript,
 	)
 }
 
@@ -74,6 +80,7 @@ func EnsureCert(ctx context.Context, r DockerRunner, req CertRequest) error {
 
 	args := []string{
 		"run", "--rm",
+		"--entrypoint", "sh",
 		"-v", ProxyCertsVolume + ":/certs",
 		"-v", ProxyConfigVolume + ":/proxy_config",
 		"-e", "CERT_BASENAME=" + req.Basename,
@@ -84,7 +91,7 @@ func EnsureCert(ctx context.Context, r DockerRunner, req CertRequest) error {
 	args = append(args,
 		"-e", "CERT_SANS="+strings.Join(req.SANs, " "),
 		ProxyImage,
-		"sh", "-c", genCertsScript,
+		"-c", genCertsScript,
 	)
 
 	return r.Docker(ctx, args...)
