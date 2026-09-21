@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"syscall"
 	"time"
+
+	"github.com/Automattic/vip/internal/debuglog"
 )
 
 type RetryConfig struct {
@@ -49,7 +51,12 @@ func (r *retryDoer) Do(req *http.Request) (*http.Response, error) {
 		req.Body = io.NopCloser(bytes.NewReader(body))
 		req.ContentLength = int64(len(body))
 	}
-	retryable := isRetryableOperation(body)
+	operation, parseErr := ParseOperationFromBody(body)
+	retryable := parseErr == nil && operation != nil && !operation.IsMutation
+	operationName := ""
+	if operation != nil {
+		operationName = operation.OperationName
+	}
 	var resp *http.Response
 	var lastErr error
 	for attempt := 1; attempt <= r.cfg.MaxAttempts; attempt++ {
@@ -58,7 +65,19 @@ func (r *retryDoer) Do(req *http.Request) (*http.Response, error) {
 			req.ContentLength = int64(len(body))
 		}
 		resp, lastErr = r.next.Do(req)
-		if !shouldRetry(resp, lastErr, retryable, attempt, r.cfg.MaxAttempts) {
+		retry := shouldRetry(resp, lastErr, retryable, attempt, r.cfg.MaxAttempts)
+		if lastErr != nil || (resp != nil && resp.StatusCode >= 400) {
+			status := 0
+			if resp != nil {
+				status = resp.StatusCode
+			}
+			action := "Request failed."
+			if retry {
+				action += " Retrying request."
+			}
+			debuglog.Printf(req.Context(), "@automattic/vip:http:graphql", "%s Operation: %s. Attempt: %d. Status code: %d.", action, operationName, attempt, status)
+		}
+		if !retry {
 			return resp, lastErr
 		}
 		if resp != nil {

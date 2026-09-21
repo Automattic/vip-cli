@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os"
 	"sync/atomic"
+
+	"github.com/Automattic/vip/internal/debuglog"
 )
 
 // progressReader counts bytes read and reports floor(100*read/total)% via
@@ -42,6 +44,7 @@ func (rc readCloser) Close() error { return rc.closer.Close() }
 // (client-file-uploader.ts:255). Returns "ok" on HTTP 200, otherwise an
 // error wrapping the S3 <Error> payload.
 func (c *Client) uploadUsingPutObject(ctx context.Context, appID, envID int64, meta FileMeta, progressCb func(string)) (string, error) {
+	debuglog.Printf(ctx, "vip:lib/client-file-uploader", "Uploading to S3 using PutObject")
 	pre, err := c.GetSignedUploadRequestData(ctx, SignedRequestArgs{
 		Action: "PutObject", AppID: appID, EnvID: envID, BaseName: meta.BaseName,
 	})

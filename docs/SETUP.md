@@ -98,7 +98,7 @@ This application uses environmental variables for vital configuration informatio
 TODO: Update description of the variables.
 
 - `API_HOST`: HTTP endpoint to use rather than the default. [For internal VIP use](TESTING.md#local-testing).
-- `DEBUG API_HOST`:
+- `DEBUG`: Enable diagnostic namespaces in the Node.js and Go CLIs, for example `DEBUG='@automattic/vip:http*'`. See [debugging](DEBUGGING.md).
 - `DOCKER_CERT_PATH`:
 - `DOCKER_CLIENT_TIMEOUT`:
 - `DOCKER_HOST`:

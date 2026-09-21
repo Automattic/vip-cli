@@ -14,6 +14,8 @@ import (
 	"time"
 
 	"github.com/fatih/color"
+
+	"github.com/Automattic/vip/internal/debuglog"
 )
 
 const (
@@ -61,12 +63,14 @@ func Run(ctx context.Context, opts Options) (Result, error) {
 	const maxBackoff = 5 * time.Second
 	first := true
 
-	for {
+	for attempt := 1; ; attempt++ {
+		debuglog.Printf(ctx, "@automattic/vip:wp", "socket: connect attempt=%d", attempt)
 		eng, err := Dial(ctx, DialOptions{
 			BaseURL: opts.APIHost,
 			Header:  bearerHeader(opts.Token),
 		})
 		if err != nil {
+			debuglog.Printf(ctx, "@automattic/vip:wp", "socket: connect_error stage=transport")
 			if first {
 				return Result{}, err
 			}
@@ -82,6 +86,7 @@ func Run(ctx context.Context, opts Options) (Result, error) {
 		// Install a retry handler: the server sends "retry" to signal it wants us to
 		// reconnect. We close the engine after 5 s to force the disconnect.
 		cli.On("retry", func(args []any) {
+			debuglog.Printf(ctx, "@automattic/vip:wp", "socket: retry")
 			go func() {
 				select {
 				case <-time.After(5 * time.Second):
@@ -93,6 +98,7 @@ func Run(ctx context.Context, opts Options) (Result, error) {
 		})
 
 		if err := cli.Connect(ctx); err != nil {
+			debuglog.Printf(ctx, "@automattic/vip:wp", "socket: connect_error stage=namespace")
 			eng.Close()
 			if first {
 				return Result{}, err
@@ -102,6 +108,7 @@ func Run(ctx context.Context, opts Options) (Result, error) {
 			}
 			continue
 		}
+		debuglog.Printf(ctx, "@automattic/vip:wp", "socket: connected")
 		first = false
 
 		res, clean := runOnce(ctx, opts, cli, ss, &offset, offset.Load())
@@ -114,6 +121,7 @@ func Run(ctx context.Context, opts Options) (Result, error) {
 			return res, nil
 		}
 
+		debuglog.Printf(ctx, "@automattic/vip:wp", "socket.io: reconnect")
 		// disconnected mid-command → wait then reconnect from offset
 		if werr := waitBackoff(ctx, &backoff, maxBackoff); werr != nil {
 			return Result{}, werr
@@ -168,6 +176,7 @@ func runOnce(ctx context.Context, opts Options, cli *Client, ss *StreamSocket, o
 	})
 	cli.On("exit", func(args []any) {
 		code, msg := parseExit(args)
+		debuglog.Printf(ctx, "@automattic/vip:wp", "socket: exit code=%d", code)
 		if msg != "" {
 			fmt.Fprintln(opts.Stdout, msg)
 		}

@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/Automattic/vip/internal/customdeploy"
+	"github.com/Automattic/vip/internal/debuglog"
 	"github.com/Automattic/vip/internal/upload"
 )
 
@@ -34,6 +35,7 @@ func runAppDeployValidate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Unable to access file %s", fileName)
 	}
 
+	debuglog.Printf(cmd.Context(), "@automattic/vip:bin:vip-app-deploy-validate", "Validating file...")
 	if err := customdeploy.ValidateFile(meta, 0); err != nil {
 		return err
 	}

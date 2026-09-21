@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/Automattic/vip/internal/debuglog"
 )
 
 // UploadResult mirrors uploadImportFileToS3's return
@@ -31,7 +33,10 @@ func gzRename(base string) string {
 //  2. checksum the (possibly compressed) file,
 //  3. PutObject below MultipartThreshold, multipart at/above it.
 func (c *Client) UploadImportFile(ctx context.Context, appID, envID int64, meta FileMeta, hashType string, progressCb func(string)) (*UploadResult, error) {
+	debuglog.Printf(ctx, "vip:lib/client-file-uploader", "File: bytes=%d compressed=%t", meta.FileSize, meta.IsCompressed)
 	if !meta.IsCompressed && meta.FileSize >= CompressThreshold {
+		debuglog.Printf(ctx, "vip:lib/client-file-uploader", "Compressing file prior to transfer")
+		originalSize := meta.FileSize
 		tmpDir, err := os.MkdirTemp("", "vip-client-file-uploader")
 		if err != nil {
 			return nil, fmt.Errorf("Unable to create temporary working directory: %s", err.Error())
@@ -48,15 +53,19 @@ func (c *Client) UploadImportFile(ctx context.Context, appID, envID int64, meta 
 			return nil, err
 		}
 		meta.FileSize = fi.Size()
+		debuglog.Printf(ctx, "vip:lib/client-file-uploader", "Compression complete: bytes=%d saved_bytes=%d", meta.FileSize, originalSize-meta.FileSize)
 	}
 
 	if hashType == "" {
 		hashType = "md5"
 	}
+	debuglog.Printf(ctx, "vip:lib/client-file-uploader", "Calculating file checksum")
 	checksum, err := FileHash(meta.FileName, hashType)
 	if err != nil {
 		return nil, err
 	}
+
+	debuglog.Printf(ctx, "vip:lib/client-file-uploader", "Calculated file checksum")
 
 	var result string
 	if meta.FileSize < MultipartThreshold {
@@ -67,5 +76,6 @@ func (c *Client) UploadImportFile(ctx context.Context, appID, envID int64, meta 
 	if err != nil {
 		return nil, err
 	}
+	debuglog.Printf(ctx, "vip:lib/client-file-uploader", "Upload complete: bytes=%d", meta.FileSize)
 	return &UploadResult{Meta: meta, Checksum: checksum, Result: result}, nil
 }

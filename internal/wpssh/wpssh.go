@@ -12,6 +12,8 @@ import (
 	"net"
 
 	"golang.org/x/crypto/ssh"
+
+	"github.com/Automattic/vip/internal/debuglog"
 )
 
 // SSH_HANDSHAKE_TIMEOUT_MS matches the Node constant (wp-ssh.ts:22).
@@ -56,6 +58,7 @@ func (e *ExitCodeError) Error() string {
 func Run(ctx context.Context, auth Auth, streams Streams, meta Meta) error {
 	signer, err := parseSigner(auth.PrivateKey, auth.Passphrase)
 	if err != nil {
+		debuglog.Printf(ctx, "@automattic/vip:wp/ssh", "SSH authentication key rejected")
 		return fmt.Errorf("wpssh: parse private key: %w", err)
 	}
 
@@ -70,11 +73,13 @@ func Run(ctx context.Context, auth Auth, streams Streams, meta Meta) error {
 	}
 
 	addr := net.JoinHostPort(auth.Host, auth.Port)
+	debuglog.Printf(ctx, "@automattic/vip:wp/ssh", "Connecting to SSH")
 	client, err := ssh.Dial("tcp", addr, cfg)
 	if err != nil {
 		return fmt.Errorf("wpssh: dial %s: %w", addr, err)
 	}
 	defer client.Close()
+	debuglog.Printf(ctx, "@automattic/vip:wp/ssh", "SSH connected")
 
 	session, err := client.NewSession()
 	if err != nil {
@@ -99,10 +104,12 @@ func Run(ctx context.Context, auth Auth, streams Streams, meta Meta) error {
 	if err := session.Run(cmd); err != nil {
 		var exitErr *ssh.ExitError
 		if errors.As(err, &exitErr) {
+			debuglog.Printf(ctx, "@automattic/vip:wp/ssh", "SSH exit code=%d", exitErr.ExitStatus())
 			return &ExitCodeError{Code: exitErr.ExitStatus(), GUID: auth.GUID}
 		}
 		return fmt.Errorf("wpssh: run: %w", err)
 	}
+	debuglog.Printf(ctx, "@automattic/vip:wp/ssh", "SSH exit code=0")
 	return nil
 }
 

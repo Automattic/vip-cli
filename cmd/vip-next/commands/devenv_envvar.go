@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/Automattic/vip/internal/appctx"
+	"github.com/Automattic/vip/internal/debuglog"
 	"github.com/Automattic/vip/internal/devenv"
 	"github.com/Automattic/vip/internal/envvar"
 	"github.com/Automattic/vip/internal/output"
@@ -37,6 +38,7 @@ func envvarGetCmd() *cobra.Command {
 			}
 			// Node trims but does NOT validate here (vip-dev-env-envvar-get.js:33).
 			name := strings.TrimSpace(args[0])
+			debuglog.Printf(cmd.Context(), "@automattic/vip:bin:config:envvar", "Will get variable %q for environment %q", name, slug)
 			v, ok, err := devenv.EnvVarGet(slug, name)
 			if err != nil {
 				return err
@@ -59,6 +61,7 @@ func envvarGetAllCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			debuglog.Printf(cmd.Context(), "@automattic/vip:bin:config:envvar", "Will get all variables for environment %q", slug)
 			all, err := devenv.EnvVarGetAll(slug)
 			if err != nil {
 				return err
@@ -83,6 +86,7 @@ func envvarListCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			debuglog.Printf(cmd.Context(), "@automattic/vip:bin:config:envvar", "Will list variable names for environment %q", slug)
 			names, err := devenv.EnvVarList(slug)
 			if err != nil {
 				return err
@@ -117,6 +121,7 @@ func envvarSetCmd() *cobra.Command {
 			if err := envvar.ValidateName(name); err != nil {
 				return err
 			}
+			debuglog.Printf(cmd.Context(), "@automattic/vip:bin:config:envvar", "Will set variable %q for environment %q: fromFile=%t", name, slug, fromFile != "")
 			var value string
 			switch {
 			case len(args) == 2:
@@ -156,6 +161,7 @@ func envvarDeleteCmd() *cobra.Command {
 			}
 			// Node trims but does NOT validate here (vip-dev-env-envvar-delete.js:32).
 			name := strings.TrimSpace(args[0])
+			debuglog.Printf(cmd.Context(), "@automattic/vip:bin:config:envvar", "Will delete variable %q for environment %q", name, slug)
 			removed, err := devenv.EnvVarDelete(slug, name)
 			if err != nil {
 				return err

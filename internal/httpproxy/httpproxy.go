@@ -21,6 +21,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Automattic/vip/internal/debuglog"
 )
 
 // ProxyURL is the port of createProxyAgent (proxy-agent.ts:20-46). It is shaped
@@ -41,10 +43,15 @@ import (
 // Errors are returned rather than swallowed. A proxy the user configured but
 // that we cannot honour must fail the request; silently connecting direct is
 // how the SOCKS half of this bug went unnoticed.
-func ProxyURL(req *http.Request) (*url.URL, error) {
+func ProxyURL(req *http.Request) (selected *url.URL, err error) {
 	if req == nil || req.URL == nil {
 		return nil, nil
 	}
+	defer func() {
+		if selected != nil && err == nil {
+			debuglog.Printf(req.Context(), "vip:proxy-dispatcher", "Enabling fetch dispatcher proxy support using config: %s://%s", selected.Scheme, selected.Host)
+		}
+	}()
 	target := req.URL
 
 	// 1. VIP Socks Proxy takes precedence and is fully backward compatible.

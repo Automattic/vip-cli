@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/Automattic/vip/internal/debuglog"
 	"github.com/Automattic/vip/internal/devenv/devlog"
 	"github.com/Automattic/vip/internal/devenv/devterm"
 	"github.com/Automattic/vip/internal/devenv/dockercli"
@@ -85,6 +86,7 @@ func shellArgv(r *dockercli.Runner, slug, service string, root bool, cmd []strin
 // output to a file) it runs through plain pipes. Either way output tees into
 // the unified log.
 func Exec(ctx context.Context, slug string, wpArgs []string) error {
+	debuglog.Printf(ctx, debugNamespace, "Will exec a WP command in environment %q: arguments=%d", slug, len(wpArgs))
 	r, err := newRunner(ctx)
 	if err != nil {
 		return err
@@ -102,6 +104,7 @@ func Exec(ctx context.Context, slug string, wpArgs []string) error {
 // Shell opens an interactive shell (or runs cmd) in a service container. Like
 // Exec it falls back to plain pipes when stdin is not a terminal.
 func Shell(ctx context.Context, slug, service string, root bool, cmd []string) error {
+	debuglog.Printf(ctx, debugNamespace, "Will open shell in environment %q: service=%q root=%t arguments=%d", slug, service, root, len(cmd))
 	r, err := newRunner(ctx)
 	if err != nil {
 		return err

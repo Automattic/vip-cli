@@ -2,6 +2,7 @@ package searchreplace
 
 import (
 	"bufio"
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
@@ -12,6 +13,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/Automattic/vip/internal/debuglog"
 )
 
 // InPlaceConfirmMessage is the prompt Node shows before an irreversible
@@ -93,6 +96,12 @@ func statExists(path string) bool {
 // files, stream input → go-search-replace → (optional mydumper fix) →
 // output.
 func Run(fileName string, pairs []string, opts Options) (*Result, error) {
+	return RunContext(context.Background(), fileName, pairs, opts)
+}
+
+// RunContext preserves invocation-scoped diagnostics while running the same
+// file pipeline as Run. Diagnostics deliberately omit paths and replacements.
+func RunContext(ctx context.Context, fileName string, pairs []string, opts Options) (*Result, error) {
 	// Node: if (!pairs.length) throw (ts:138)
 	if len(pairs) == 0 {
 		return nil, errors.New("No search and replace parameters provided.")
@@ -112,7 +121,9 @@ func Run(fileName string, pairs []string, opts Options) (*Result, error) {
 
 	inputPath := fileName
 	outputPath := opts.Output
+	outputMode := "file"
 	if opts.InPlace {
+		outputMode = "in-place"
 		// Node copies the input to a temp "midput" file first (ts:40-58) because
 		// it opens a write stream on the original immediately. We instead stage
 		// the result in a sibling temp file and rename it into place only on
@@ -120,6 +131,7 @@ func Run(fileName string, pairs []string, opts Options) (*Result, error) {
 		// read directly — no full extra copy of a multi-GB dump.
 		outputPath = fileName
 	} else if outputPath == "" {
+		outputMode = "temporary-file"
 		// Default: temp output file keeping the basename (ts:79-90).
 		tmpDir, err := os.MkdirTemp("", "vip-search-replace")
 		if err != nil {
@@ -127,6 +139,7 @@ func Run(fileName string, pairs []string, opts Options) (*Result, error) {
 		}
 		outputPath = filepath.Join(tmpDir, filepath.Base(fileName))
 	}
+	debuglog.Printf(ctx, "@automattic/vip:lib:search-and-replace", "stage=started input=file output=%s mydumper=%t", outputMode, details.Type == DumpTypeMyDumper)
 
 	bin, err := ResolveBinary()
 	if err != nil {
@@ -189,6 +202,7 @@ func Run(fileName string, pairs []string, opts Options) (*Result, error) {
 		return nil, err
 	}
 	committed = true
+	debuglog.Printf(ctx, "@automattic/vip:lib:search-and-replace", "stage=completed")
 
 	return &Result{InputFileName: fileName, OutputFileName: outputPath}, nil
 }

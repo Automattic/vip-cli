@@ -1,12 +1,15 @@
 package main
 
 import (
+	"context"
 	"errors"
+	"os"
 
 	"github.com/spf13/cobra"
 
 	"github.com/Automattic/vip/cmd/vip-next/commands"
 	"github.com/Automattic/vip/internal/appctx"
+	"github.com/Automattic/vip/internal/debuglog"
 	"github.com/Automattic/vip/internal/update"
 	"github.com/Automattic/vip/internal/version"
 )
@@ -43,6 +46,17 @@ func newRootBase(rc *rootContext) *cobra.Command {
 	root.PersistentFlags().Bool("non-interactive", false, "disable prompts; fail fast if a required flag is missing")
 
 	root.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		namespaces := os.Getenv("DEBUG")
+		if cmd.Flags().Changed("debug") {
+			if value, _ := cmd.Flags().GetString("debug"); value != "" {
+				namespaces = value
+			}
+		}
+		ctx := cmd.Context()
+		if ctx == nil {
+			ctx = context.Background()
+		}
+		cmd.SetContext(debuglog.WithLogger(ctx, namespaces, cmd.ErrOrStderr()))
 		flagApp, _ := cmd.Flags().GetString("app")
 		flagEnv, _ := cmd.Flags().GetString("env")
 		hasAlias := rc.aliasApp != "" || rc.aliasEnv != ""

@@ -9,6 +9,8 @@ import (
 	"os"
 
 	json "encoding/json/v2"
+
+	"github.com/Automattic/vip/internal/debuglog"
 )
 
 // ErrorConfig controls the behavior of the error middleware.
@@ -64,6 +66,11 @@ type errorDoer struct {
 }
 
 func (e *errorDoer) Do(req *http.Request) (*http.Response, error) {
+	operation := ""
+	debugEnabled := debuglog.Enabled(req.Context(), "@automattic/vip:http:graphql")
+	if debugEnabled {
+		operation, _ = operationNameFromBody(req)
+	}
 	resp, err := e.next.Do(req)
 	if err != nil || resp == nil {
 		return resp, err
@@ -84,7 +91,26 @@ func (e *errorDoer) Do(req *http.Request) (*http.Response, error) {
 	resp.Body.Close()
 	resp.Body = io.NopCloser(bytes.NewReader(body))
 
-	if hasGraphQLErrors(body) && !allowGQLErrorsFromContext(req.Context()) {
+	if hasGraphQLErrors(body) {
+		// Node emits safe diagnostic metadata even when the command handles
+		// GraphQL errors itself. Never include messages, variables or extensions
+		// other than the error code in the diagnostic stream.
+		var doc struct {
+			Errors []struct {
+				Path       []any `json:"path"`
+				Extensions struct {
+					Code string `json:"code"`
+				} `json:"extensions"`
+			} `json:"errors"`
+		}
+		if debugEnabled && json.Unmarshal(body, &doc) == nil {
+			for _, item := range doc.Errors {
+				debuglog.Printf(req.Context(), "@automattic/vip:http:graphql", "GraphQL errors in response: operation=%s path=%v code=%s", operation, item.Path, item.Extensions.Code)
+			}
+		}
+		if allowGQLErrorsFromContext(req.Context()) {
+			return resp, nil
+		}
 		for _, m := range extractGraphQLErrorMessages(body) {
 			fmt.Fprintf(e.cfg.Stderr, "Error: %s\n", m)
 		}

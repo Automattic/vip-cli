@@ -8,6 +8,7 @@ import (
 
 	"github.com/fatih/color"
 
+	"github.com/Automattic/vip/internal/debuglog"
 	"github.com/Automattic/vip/internal/tui"
 )
 
@@ -117,6 +118,7 @@ func CheckStatus(ctx context.Context, opts CheckStatusOpts) (*StatusResult, erro
 		}
 
 		if snap.Job == nil {
+			debuglog.Printf(ctx, "vip:lib/site-import/status", "No import job data available")
 			if opts.ReturnMissingJobImmediately {
 				// status.ts:329 — resolve('No import job found')
 				return &StatusResult{Message: "No import job found"}, nil
@@ -137,6 +139,14 @@ func CheckStatus(ctx context.Context, opts CheckStatusOpts) (*StatusResult, erro
 		}
 		createdAt := job.CreatedAt
 		completedAt := job.CompletedAt
+		// Server strings and command output can contain sensitive data. Only
+		// allow known status values into the diagnostic summary.
+		diagnosticStatus := "unknown"
+		switch jobStatus {
+		case "running", "success", "error", "failed", "completed":
+			diagnosticStatus = jobStatus
+		}
+		debuglog.Printf(ctx, "vip:lib/site-import/status", "Import job: status=%s steps=%d completed=%t", diagnosticStatus, len(job.Steps), completedAt != "")
 
 		// failedImportStep gate (status.ts:353-366): the import_progress
 		// meta is only pertinent when it started at/after job creation.
@@ -155,6 +165,7 @@ func CheckStatus(ctx context.Context, opts CheckStatusOpts) (*StatusResult, erro
 		}
 
 		if failed != nil {
+			debuglog.Printf(ctx, "vip:lib/site-import/status", "Import step failed: launched=%t", snap.Launched)
 			// status.ts:373 — demote the 'import' step to failed, render,
 			// then reject with the structured error.
 			steps := make([]JobStep, len(job.Steps))

@@ -27,7 +27,7 @@ func LogoutCmd() *cobra.Command {
 			store := auth.NewStore(k)
 
 			if raw, err := store.LoadPrimary(); err == nil && raw != "" {
-				_ = auth.PostLogout(cfg.APIHost, raw)
+				_ = auth.PostLogoutContext(cmd.Context(), cfg.APIHost, raw)
 			}
 			if err := store.Delete(); err != nil && !errors.Is(err, auth.ErrNoToken) {
 				return err

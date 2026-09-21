@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -58,6 +59,9 @@ func GetConfig() Config { return pkgConfig }
 const meQuery = `{"operationName":"Me","query":"query Me {\n  me {\n    id\n    displayName\n    isVIP\n  }\n}"}`
 
 type WhoamiDeps struct {
+	// Context carries invocation-scoped diagnostics and cancellation. Nil uses
+	// context.Background for callers predating command context propagation.
+	Context context.Context
 	APIHost string
 	Token   string
 	Client  *gql.Client
@@ -65,6 +69,9 @@ type WhoamiDeps struct {
 }
 
 func RunWhoami(deps WhoamiDeps) error {
+	if deps.Context == nil {
+		deps.Context = context.Background()
+	}
 	if deps.Stdout == nil {
 		deps.Stdout = os.Stdout
 	}
@@ -75,7 +82,7 @@ func RunWhoami(deps WhoamiDeps) error {
 			Middleware: pkgConfig.Middleware,
 		})
 	}
-	req, err := http.NewRequest("POST", deps.APIHost+"/graphql", strings.NewReader(meQuery))
+	req, err := http.NewRequestWithContext(deps.Context, "POST", deps.APIHost+"/graphql", strings.NewReader(meQuery))
 	if err != nil {
 		return err
 	}
@@ -137,8 +144,10 @@ func NewWhoamiCmd() *cobra.Command {
 				host = defaultAPIHost()
 			}
 			return RunWhoami(WhoamiDeps{
+				Context: cmd.Context(),
 				APIHost: host,
 				Token:   pkgConfig.Token,
+				Stdout:  cmd.OutOrStdout(),
 			})
 		},
 	}

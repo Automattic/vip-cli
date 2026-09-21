@@ -3,6 +3,7 @@ package devenv
 import (
 	"context"
 
+	"github.com/Automattic/vip/internal/debuglog"
 	"github.com/Automattic/vip/internal/devenv/instancedata"
 )
 
@@ -71,6 +72,7 @@ func applyUpdate(d *instancedata.InstanceData, c UpdateConfig) {
 // Update reads, overlays, re-materializes, and persists an env's instance data.
 // Like Node it does NOT restart — the caller instructs the user to start again.
 func Update(ctx context.Context, slug string, c UpdateConfig) error {
+	debuglog.Printf(ctx, debugNamespace, "Will update an environment %q", slug)
 	d, err := instancedata.Read(slug)
 	if err != nil {
 		return err

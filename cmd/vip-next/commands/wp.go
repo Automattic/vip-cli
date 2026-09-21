@@ -16,6 +16,7 @@ import (
 	"golang.org/x/term"
 
 	"github.com/Automattic/vip/internal/appctx"
+	"github.com/Automattic/vip/internal/debuglog"
 	"github.com/Automattic/vip/internal/exit"
 	"github.com/Automattic/vip/internal/gql"
 	"github.com/Automattic/vip/internal/output"
@@ -161,6 +162,7 @@ func dispatchWP(cmd *cobra.Command, ae *appctx.AppEnv, info *wpEnvInfo, args []s
 		Id:            &ae.App.ID,
 		EnvironmentId: &ae.Env.ID,
 	}
+	debuglog.Printf(cmd.Context(), "@automattic/vip:wp/ssh", "Requesting SSH authentication")
 	triggerCtx := gql.WithAllowGQLErrors(cmd.Context())
 	resp, err := gql.TriggerWPCLICommand(triggerCtx, cfg.GQLClient, triggerInput)
 	if err != nil {

@@ -256,7 +256,52 @@ func defaultAPIHost() string {
 // its omitted-value default and drop the "n" on the floor, inverting Node,
 // where "n" DISABLES the service. See internal/nodeflags.
 func prepareArgs(root *cobra.Command, argv []string) []string {
+	argv = normalizeDebugValues(root, argv)
+	argv = prepareWPDebugArgs(root, argv)
 	return nodeflags.NormalizeOptionalValues(root, argv)
+}
+
+// WP-CLI owns every token after "wp". Cobra disables parsing for that command,
+// including flags before it, so consume only VIP's leading debug selector here.
+func prepareWPDebugArgs(root *cobra.Command, argv []string) []string {
+	var kept []string
+	selector := ""
+	found := false
+	for i := 0; i < len(argv); i++ {
+		tok := argv[i]
+		if tok == "wp" {
+			if !found {
+				return argv
+			}
+			_ = root.PersistentFlags().Set("debug", selector)
+			return append(kept, argv[i:]...)
+		}
+		if tok == "--" || !strings.HasPrefix(tok, "-") {
+			return argv
+		}
+		if tok == "-d" || tok == "--debug" {
+			selector, found = "*", true
+			if i+1 < len(argv) && argv[i+1] != "wp" && !strings.HasPrefix(argv[i+1], "-") {
+				i++
+				selector = argv[i]
+			}
+			continue
+		}
+		if strings.HasPrefix(tok, "--debug=") || strings.HasPrefix(tok, "-d=") {
+			_, selector, _ = strings.Cut(tok, "=")
+			found = true
+			continue
+		}
+		kept = append(kept, tok)
+		// Skip values of other leading global flags without changing them.
+		if tok == "--app" || tok == "--env" {
+			if i+1 < len(argv) {
+				i++
+				kept = append(kept, argv[i])
+			}
+		}
+	}
+	return argv
 }
 
 // normalizeWPArgs reshapes a post-envalias argv so cobra can route the
@@ -276,7 +321,12 @@ func prepareArgs(root *cobra.Command, argv []string) []string {
 // non-"--" token is "wp"). Everything else passes through untouched.
 func normalizeWPArgs(argv []string) (out []string, yes bool) {
 	cmdIdx := -1
-	for i, tok := range argv {
+	for i := 0; i < len(argv); i++ {
+		tok := argv[i]
+		if (tok == "--debug" || tok == "-d") && i+1 < len(argv) && argv[i+1] != "wp" && !strings.HasPrefix(argv[i+1], "-") {
+			i++ // A separated debug namespace is not the command name.
+			continue
+		}
 		if tok == "--" || strings.HasPrefix(tok, "-") {
 			continue
 		}

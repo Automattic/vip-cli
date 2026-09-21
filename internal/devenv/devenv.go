@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Automattic/vip/internal/debuglog"
 	"github.com/Automattic/vip/internal/version"
 
 	"github.com/Automattic/vip/internal/devenv/compose"
@@ -28,9 +29,13 @@ import (
 // session logger (set by the cobra layer for create/start), the runner tees its
 // docker output into that per-env log.
 func newRunner(ctx context.Context) (*dockercli.Runner, error) {
-	if _, err := dockercli.DockerSocket(); err != nil {
+	socket, err := dockercli.DockerSocket()
+	if err != nil {
+		debuglog.Printf(ctx, debugNamespace, "Docker endpoint resolution failed")
 		return nil, err
 	}
+	// DOCKER_HOST may contain credentials; only report whether it was resolved.
+	debuglog.Printf(ctx, debugNamespace, "Docker endpoint resolved: explicit=%t", socket != "")
 	return &dockercli.Runner{Log: devlog.FromContext(ctx)}, nil
 }
 
@@ -64,6 +69,7 @@ type StartOptions struct {
 
 // Create writes a new env and (when c.Start) starts it.
 func Create(ctx context.Context, c CreateConfig) error {
+	debuglog.Printf(ctx, debugNamespace, "Will create an environment %q: start=%t", c.Slug, c.Start)
 	if err := writeNewEnv(c); err != nil {
 		return err
 	}
@@ -75,6 +81,7 @@ func Create(ctx context.Context, c CreateConfig) error {
 
 // Start materializes + starts an existing env (detecting migration on first run).
 func Start(ctx context.Context, slug string, opts StartOptions) error {
+	debuglog.Printf(ctx, debugNamespace, "Will start an environment %q: skipRebuild=%t", slug, opts.SkipRebuild)
 	r, err := newRunner(ctx)
 	if err != nil {
 		return err
@@ -95,6 +102,7 @@ func PlanLandoMigration(ctx context.Context, slug string) (lifecycle.MigrationPl
 
 // Rebuild downs (keeping volumes) + orphan-guards, then re-runs the start stack.
 func Rebuild(ctx context.Context, slug string) error {
+	debuglog.Printf(ctx, debugNamespace, "Will rebuild an environment %q", slug)
 	r, err := newRunner(ctx)
 	if err != nil {
 		return err
@@ -110,6 +118,7 @@ func Rebuild(ctx context.Context, slug string) error {
 // the compose files, pull-gates images, and runs lifecycle.Start. Shared by Start
 // and Rebuild.
 func startStack(ctx context.Context, r *dockercli.Runner, deps lifecycle.Deps, slug string, opts StartOptions) error {
+	debuglog.Printf(ctx, debugNamespace, "Will try to get instance data for environment %q", slug)
 	// Write the diagnostic banner to the head of a fresh per-invocation log
 	// (Node parity: writeLogBanner). No-op if the file already has content.
 	if r.Log != nil {
@@ -127,6 +136,7 @@ func startStack(ctx context.Context, r *dockercli.Runner, deps lifecycle.Deps, s
 	if _, err := Materialize(slug, view); err != nil {
 		return err
 	}
+	debuglog.Printf(ctx, debugNamespace, "Environment %q configuration materialized", slug)
 	// One-time Lando adoption: after materialize (so `compose down` finds the
 	// project's compose file) and before Start (so the Go proxy/containers come up
 	// clean on the reused data volume).
@@ -139,7 +149,9 @@ func startStack(ctx context.Context, r *dockercli.Runner, deps lifecycle.Deps, s
 			return err
 		}
 	}
-	pull := lifecycle.ShouldPull(time.Now(), d.PullAfter, registryReachable())
+	reachable := registryReachable()
+	pull := lifecycle.ShouldPull(time.Now(), d.PullAfter, reachable)
+	debuglog.Printf(ctx, debugNamespace, "Registry ghcr.io resolvable=%t; environment %q pull=%t", reachable, slug, pull)
 	if pull {
 		if err := r.Compose(ctx, slug, "pull"); err != nil {
 			return err
@@ -164,6 +176,7 @@ func startStack(ctx context.Context, r *dockercli.Runner, deps lifecycle.Deps, s
 
 // Stop stops an env's containers.
 func Stop(ctx context.Context, slug string) error {
+	debuglog.Printf(ctx, debugNamespace, "Will stop an environment %q", slug)
 	r, err := newRunner(ctx)
 	if err != nil {
 		return err
@@ -173,6 +186,7 @@ func Stop(ctx context.Context, slug string) error {
 
 // StopAll stops every on-disk environment (Node `dev-env stop --all`).
 func StopAll(ctx context.Context) error {
+	debuglog.Printf(ctx, debugNamespace, "Will stop all environments")
 	return stopEachEnv(instancedata.AllNames(), func(slug string) error {
 		return Stop(ctx, slug)
 	})
@@ -230,6 +244,7 @@ func eachEnv(names []string, fn func(string) error) error {
 // `--soft`); otherwise the env dir is removed and /etc/hosts is recomputed for
 // the remaining envs.
 func Destroy(ctx context.Context, slug string, soft bool) error {
+	debuglog.Printf(ctx, debugNamespace, "Will destroy an environment %q: preserveFiles=%t", slug, soft)
 	r, err := newRunner(ctx)
 	if err != nil {
 		return err
@@ -275,6 +290,7 @@ func Destroy(ctx context.Context, slug string, soft bool) error {
 // /etc/hosts block (only when some env had custom-domain entries — avoids a
 // needless sudo prompt).
 func Purge(ctx context.Context, soft bool) error {
+	debuglog.Printf(ctx, debugNamespace, "Will purge all environments: preserveFiles=%t", soft)
 	r, err := newRunner(ctx)
 	if err != nil {
 		return err
@@ -305,6 +321,7 @@ func Purge(ctx context.Context, soft bool) error {
 
 // Info returns a human-readable summary of an env (URL from bound ports + status).
 func Info(ctx context.Context, slug string) (string, error) {
+	debuglog.Printf(ctx, debugNamespace, "Will get info for an environment %q", slug)
 	r, err := newRunner(ctx)
 	if err != nil {
 		return "", err
@@ -323,6 +340,7 @@ func Info(ctx context.Context, slug string) (string, error) {
 // a blank line (Node `dev-env info --all`).
 func InfoAll(ctx context.Context) (string, error) {
 	names := instancedata.AllNames()
+	debuglog.Printf(ctx, debugNamespace, "Will print info for all environments. Names found: %q", names)
 	if len(names) == 0 {
 		return "No local environments found.\n", nil
 	}

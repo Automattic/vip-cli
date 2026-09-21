@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/Automattic/vip/internal/appctx"
+	"github.com/Automattic/vip/internal/debuglog"
 	"github.com/Automattic/vip/internal/envvar"
 	"github.com/Automattic/vip/internal/output"
 )
@@ -33,6 +34,7 @@ func runEnvvarGetAll(cmd *cobra.Command, args []string) (any, error) {
 		return nil, errors.New("appctx not set; this is a wiring bug")
 	}
 	cfg := GetConfig()
+	debuglog.Printf(cmd.Context(), "@automattic/vip:bin:config:envvar", "Request: Get all environment variables for app_id=%d env_id=%d", ae.App.ID, ae.Env.ID)
 	trackEvent("envvar_get_all_command_execute", nil)
 	vars, err := envvar.GetAll(cmd.Context(), cfg.GQLClient, ae.App.ID, ae.Env.ID)
 	if err != nil {
