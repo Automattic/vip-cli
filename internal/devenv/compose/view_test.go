@@ -108,7 +108,7 @@ func TestNewViewResolvesPHPImage(t *testing.T) {
 		return &instancedata.InstanceData{SiteSlug: "e", Multisite: json.RawMessage("false"), PHP: php}
 	}
 	cases := []struct{ php, want string }{
-		{"", "ghcr.io/automattic/vip-container-images/php-fpm:8.2"},                                                    // empty -> recommended default
+		{"", "ghcr.io/automattic/vip-container-images/php-fpm:8.4"},                                                    // empty -> recommended default
 		{"8.4", "ghcr.io/automattic/vip-container-images/php-fpm:8.4"},                                                 // bare version -> mapped image
 		{"ghcr.io/automattic/vip-container-images/php-fpm:8.3", "ghcr.io/automattic/vip-container-images/php-fpm:8.3"}, // explicit image -> as-is
 	}

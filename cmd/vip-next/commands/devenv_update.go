@@ -77,7 +77,7 @@ func resolveUpdateConfig(cmd *cobra.Command, cur *instancedata.InstanceData) (de
 		v, _ := f.GetString("php")
 		c.PHP = &v
 	} else if interactive {
-		sel, err := selectWithDefault(cmd, "PHP version", phpLabels(), phpLabelForVersion(currentPHPVersion(cur)))
+		sel, err := selectWithDefault(cmd, "PHP version", phpLabels(), phpDefaultLabel(currentPHPVersion(cur)))
 		if err != nil {
 			return c, err
 		}

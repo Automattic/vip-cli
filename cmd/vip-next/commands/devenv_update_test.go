@@ -59,11 +59,37 @@ func TestCurrentPHPVersion(t *testing.T) {
 }
 
 func TestPHPLabelForVersion(t *testing.T) {
-	if phpLabelForVersion("8.2") != "8.2 (recommended)" {
-		t.Fatal("8.2 should map to the recommended label")
+	if phpLabelForVersion("8.4") != "8.4 (recommended)" {
+		t.Fatal("8.4 should map to the recommended label")
+	}
+	if phpLabelForVersion("8.2") != "8.2" {
+		t.Fatal("8.2 should map to its plain label")
 	}
 	if phpLabelForVersion("9.9") != "" {
 		t.Fatal("unknown version should map to empty")
+	}
+}
+
+func TestPHPDefaultLabelUsesRecommendedVersionWhenCurrentVersionIsMissing(t *testing.T) {
+	if got := phpDefaultLabel(""); got != "8.4 (recommended)" {
+		t.Fatalf("phpDefaultLabel(\"\") = %q, want 8.4 (recommended)", got)
+	}
+	if got := phpDefaultLabel("8.2"); got != "8.2" {
+		t.Fatalf("phpDefaultLabel(\"8.2\") = %q, want 8.2", got)
+	}
+}
+
+func TestPHPDefaultSelectionUsesRecommendedVersion(t *testing.T) {
+	t.Setenv("VIP_NON_INTERACTIVE", "1")
+	got, err := selectWithDefault(&cobra.Command{}, "PHP version", phpLabels(), phpDefaultLabel(""))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != "8.4 (recommended)" {
+		t.Fatalf("default PHP selection = %q, want 8.4 (recommended)", got)
+	}
+	if version := phpVersionForLabel(got); version != "8.4" {
+		t.Fatalf("selected PHP version = %q, want 8.4", version)
 	}
 }
 

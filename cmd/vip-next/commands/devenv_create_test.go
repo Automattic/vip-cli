@@ -21,8 +21,8 @@ func TestResolveCreateConfigNonInteractiveDefaults(t *testing.T) {
 	if cfg.MultisiteMode != "" {
 		t.Fatalf("MultisiteMode default = %q, want single site", cfg.MultisiteMode)
 	}
-	if cfg.PHP != "" {
-		t.Fatalf("PHP default = %q, want empty (NewView resolves to recommended)", cfg.PHP)
+	if cfg.PHP != "8.4" {
+		t.Fatalf("PHP default = %q, want 8.4", cfg.PHP)
 	}
 	if cfg.PHPMyAdmin || cfg.Xdebug || cfg.Mailpit || cfg.Photon || cfg.Elasticsearch {
 		t.Fatalf("service toggles should default off: %+v", cfg)
@@ -235,13 +235,13 @@ func TestResolveCreateConfigFlagsWin(t *testing.T) {
 }
 
 func TestPHPVersionForLabel(t *testing.T) {
-	if phpVersionForLabel("8.2 (recommended)") != "8.2" {
-		t.Fatal("recommended label should map to 8.2")
+	if phpVersionForLabel("8.4 (recommended)") != "8.4" {
+		t.Fatal("recommended label should map to 8.4")
 	}
 	if phpVersionForLabel("8.5 (experimental)") != "8.5" {
 		t.Fatal("experimental label should map to 8.5")
 	}
-	if phpVersionForLabel("8.4") != "8.4" {
+	if phpVersionForLabel("8.2") != "8.2" {
 		t.Fatal("plain label should map to its version")
 	}
 }
