@@ -43,12 +43,6 @@ jobs:
       - name: Run ${{ matrix.config.tool }}
         run: npm run '${{ matrix.config.tool }}'
 
-  dependaban:
-    name: Dependaban
-    runs-on: ubuntu-latest
-    steps:
-      - uses: Automattic/vip-actions/dependaban@438cd00aac2463a2dbfb4a747ad7b1ac67a2575a # trunk
-
   audit:
     name: Verify signatures and provenance statements
     runs-on: ubuntu-latest

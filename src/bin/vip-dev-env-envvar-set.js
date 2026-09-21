@@ -38,7 +38,7 @@ const examples = [
 	},
 ];
 
-async function deleteEnvVarCommand( args, opt ) {
+async function setEnvVarCommand( args, opt ) {
 	debug( 'args: %o, opt: %o', args, opt );
 
 	const slug = await getEnvironmentName( opt );
@@ -122,4 +122,4 @@ command( {
 		'Read environment variable value from a UTF-8-encoded text file (useful for multiline input). Accepts a relative or absolute path.'
 	)
 	.examples( examples )
-	.argv( process.argv, deleteEnvVarCommand );
+	.argv( process.argv, setEnvVarCommand );
