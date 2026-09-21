@@ -5,12 +5,27 @@ set -e
 CA_CERT="${CA_CERT:-/certs/lndo.site.pem}"
 CA_KEY="${CA_KEY:-/certs/lndo.site.key}"
 
+# quiet runs a command with its stderr captured, replaying it only on failure.
+# openssl narrates success on stderr ("Certificate request self-signature ok",
+# "subject=..."), which the CLI would otherwise tee to the user's terminal.
+quiet() {
+  _err=$(mktemp)
+  if "$@" 2>"$_err"; then
+    rm -f "$_err"
+  else
+    _st=$?
+    cat "$_err" >&2
+    rm -f "$_err"
+    return $_st
+  fi
+}
+
 # 1. Ensure the CA exists (idempotent). Subject CN parity: WPVIP Local CA.
 if [ ! -f "$CA_KEY" ]; then
-  openssl genrsa -out "$CA_KEY" 2048
+  quiet openssl genrsa -out "$CA_KEY" 2048
 fi
 if [ ! -f "$CA_CERT" ]; then
-  openssl req -x509 -new -nodes -key "$CA_KEY" -sha256 -days 8675 \
+  quiet openssl req -x509 -new -nodes -key "$CA_KEY" -sha256 -days 8675 \
     -out "$CA_CERT" \
     -subj "/C=US/ST=California/L=San Francisco/O=Automattic/OU=WPVIP/CN=WPVIP Local CA"
 fi
@@ -41,10 +56,10 @@ if [ -n "$CERT_BASENAME" ] && [ -n "$CERT_SANS" ]; then
   done
   set +f
 
-  openssl genrsa -out "$KEY" 2048
-  openssl req -new -key "$KEY" -out "$CSR" \
+  quiet openssl genrsa -out "$KEY" 2048
+  quiet openssl req -new -key "$KEY" -out "$CSR" \
     -subj "/C=US/ST=California/L=San Francisco/O=Automattic/OU=WPVIP/CN=${CN}"
-  openssl x509 -req -in "$CSR" -CA "$CA_CERT" -CAkey "$CA_KEY" \
+  quiet openssl x509 -req -in "$CSR" -CA "$CA_CERT" -CAkey "$CA_KEY" \
     -CAcreateserial -out "$CRT" -days 825 -sha256 -extfile "$EXT"
   rm -f "$CSR" "$EXT"
 

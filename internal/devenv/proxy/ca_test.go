@@ -32,7 +32,7 @@ func TestEnsureCARunsGenScript(t *testing.T) {
 		t.Fatalf("expected 1 docker call, got %d: %v", len(r.calls), r.calls)
 	}
 	joined := strings.Join(r.calls[0], " ")
-	for _, want := range []string{"run", "--rm", ProxyCertsVolume + ":/certs", ProxyImage, "sh", "-c"} {
+	for _, want := range []string{"run", "--rm", "--entrypoint", "sh", ProxyCertsVolume + ":/certs", ProxyImage, "-c"} {
 		if !strings.Contains(joined, want) {
 			t.Fatalf("EnsureCA call missing %q:\n%s", want, joined)
 		}
