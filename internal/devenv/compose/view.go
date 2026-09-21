@@ -144,9 +144,12 @@ func wordpressTag(d *instancedata.InstanceData) string {
 // phpFPMImagePrefix is the VIP php-fpm image repo; a bare version is appended.
 const phpFPMImagePrefix = "ghcr.io/automattic/vip-container-images/php-fpm:"
 
-// defaultPHPImage is the recommended php-fpm image when none is specified —
-// the first entry of Node's DEV_ENVIRONMENT_PHP_VERSIONS (8.2, recommended).
-const defaultPHPImage = phpFPMImagePrefix + "8.2"
+// DefaultPHPVersion is the recommended PHP version for new environments.
+// Keep this aligned with Node's DEV_ENVIRONMENT_DEFAULT_PHP_VERSION.
+const DefaultPHPVersion = "8.4"
+
+// defaultPHPImage is the recommended php-fpm image when none is specified.
+const defaultPHPImage = phpFPMImagePrefix + DefaultPHPVersion
 
 // phpImage resolves the php-fpm image from instance-data's php field, mirroring
 // Node DEV_ENVIRONMENT_PHP_VERSIONS resolution: empty -> recommended default; a

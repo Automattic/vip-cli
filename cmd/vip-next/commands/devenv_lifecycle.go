@@ -152,14 +152,22 @@ const devEnvWizardIntro = "This is a wizard to help you set up your local dev en
 	"matching flags (or --non-interactive) to skip the wizard, and use --slug to\n" +
 	"create multiple environments with different settings.\n\n"
 
-// devEnvPHPChoices are the offered PHP versions with Node's labels
+// devEnvPHPChoices are the offered PHP versions with Node's base labels
 // (DEV_ENVIRONMENT_PHP_VERSIONS); the value is the bare version, which NewView
-// resolves to the php-fpm image. The first entry is the recommended default.
+// resolves to the php-fpm image. phpChoiceLabel marks the configured default as
+// recommended without depending on list order.
 var devEnvPHPChoices = []struct{ Label, Version string }{
-	{"8.2 (recommended)", "8.2"},
+	{"8.2", "8.2"},
 	{"8.3", "8.3"},
 	{"8.4", "8.4"},
 	{"8.5 (experimental)", "8.5"},
+}
+
+func phpChoiceLabel(label, version string) string {
+	if version == compose.DefaultPHPVersion {
+		return label + " (recommended)"
+	}
+	return label
 }
 
 // validatePHPVersion ports resolvePhpVersion's rejection
@@ -188,7 +196,7 @@ func validatePHPVersion(php string) error {
 func phpLabels() []string {
 	labels := make([]string, len(devEnvPHPChoices))
 	for i, c := range devEnvPHPChoices {
-		labels[i] = c.Label
+		labels[i] = phpChoiceLabel(c.Label, c.Version)
 	}
 	return labels
 }
@@ -196,7 +204,7 @@ func phpLabels() []string {
 // phpVersionForLabel maps a wizard PHP label back to its bare version.
 func phpVersionForLabel(label string) string {
 	for _, c := range devEnvPHPChoices {
-		if c.Label == label {
+		if phpChoiceLabel(c.Label, c.Version) == label {
 			return c.Version
 		}
 	}
@@ -208,10 +216,17 @@ func phpVersionForLabel(label string) string {
 func phpLabelForVersion(version string) string {
 	for _, c := range devEnvPHPChoices {
 		if c.Version == version {
-			return c.Label
+			return phpChoiceLabel(c.Label, c.Version)
 		}
 	}
 	return ""
+}
+
+func phpDefaultLabel(version string) string {
+	if version == "" {
+		version = compose.DefaultPHPVersion
+	}
+	return phpLabelForVersion(version)
 }
 
 // selectWithDefault prompts with options, moving dflt to the front so it is the
@@ -441,22 +456,26 @@ func resolveCreateConfig(cmd *cobra.Command, defaults *createDefaults) (devenv.C
 		cfg.MultisiteMode = normalizeMultisite(msDefaultChoice)
 	}
 
-	// php (default from the app env, else recommended; empty => NewView resolves
-	// to php-fpm:8.2). The wizard lists the versions with Node's
-	// recommended/experimental labels, pre-selecting the app's version.
+	// php (default from the app env, else recommended). The wizard lists the
+	// versions with Node's recommended/experimental labels, pre-selecting the
+	// app's version.
+	phpDefaultVersion := d.PHP
+	if phpDefaultVersion == "" {
+		phpDefaultVersion = compose.DefaultPHPVersion
+	}
 	if f.Changed("php") {
 		cfg.PHP, _ = f.GetString("php")
 		if err := validatePHPVersion(cfg.PHP); err != nil {
 			return cfg, err
 		}
 	} else if interactive {
-		sel, err := selectWithDefault(cmd, "PHP version", phpLabels(), phpLabelForVersion(d.PHP))
+		sel, err := selectWithDefault(cmd, "PHP version", phpLabels(), phpDefaultLabel(d.PHP))
 		if err != nil {
 			return cfg, err
 		}
 		cfg.PHP = phpVersionForLabel(sel)
 	} else {
-		cfg.PHP = d.PHP
+		cfg.PHP = phpDefaultVersion
 	}
 
 	// wordpress (default from the app env, else trunk; empty => NewView resolves
