@@ -1,6 +1,7 @@
 package telemetry
 
 import (
+	"context"
 	"fmt"
 	"os"
 )
@@ -17,6 +18,31 @@ type Tracker struct {
 	Clients   []Client
 	UUIDStore *UUIDStore
 	Disabled  bool
+}
+
+// SetPendoTokenSource binds Pendo to the invocation's credential store before
+// login can emit events. Tracks has its own authentication scheme.
+func (t *Tracker) SetPendoTokenSource(getToken func() (string, error)) {
+	if t == nil {
+		return
+	}
+	for _, client := range t.Clients {
+		if pendo, ok := client.(*PendoClient); ok {
+			pendo.GetToken = getToken
+		}
+	}
+}
+
+// SetContext attaches the parsed command's diagnostics before command events.
+func (t *Tracker) SetContext(ctx context.Context) {
+	if t == nil {
+		return
+	}
+	for _, client := range t.Clients {
+		if pendo, ok := client.(*PendoClient); ok {
+			pendo.Context = ctx
+		}
+	}
 }
 
 // TrackEvent emits name with props to every configured Client.

@@ -64,6 +64,7 @@ vip-next @example.develop -d wp option get home
 | `@automattic/vip:http`                                                                     | API requests, without URL credentials or arbitrary query parameters                                 |
 | `@automattic/vip:http:graphql`                                                             | Failed requests, retries, operation names, HTTP status, safe GraphQL error metadata                 |
 | `vip:proxy-dispatcher`                                                                     | Selected proxy scheme and host                                                                      |
+| `@automattic/vip:analytics:clients:pendo`                                                   | Telemetry send/skip stages and HTTP response status, without credentials, event properties or response bodies |
 | `@automattic/vip:rechallenge:*`                                                            | Step-up session creation, pending polling, flow failures                                            |
 | `@automattic/vip:bin:dev-environment`                                                      | Local environment lifecycle, discovered environments, container status, import and execution stages |
 | `@automattic/vip:bin:config:envvar`                                                        | Remote and local environment-variable operations, without values                                    |
@@ -86,5 +87,8 @@ The command-family audit covered app, backup, cache, config, db, defensive-mode,
 dev-env, edge-workers, export, import, login, logout, logs, search-replace,
 slowlogs, sync, update, whoami and wp. Families without command-specific Node
 diagnostics use shared request logging where applicable. The Go-only updater has
-no Node command diagnostics to port. Authentication bootstrap and credential-store
-selection precede command logging; this does not add credential-store dumps.
+no Node command diagnostics to port. Use `DEBUG` to inspect Pendo delivery during
+authentication bootstrap, before command flags are parsed. Pendo requests use the
+current stored token and are skipped when no token is available. Delivery failures
+do not fail the command. Tracking opt-outs also disable Pendo; these diagnostics
+do not add credential-store dumps.

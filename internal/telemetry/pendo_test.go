@@ -26,6 +26,7 @@ func captureRequest(t *testing.T, c *PendoClient, name string, props map[string]
 	t.Cleanup(srv.Close)
 
 	c.Endpoint = srv.URL
+	c.GetToken = func() (string, error) { return "fixture-token", nil }
 	if err := c.TrackEvent(name, props); err != nil {
 		t.Fatalf("TrackEvent returned unexpected error: %v", err)
 	}
@@ -33,6 +34,22 @@ func captureRequest(t *testing.T, c *PendoClient, name string, props map[string]
 		t.Fatal("no request received by test server")
 	}
 	return captured, capturedReq
+}
+
+func TestPendoRejectsHTTPFailure(t *testing.T) {
+	for _, status := range []int{401, 403, 429, 500} {
+		t.Run(http.StatusText(status), func(t *testing.T) {
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(status)
+				_, _ = w.Write([]byte("private response body"))
+			}))
+			defer srv.Close()
+			c := &PendoClient{Endpoint: srv.URL, HTTP: srv.Client(), UserID: "fixture", GetToken: func() (string, error) { return "fixture-token", nil }}
+			if err := c.TrackEvent("test", nil); err == nil {
+				t.Fatal("failed delivery was reported as successful")
+			}
+		})
+	}
 }
 
 // TestPendoClientPostsExpectedPayload verifies that TrackEvent sends a POST
@@ -173,17 +190,18 @@ func TestPendoClientOrgContextFields(t *testing.T) {
 	}
 }
 
-// TestPendoClientSwallowsNetworkError verifies that a network failure returns
-// nil (not an error), mirroring Node's catch block returning Promise.resolve(false).
-func TestPendoClientSwallowsNetworkError(t *testing.T) {
+// TestPendoClientReportsNetworkError verifies failures are observable to the
+// tracker without including raw transport errors or request data.
+func TestPendoClientReportsNetworkError(t *testing.T) {
 	c := &PendoClient{
+		GetToken:    func() (string, error) { return "fixture-token", nil },
 		Endpoint:    "http://127.0.0.1:1", // nothing listening
 		UserID:      "u",
 		UserAgent:   "x",
 		EventPrefix: TracksEventPrefix,
 	}
-	if err := c.TrackEvent("test", nil); err != nil {
-		t.Errorf("expected nil on network error (Node swallows errors), got %v", err)
+	if err := c.TrackEvent("test", nil); err == nil || err.Error() != "Request failed" {
+		t.Errorf("expected safe network error, got %v", err)
 	}
 }
 
@@ -198,6 +216,7 @@ func TestPendoClientLazyUserIDResolved(t *testing.T) {
 
 	c := &PendoClient{
 		Endpoint:    srv.URL,
+		GetToken:    func() (string, error) { return "fixture-token", nil },
 		GetUserID:   func() string { calls++; return "lazy-uuid" },
 		UserAgent:   "vip-next/test",
 		EventPrefix: TracksEventPrefix,

@@ -3,6 +3,7 @@ import { type Response } from 'undici';
 
 import http from '../../../lib/api/http';
 import { type Env } from '../../env';
+import Token from '../../token';
 
 import type { AnalyticsClient } from './client';
 
@@ -40,7 +41,7 @@ export default class Pendo implements AnalyticsClient {
 			eventName = this.eventPrefix + eventName;
 		}
 
-		debug( 'trackEvent()', eventProps );
+		debug( 'trackEvent()' );
 
 		this.context = {
 			...this.context,
@@ -53,9 +54,9 @@ export default class Pendo implements AnalyticsClient {
 
 		try {
 			return await this.send( eventName, eventProps );
-		} catch ( error ) {
-			debug( error );
-			return Promise.resolve( false );
+		} catch {
+			debug( 'Pendo event delivery failed' );
+			return false;
 		}
 	}
 
@@ -63,6 +64,12 @@ export default class Pendo implements AnalyticsClient {
 		eventName: string,
 		eventProps: Record< string, unknown >
 	): Promise< Response > {
+		const token = await Token.get();
+		if ( ! token.raw ) {
+			debug( 'Skipping Pendo event: authentication token unavailable' );
+			throw new Error( 'Pendo authentication token unavailable' );
+		}
+
 		const body = {
 			context: this.context,
 			event: eventName,
@@ -73,16 +80,20 @@ export default class Pendo implements AnalyticsClient {
 			accountId: `${ this.context.org_sfid as string }`,
 		};
 
-		debug( 'send()', body );
+		debug( 'send()' );
 
 		const response = await http( Pendo.ENDPOINT, {
 			method: 'POST',
+			headers: { Authorization: `Bearer ${ token.raw }` },
 			body: JSON.stringify( body ),
 		} );
 
-		const responseText = await response.text();
+		await response.text();
 
-		debug( 'response', responseText );
+		debug( 'Pendo response status=%d', response.status );
+		if ( ! response.ok ) {
+			throw new Error( `Pendo request failed with HTTP ${ response.status }` );
+		}
 
 		return response;
 	}

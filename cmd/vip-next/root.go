@@ -10,11 +10,13 @@ import (
 	"github.com/Automattic/vip/cmd/vip-next/commands"
 	"github.com/Automattic/vip/internal/appctx"
 	"github.com/Automattic/vip/internal/debuglog"
+	"github.com/Automattic/vip/internal/telemetry"
 	"github.com/Automattic/vip/internal/update"
 	"github.com/Automattic/vip/internal/version"
 )
 
 type rootContext struct {
+	tracker      *telemetry.Tracker
 	updateRunner commands.UpdateRunner
 	aliasApp     string
 	aliasEnv     string
@@ -57,6 +59,7 @@ func newRootBase(rc *rootContext) *cobra.Command {
 			ctx = context.Background()
 		}
 		cmd.SetContext(debuglog.WithLogger(ctx, namespaces, cmd.ErrOrStderr()))
+		rc.tracker.SetContext(cmd.Context())
 		flagApp, _ := cmd.Flags().GetString("app")
 		flagEnv, _ := cmd.Flags().GetString("env")
 		hasAlias := rc.aliasApp != "" || rc.aliasEnv != ""
