@@ -86,6 +86,12 @@ beside the CLI. PATH and `VIP_SEARCH_REPLACE_BIN` targets are never overwritten;
 an active override continues to control helper execution.
 
 Recognized package-managed installations receive package-manager instructions
-instead of file replacement. Missing bundles, ambiguous layouts, and unwritable
+instead of file replacement. Installations created by the macOS `.pkg` or
+Windows `.msi` contain `.vip-next-installer.json` beside the binaries; keep this
+file intact. When an update is available, `vip-next update` directs these
+installations to the matching installer download. `--check` remains available.
+See [native installer installation and upgrades](BUILD-SIGNING.md#native-installers).
+
+Missing bundles, ambiguous layouts, and unwritable
 locations require manual installation. The updater does not elevate privileges.
 Supported release assets are macOS and Linux amd64/arm64, and Windows amd64.

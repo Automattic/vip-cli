@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# Build, sign, and notarize the macOS vip-next artifacts on a Buildkite macOS
-# agent (queue: mac). Each arch is a tarball of vip-next + go-search-replace,
-# both codesigned and notarized. Checksums are written AFTER signing.
+# Build, sign, and notarize portable macOS binary archives.
+# Native installers consume these archives in a separate downstream job.
 
 [ -f .buildkite/shared-pipeline-vars ] && . .buildkite/shared-pipeline-vars
 : "${BIN_BASE:=vip-next}"

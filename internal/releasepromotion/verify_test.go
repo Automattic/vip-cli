@@ -34,6 +34,47 @@ func TestVerifyDownloads(t *testing.T) {
 	}
 }
 
+func TestVerifyDownloadsWithoutInstallers(t *testing.T) {
+	root := t.TempDir()
+	writeCompleteArtifactSet(t, root)
+	for _, p := range ExpectedArtifactPaths() {
+		if !strings.Contains(p, ".tar.gz") {
+			if err := os.Remove(filepath.Join(root, filepath.Base(p))); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+	if err := VerifyDownloads(root); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestVerifyInstallerDownloads(t *testing.T) {
+	for _, name := range []string{"vip-next-darwin-amd64.pkg", "vip-next-darwin-arm64.pkg", "vip-next-windows-amd64.msi"} {
+		for _, mutation := range []string{"checksum", "format", "truncated"} {
+			t.Run(name+"/"+mutation, func(t *testing.T) {
+				root := t.TempDir()
+				writeCompleteArtifactSet(t, root)
+				file := filepath.Join(root, name)
+				if err := os.WriteFile(file, []byte("invalid installer"), 0600); err != nil {
+					t.Fatal(err)
+				}
+				if mutation == "truncated" {
+					if err := os.WriteFile(file, []byte("xar!"), 0600); err != nil {
+						t.Fatal(err)
+					}
+				}
+				if mutation != "checksum" {
+					writeChecksum(t, root, name, false, false)
+				}
+				if err := VerifyDownloads(root); err == nil || !strings.Contains(err.Error(), name) {
+					t.Fatalf("invalid installer accepted: %v", err)
+				}
+			})
+		}
+	}
+}
+
 func TestVerifyDownloadsRejectsInvalidArtifacts(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
@@ -103,6 +144,20 @@ func writeCompleteArtifactSet(t *testing.T, root string) {
 			continue
 		}
 		archiveName := filepath.Base(artifactPath)
+		if strings.HasSuffix(archiveName, ".pkg") || strings.HasSuffix(archiveName, ".msi") {
+			// Container checks only; platform-native tests validate real payloads.
+			data := make([]byte, 512)
+			if strings.HasSuffix(archiveName, ".pkg") {
+				copy(data, "xar!")
+			} else {
+				copy(data, []byte{0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1})
+			}
+			if err := os.WriteFile(filepath.Join(root, archiveName), data, 0600); err != nil {
+				t.Fatal(err)
+			}
+			writeChecksum(t, root, archiveName, false, false)
+			continue
+		}
 		entries := []archiveEntry{{name: "vip-next", typeflag: tar.TypeReg}, {name: "go-search-replace", typeflag: tar.TypeReg}}
 		if strings.Contains(archiveName, "windows") {
 			entries = []archiveEntry{{name: "vip-next.exe", typeflag: tar.TypeReg}, {name: "go-search-replace.exe", typeflag: tar.TypeReg}}
@@ -193,5 +248,49 @@ func writeChecksum(t *testing.T, root, archiveName string, includeDist, uppercas
 	}
 	if err := os.WriteFile(filepath.Join(root, archiveName+".sha256"), []byte(digest+separator+checksumName+"\n"), 0o600); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestExtractBinaryArchive(t *testing.T) {
+	for _, platform := range []string{"darwin", "windows"} {
+		t.Run(platform, func(t *testing.T) {
+			root := t.TempDir()
+			writeCompleteArtifactSet(t, root)
+			archive := filepath.Join(root, "vip-next-"+platform+"-amd64.tar.gz")
+			destination := filepath.Join(root, "payload")
+			if err := ExtractBinaryArchive(platform, archive, destination); err != nil {
+				t.Fatal(err)
+			}
+			expected := unixEntries
+			if platform == "windows" {
+				expected = windowsEntries
+			}
+			for name := range expected {
+				got, err := os.ReadFile(filepath.Join(destination, name))
+				if err != nil || string(got) != "x" {
+					t.Fatalf("payload %s = %q, %v", name, got, err)
+				}
+			}
+			if err := ExtractBinaryArchive(platform, archive, destination); err == nil {
+				t.Fatal("overwrote existing destination")
+			}
+		})
+	}
+}
+
+func TestExtractBinaryArchiveRejectsInvalidPayloadBeforeWriting(t *testing.T) {
+	for _, mutation := range []fixtureMutation{corruptChecksum, addReadmeEntry, addNestedVIPNext, replaceVIPNextWithSymlink} {
+		t.Run(fmt.Sprint(mutation), func(t *testing.T) {
+			root := t.TempDir()
+			writeCompleteArtifactSet(t, root)
+			applyFixtureMutation(t, root, mutation)
+			destination := filepath.Join(root, "payload")
+			if err := ExtractBinaryArchive("darwin", filepath.Join(root, "vip-next-darwin-amd64.tar.gz"), destination); err == nil {
+				t.Fatal("invalid archive accepted")
+			}
+			if _, err := os.Stat(destination); !os.IsNotExist(err) {
+				t.Fatalf("destination created before validation: %v", err)
+			}
+		})
 	}
 }
