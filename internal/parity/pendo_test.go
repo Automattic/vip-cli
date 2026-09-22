@@ -77,7 +77,7 @@ c.trackEvent('test', { org_slug: 'org-sentinel', org_sfid: 'account-sentinel' })
 `
 					ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 					cmd := exec.CommandContext(ctx, "node", "-e", script, dist)
-					cmd.Env = ScenarioEnv(os.Environ(), map[string]string{"API_HOST": srv.URL, "PENDO_FIXTURE_TOKEN": tc.token, "DEBUG": "@automattic/vip:analytics:clients:pendo"})
+					cmd.Env = FixtureEnv(map[string]string{"API_HOST": srv.URL, "PENDO_FIXTURE_TOKEN": tc.token, "DEBUG": "@automattic/vip:analytics:clients:pendo"})
 					cmd.Stderr = &diagnostics
 					out, err := cmd.Output()
 					cancel()
