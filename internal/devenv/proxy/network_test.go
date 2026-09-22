@@ -32,6 +32,12 @@ func (f *fakeRunner) Docker(ctx context.Context, args ...string) error {
 	return nil
 }
 
+// DockerOut mirrors Docker's scripting: a matching failSub errors, otherwise
+// empty stdout (no proxy container -> IsRunning false).
+func (f *fakeRunner) DockerOut(ctx context.Context, args ...string) ([]byte, error) {
+	return nil, f.Docker(ctx, args...)
+}
+
 func TestEnsureNetworkCreatesWhenMissing(t *testing.T) {
 	// network inspect fails (missing) -> network create is issued.
 	r := &fakeRunner{failSub: "inspect"}
