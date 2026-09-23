@@ -1140,11 +1140,18 @@ export async function getTagChoices(): Promise<
 	} );
 }
 
+// Credentials stored in instance data must never be sent as event props (PLTFRM-2820)
+const TRACKING_EXCLUDED_KEYS: ReadonlySet< string > = new Set( [ 'adminPassword' ] );
+
 export function getEnvTrackingInfo( slug: string ): Record< string, unknown > {
 	try {
 		const envData = readEnvironmentData( slug );
 		const result: Record< string, unknown > = { slug };
 		for ( const key of Object.keys( envData ) ) {
+			if ( TRACKING_EXCLUDED_KEYS.has( key ) ) {
+				continue;
+			}
+
 			// track doesn't like camelCase
 			const snakeCasedKey = key.replace( /[A-Z]/g, letter => `_${ letter.toLowerCase() }` );
 			const value = ( DEV_ENVIRONMENT_COMPONENTS_WITH_WP as readonly string[] ).includes( key )

@@ -8,6 +8,7 @@ import { DEV_ENVIRONMENT_PHP_VERSIONS } from '../../../src/lib/constants/dev-env
 import {
 	getEnvironmentName,
 	getEnvironmentStartCommand,
+	getEnvTrackingInfo,
 	processComponentOptionInput,
 	promptForText,
 	promptForComponent,
@@ -601,6 +602,26 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 			expect( () => resolvePhpVersion( version ) ).toThrow(
 				`Unknown or unsupported PHP version: ${ version }`
 			);
+		} );
+	} );
+
+	describe( 'getEnvTrackingInfo', () => {
+		it( 'should snake_case instance data and omit the admin password', () => {
+			jest.spyOn( devEnvCore, 'readEnvironmentData' ).mockReturnValue( {
+				siteSlug: 'example-site',
+				wordpress: { tag: '6.8' },
+				php: 'ghcr.io/automattic/vip-container-images/php-fpm:8.4',
+				mediaRedirectDomain: 'example.com',
+				adminPassword: 's3cret',
+			} );
+
+			expect( getEnvTrackingInfo( 'example-site' ) ).toStrictEqual( {
+				slug: 'example-site',
+				site_slug: 'example-site',
+				wordpress: '{"tag":"6.8"}',
+				php: '8.4',
+				media_redirect_domain: 'example.com',
+			} );
 		} );
 	} );
 } );
