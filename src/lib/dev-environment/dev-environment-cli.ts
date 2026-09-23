@@ -1144,7 +1144,33 @@ export function getEnvTrackingInfo( slug: string ): Record< string, unknown > {
 	try {
 		const envData = readEnvironmentData( slug );
 		const result: Record< string, unknown > = { slug };
-		for ( const key of Object.keys( envData ) ) {
+		// Keep this list in sync with vip-next's devEnvTrackingInfo. Instance data
+		// may contain credentials and user-defined fields that must stay local.
+		const trackedFields = [
+			'siteSlug',
+			'wpTitle',
+			'multisite',
+			'wordpress',
+			'muPlugins',
+			'appCode',
+			'mediaRedirectDomain',
+			'phpmyadmin',
+			'xdebug',
+			'xdebugConfig',
+			'mariadb',
+			'php',
+			'elasticsearch',
+			'mailpit',
+			'photon',
+			'cron',
+			'pullAfter',
+			'version',
+		] as const;
+		for ( const key of trackedFields ) {
+			if ( ! Object.hasOwn( envData, key ) ) {
+				continue;
+			}
+
 			// track doesn't like camelCase
 			const snakeCasedKey = key.replace( /[A-Z]/g, letter => `_${ letter.toLowerCase() }` );
 			const value = ( DEV_ENVIRONMENT_COMPONENTS_WITH_WP as readonly string[] ).includes( key )
@@ -1154,7 +1180,9 @@ export function getEnvTrackingInfo( slug: string ): Record< string, unknown > {
 			result[ snakeCasedKey ] = value;
 		}
 
-		result.php = ( result.php as string ).replace( /^[^:]+:/, '' );
+		if ( typeof result.php === 'string' ) {
+			result.php = result.php.replace( /^[^:]+:/, '' );
+		}
 
 		return result;
 	} catch {

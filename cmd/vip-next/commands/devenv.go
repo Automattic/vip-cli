@@ -31,6 +31,7 @@ func DevEnvCmd() *cobra.Command {
 		devEnvEnvvarCmd(),
 		devEnvImportCmd(),
 	)
+	installDevEnvTelemetry(root)
 	return root
 }
 

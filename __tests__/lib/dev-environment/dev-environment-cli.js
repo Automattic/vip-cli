@@ -8,6 +8,7 @@ import { DEV_ENVIRONMENT_PHP_VERSIONS } from '../../../src/lib/constants/dev-env
 import {
 	getEnvironmentName,
 	getEnvironmentStartCommand,
+	getEnvTrackingInfo,
 	processComponentOptionInput,
 	promptForText,
 	promptForComponent,
@@ -85,6 +86,30 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 		prompt.mockReset();
 		confirmRunMock.mockReset();
 		getVersionListMock.mockResolvedValue( mockedWordPressVersions );
+	} );
+	it( 'keeps local login credentials out of environment tracking properties', () => {
+		const readEnvironmentDataMock = jest
+			.spyOn( devEnvCore, 'readEnvironmentData' )
+			.mockReturnValue( {
+				siteSlug: 'example-site',
+				wpTitle: 'Example Site',
+				php: 'php-fpm:8.4',
+				adminPassword: 'local-password',
+				autologinKey: 'local-autologin-key',
+				envVars: { API_TOKEN: 'private-value' },
+				overrides: 'API_TOKEN: private-value',
+			} );
+
+		try {
+			expect( getEnvTrackingInfo( 'example-site' ) ).toEqual( {
+				slug: 'example-site',
+				site_slug: 'example-site',
+				wp_title: 'Example Site',
+				php: '8.4',
+			} );
+		} finally {
+			readEnvironmentDataMock.mockRestore();
+		}
 	} );
 	describe( 'getEnvironmentName with no environments present', () => {
 		beforeEach( () => {

@@ -116,9 +116,13 @@ func envvarSetCmd() *cobra.Command {
 			// a valid shell identifier and the container silently ignores it.
 			name := strings.TrimSpace(args[0])
 			if name == "" {
+				devEnvTrackingSpecial(cmd, "dev_env_envvar_set_invalid_name")
+				devEnvTrackingCancelled(cmd)
 				return errors.New("variable name is required")
 			}
 			if err := envvar.ValidateName(name); err != nil {
+				devEnvTrackingSpecial(cmd, "dev_env_envvar_set_invalid_name")
+				devEnvTrackingCancelled(cmd)
 				return err
 			}
 			debuglog.Printf(cmd.Context(), "@automattic/vip:bin:config:envvar", "Will set variable %q for environment %q: fromFile=%t", name, slug, fromFile != "")
@@ -138,6 +142,8 @@ func envvarSetCmd() *cobra.Command {
 			default:
 				value, err = appctx.Input(cmd, fmt.Sprintf("Value for %s", name), "")
 				if err != nil {
+					devEnvTrackingSpecial(cmd, "dev_env_envvar_set_user_cancelled_input")
+					devEnvTrackingCancelled(cmd)
 					return err
 				}
 			}
