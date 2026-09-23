@@ -606,13 +606,14 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 	} );
 
 	describe( 'getEnvTrackingInfo', () => {
-		it( 'should snake_case instance data and omit the admin password', () => {
+		it( 'should snake_case instance data and omit credentials', () => {
 			jest.spyOn( devEnvCore, 'readEnvironmentData' ).mockReturnValue( {
 				siteSlug: 'example-site',
 				wordpress: { tag: '6.8' },
 				php: 'ghcr.io/automattic/vip-container-images/php-fpm:8.4',
 				mediaRedirectDomain: 'example.com',
 				adminPassword: 's3cret',
+				autologinKey: '3f2b8c1e-6d4a-4e7b-9c0d-1a2b3c4d5e6f',
 			} );
 
 			expect( getEnvTrackingInfo( 'example-site' ) ).toStrictEqual( {

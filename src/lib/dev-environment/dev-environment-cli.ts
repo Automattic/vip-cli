@@ -1141,7 +1141,10 @@ export async function getTagChoices(): Promise<
 }
 
 // Credentials stored in instance data must never be sent as event props (PLTFRM-2820)
-const TRACKING_EXCLUDED_KEYS: ReadonlySet< string > = new Set( [ 'adminPassword' ] );
+const TRACKING_EXCLUDED_KEYS: ReadonlySet< string > = new Set( [
+	'adminPassword',
+	'autologinKey',
+] );
 
 export function getEnvTrackingInfo( slug: string ): Record< string, unknown > {
 	try {
