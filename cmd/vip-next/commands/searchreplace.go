@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/Automattic/vip/internal/appctx"
+	"github.com/Automattic/vip/internal/debuglog"
 	"github.com/Automattic/vip/internal/searchreplace"
 )
 
@@ -45,7 +46,7 @@ func SearchReplaceCmd() *cobra.Command {
 					return nil
 				}
 			}
-			res, err := searchreplace.Run(args[0], pairs, searchreplace.Options{InPlace: inPlace, Output: output})
+			res, err := searchreplace.RunContext(cmd.Context(), args[0], pairs, searchreplace.Options{InPlace: inPlace, Output: output})
 			if err != nil {
 				return err
 			}
@@ -53,6 +54,7 @@ func SearchReplaceCmd() *cobra.Command {
 			// file to stdout and remove the temp file (Node: "output to STDOUT by
 			// default").
 			if !inPlace && output == "" {
+				debuglog.Printf(cmd.Context(), "@automattic/vip:lib:search-and-replace", "input=file output=stdout")
 				f, err := os.Open(res.OutputFileName)
 				if err != nil {
 					return err

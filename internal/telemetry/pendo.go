@@ -2,22 +2,26 @@ package telemetry
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/Automattic/vip/internal/debuglog"
 	"github.com/Automattic/vip/internal/httpproxy"
 )
 
 // PendoClient posts analytics events to Pendo via the VIP API proxy.
 //
-// Node parity: mirrors src/lib/analytics/clients/pendo.ts exactly.
+// Node counterpart: src/lib/analytics/clients/pendo.ts.
 //
 // The Node client sends to Pendo.ENDPOINT = "/pendo" prefixed by API_HOST
 // (https://api.wpvip.com), so the full URL is https://api.wpvip.com/pendo.
-// Node attaches a bearer token via the shared http wrapper; Go telemetry
-// calls are fire-and-forget without auth (same approach as TracksClient).
+// Both runtimes authenticate through the current VIP session. Failures are
+// diagnostic only: Tracker deliberately does not fail the user's command.
 //
 // Payload shape (mirrors Node's send() method):
 //
@@ -44,6 +48,11 @@ type PendoClient struct {
 	EventPrefix string
 	// HTTP is the HTTP client; nil means a default 5-second-timeout client.
 	HTTP *http.Client
+	// GetToken reads the current session at send time, including login/logout
+	// changes. Missing credentials skip Pendo without starting a login flow.
+	GetToken func() (string, error)
+	// Context carries this invocation's opt-in diagnostics.
+	Context context.Context
 }
 
 // resolveUserID returns UserID if set, otherwise calls GetUserID().
@@ -84,8 +93,26 @@ type pendoPayload struct {
 
 // TrackEvent sends a single named event to Pendo.
 // The event name is auto-prefixed with EventPrefix if not already present.
-// Errors from the HTTP call are swallowed (Node returns false on error).
+// Delivery errors contain only safe summaries; Tracker ignores them.
 func (c *PendoClient) TrackEvent(name string, props map[string]any) error {
+	requestContext := c.Context
+	if requestContext == nil {
+		requestContext = context.Background()
+	}
+	const namespace = "@automattic/vip:analytics:clients:pendo"
+	fail := func(message string) error {
+		debuglog.Printf(requestContext, namespace, "%s", message)
+		return errors.New(message)
+	}
+	if c.GetToken == nil {
+		debuglog.Printf(requestContext, namespace, "Skipping event: no authenticated session")
+		return nil
+	}
+	token, err := c.GetToken()
+	if err != nil || token == "" {
+		debuglog.Printf(requestContext, namespace, "Skipping event: no authenticated session")
+		return nil
+	}
 	if !strings.HasPrefix(name, c.EventPrefix) {
 		name = c.EventPrefix + name
 	}
@@ -125,16 +152,16 @@ func (c *PendoClient) TrackEvent(name string, props map[string]any) error {
 
 	body, err := json.Marshal(payload)
 	if err != nil {
-		// Swallow, same as Node's catch block returning false.
-		return nil
+		return fail("Unable to encode event")
 	}
 
-	req, err := http.NewRequest("POST", c.Endpoint, bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(requestContext, "POST", c.Endpoint, bytes.NewReader(body))
 	if err != nil {
-		return nil
+		return fail("Unable to construct request")
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("User-Agent", c.UserAgent)
+	req.Header.Set("Authorization", "Bearer "+token)
 
 	httpClient := c.HTTP
 	if httpClient == nil {
@@ -144,11 +171,15 @@ func (c *PendoClient) TrackEvent(name string, props map[string]any) error {
 		httpClient = httpproxy.ClientWithTimeout(5 * time.Second)
 	}
 
+	debuglog.Printf(requestContext, namespace, "Sending event")
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		// Node: catch(error) { debug(error); return Promise.resolve(false) }
-		return nil
+		return fail("Request failed")
 	}
 	resp.Body.Close()
+	debuglog.Printf(requestContext, namespace, "Response status=%d", resp.StatusCode)
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return fail(fmt.Sprintf("Request rejected: HTTP %d", resp.StatusCode))
+	}
 	return nil
 }

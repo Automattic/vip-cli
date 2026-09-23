@@ -10,6 +10,8 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+
+	"github.com/Automattic/vip/internal/debuglog"
 )
 
 // initiateResult is S3's CreateMultipartUpload response
@@ -66,6 +68,7 @@ func (c *Client) uploadUsingMultipart(ctx context.Context, appID, envID int64, m
 	if err != nil {
 		return "", err
 	}
+	debuglog.Printf(ctx, "vip:lib/client-file-uploader", "Uploading to S3 using Multipart: parts=%d concurrency=%d", len(parts), MaxConcurrentPartUploads)
 	etags, err := c.uploadParts(ctx, appID, envID, meta, init.UploadId, parts, progressCb)
 	if err != nil {
 		return "", err

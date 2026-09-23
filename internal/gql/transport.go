@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/Automattic/vip/internal/debuglog"
 )
 
 type transport struct {
@@ -31,6 +33,13 @@ func (t *transport) Do(req *http.Request) (*http.Response, error) {
 	if req.Header.Get("Content-Type") == "" {
 		req.Header.Set("Content-Type", "application/json")
 	}
+	// Mirror Node's HTTP diagnostic without exposing URL credentials or
+	// arbitrary query parameters (which can contain signed download tokens).
+	safeURL := *req.URL
+	safeURL.User = nil
+	safeURL.RawQuery = ""
+	safeURL.Fragment = ""
+	debuglog.Printf(req.Context(), "@automattic/vip:http", "running fetch %s", safeURL.String())
 	return t.cfg.HTTPClient.Do(req)
 }
 

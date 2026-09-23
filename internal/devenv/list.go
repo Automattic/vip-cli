@@ -3,6 +3,7 @@ package devenv
 import (
 	"context"
 
+	"github.com/Automattic/vip/internal/debuglog"
 	"github.com/Automattic/vip/internal/devenv/instancedata"
 	"github.com/Automattic/vip/internal/devenv/lifecycle"
 )
@@ -32,9 +33,16 @@ func List(ctx context.Context) ([]EnvStatus, error) {
 	}
 	d := dockerAdapter{r: r}
 	var out []EnvStatus
-	for _, slug := range instancedata.AllNames() {
+	names := instancedata.AllNames()
+	debuglog.Printf(ctx, debugNamespace, "Will print info for all environments. Names found: %q", names)
+	for _, slug := range names {
 		states, err := d.ComposePS(ctx, slug)
 		running := err == nil && anyRunning(states)
+		if err != nil {
+			debuglog.Printf(ctx, debugNamespace, "Environment %q status query failed; reporting stopped", slug)
+		} else {
+			debuglog.Printf(ctx, debugNamespace, "Environment %q: services=%d running=%t", slug, len(states), running)
+		}
 		out = append(out, EnvStatus{Slug: slug, Running: running})
 	}
 	return out, nil

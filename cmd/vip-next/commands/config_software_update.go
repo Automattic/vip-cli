@@ -18,6 +18,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/Automattic/vip/internal/appctx"
+	"github.com/Automattic/vip/internal/debuglog"
 	"github.com/Automattic/vip/internal/gql"
 	"github.com/Automattic/vip/internal/softwaresettings"
 )
@@ -126,6 +127,7 @@ func runConfigSoftwareUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	// Fire the mutation.
+	debuglog.Printf(cmd.Context(), "@automattic/vip:bin:config-software", "Triggering update: app_id=%d env_id=%d component=%s version=%s", ae.App.ID, ae.Env.ID, resolvedComponent, resolvedVersion)
 	_, err = gql.UpdateSoftwareSettings(cmd.Context(), cfg.GQLClient, ae.App.ID, ae.Env.ID, resolvedComponent, resolvedVersion)
 	if err != nil {
 		trackEvent("config_software_update_error", map[string]any{"error": err.Error()})
@@ -133,6 +135,7 @@ func runConfigSoftwareUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	trackEvent("config_software_update_mutation_success", nil)
+	debuglog.Printf(cmd.Context(), "@automattic/vip:bin:config-software", "Triggered update with result: success")
 
 	// Poll until the update job completes.
 	if err := pollSoftwareUpdateJob(cmd, cfg, ae); err != nil {
@@ -160,6 +163,7 @@ type jobIface = gql.SoftwareUpdateJobAppEnvironmentsAppEnvironmentJobsJobInterfa
 //   - success when no job or progress.status == "success"
 //   - failure: find a step with status "failed" → "Failed during step: <name>" else "Software update failed"
 func pollSoftwareUpdateJob(cmd *cobra.Command, cfg Config, ae *appctx.AppEnv) error {
+	debuglog.Printf(cmd.Context(), "@automattic/vip:bin:config-software", "Getting update result: app_id=%d env_id=%d", ae.App.ID, ae.Env.ID)
 	for {
 		resp, err := gql.SoftwareUpdateJob(cmd.Context(), cfg.GQLClient, ae.App.ID, ae.Env.ID)
 		if err != nil {
@@ -168,11 +172,13 @@ func pollSoftwareUpdateJob(cmd *cobra.Command, cfg Config, ae *appctx.AppEnv) er
 
 		// Navigate to jobs.
 		if resp.App == nil || len(resp.App.Environments) == 0 || resp.App.Environments[0] == nil {
+			debuglog.Printf(cmd.Context(), "@automattic/vip:bin:config-software", "Latest job result: present=false")
 			// No environment data → treat as success (job gone).
 			return nil
 		}
 		jobs := resp.App.Environments[0].GetJobs()
 		if len(jobs) == 0 {
+			debuglog.Printf(cmd.Context(), "@automattic/vip:bin:config-software", "Latest job result: present=false")
 			// No jobs → update complete (Node parity: "no job" = success).
 			return nil
 		}
@@ -200,12 +206,16 @@ func pollSoftwareUpdateJob(cmd *cobra.Command, cfg Config, ae *appctx.AppEnv) er
 			}
 		}
 		if latestPtr == nil || *latestPtr == nil {
+			debuglog.Printf(cmd.Context(), "@automattic/vip:bin:config-software", "Latest job result: present=false")
 			return nil
 		}
 		latest := *latestPtr
+		lock := latest.GetInProgressLock()
+		debuglog.Printf(cmd.Context(), "@automattic/vip:bin:config-software", "Latest job result: present=true in_progress=%t", lock != nil && *lock)
 
 		// Still in-progress → wait and retry.
-		if lock := latest.GetInProgressLock(); lock != nil && *lock {
+		if lock != nil && *lock {
+			debuglog.Printf(cmd.Context(), "@automattic/vip:bin:config-software", "Sleep for %s", softwareUpdatePollInterval)
 			time.Sleep(softwareUpdatePollInterval)
 			continue
 		}
@@ -232,6 +242,7 @@ func pollSoftwareUpdateJob(cmd *cobra.Command, cfg Config, ae *appctx.AppEnv) er
 		// arrives with inProgressLock=false. That is a hang risk, not a silent
 		// success — and this loop has no 6 h poll.Timeout ceiling either.
 		if status != "" && status != "failed" {
+			debuglog.Printf(cmd.Context(), "@automattic/vip:bin:config-software", "Sleep for %s", softwareUpdatePollInterval)
 			time.Sleep(softwareUpdatePollInterval)
 			continue
 		}

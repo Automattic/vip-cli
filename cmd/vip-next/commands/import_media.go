@@ -18,6 +18,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/Automattic/vip/internal/appctx"
+	"github.com/Automattic/vip/internal/debuglog"
 	"github.com/Automattic/vip/internal/gql"
 	"github.com/Automattic/vip/internal/httpproxy"
 	"github.com/Automattic/vip/internal/mediaimport"
@@ -136,6 +137,7 @@ func runImportMedia(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		fmt.Fprint(out, "\n")
+		debuglog.Printf(cmd.Context(), "vip:vip-import-media", "Upload complete: bytes=%d", res.Meta.FileSize)
 
 		pre, err := uc.GetSignedUploadRequestData(cmd.Context(), upload.SignedRequestArgs{
 			Action: "GetObject", AppID: ae.App.ID, EnvID: ae.Env.ID, BaseName: res.Meta.BaseName,
@@ -146,6 +148,7 @@ func runImportMedia(cmd *cobra.Command, args []string) error {
 		archiveURL = pre.URL
 	}
 
+	debuglog.Printf(cmd.Context(), "vip:vip-import-media", "Options: local=%t overwrite_existing=%t import_intermediate_images=%t", sourceIsLocal, overwriteExistingFiles, importIntermediateImages)
 	trackEvent("import_media_start_execute", nil)
 
 	tracker := mediaimport.NewTracker()
@@ -181,6 +184,7 @@ func runImportMedia(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
+	debuglog.Printf(cmd.Context(), "vip:vip-import-media", "Import queued")
 	return mediaImportCheckStatusCmd(cmd, tracker, ae, exportJSON, saveErrorLog)
 }
 

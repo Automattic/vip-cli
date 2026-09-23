@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/Automattic/vip/internal/customdeploy"
+	"github.com/Automattic/vip/internal/debuglog"
 	"github.com/Automattic/vip/internal/gql"
 	"github.com/Automattic/vip/internal/tui"
 	"github.com/Automattic/vip/internal/upload"
@@ -97,6 +98,7 @@ func runAppDeploy(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Unable to access file %s", fileName)
 	}
 
+	debuglog.Printf(cmd.Context(), "@automattic/vip:bin:vip-app-deploy", "Validating custom deploy key...")
 	deployToken := os.Getenv("WPVIP_DEPLOY_TOKEN")
 	if deployToken == "" {
 		// custom-deploy.ts:33.
@@ -112,6 +114,7 @@ func runAppDeploy(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	debuglog.Printf(cmd.Context(), "@automattic/vip:bin:vip-app-deploy", "Validating file...")
 	if err := customdeploy.ValidateFile(meta, 0); err != nil {
 		trackEvent("deploy_app_command_error", map[string]any{"error_type": "invalid-file"})
 		return err
@@ -169,6 +172,7 @@ func runAppDeploy(cmd *cobra.Command, args []string) error {
 		_ = pt.StepFailed("upload")
 		return failWithError(err)
 	}
+	debuglog.Printf(cmd.Context(), "@automattic/vip:bin:vip-app-deploy", "Upload complete. Initiating the deploy.")
 	_ = pt.StepSuccess("upload")
 	trackEvent("deploy_app_upload_complete", nil)
 

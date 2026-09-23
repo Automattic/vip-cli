@@ -18,6 +18,7 @@ import (
 	"golang.org/x/term"
 
 	"github.com/Automattic/vip/internal/appctx"
+	"github.com/Automattic/vip/internal/debuglog"
 	"github.com/Automattic/vip/internal/gql"
 	"github.com/Automattic/vip/internal/searchreplace"
 	"github.com/Automattic/vip/internal/siteimport"
@@ -343,6 +344,7 @@ func importSQLGates(g gateInput) error {
 func validateAndGetTableNames(cmd *cobra.Command, client graphql.Client, appID, envID int64, fileName string, skipValidate bool, searchReplace []string, isMultiSite bool) ([]string, error) {
 	out := cmd.OutOrStdout()
 	if skipValidate {
+		debuglog.Printf(cmd.Context(), "@automattic/vip:bin:vip-import-sql", "Validation was skipped. No playbook information will be displayed.")
 		fmt.Fprintln(out, "Skipping SQL file validation.")
 		return []string{}, nil
 	}
@@ -359,6 +361,7 @@ func validateAndGetTableNames(cmd *cobra.Command, client graphql.Client, appID, 
 	wpSiteCapture := siteimport.NewMultilineCapture("INSERT INTO `wp_site`")
 	var wpSiteStatements [][]string
 	ticker := newImportLineTicker(out, isTerminalWriter(out))
+	debuglog.Printf(cmd.Context(), "vip:validations:line-by-line", "Validations: static SQL checks and site type")
 	res, scanErr := sqlvalidation.ValidateWithLineHook(f, func(line string, lineNum int) {
 		if lineNum%500 == 0 {
 			ticker.tick(lineNum) // sql.ts:533 trailing space
@@ -370,6 +373,7 @@ func validateAndGetTableNames(cmd *cobra.Command, client graphql.Client, appID, 
 		return nil, fmt.Errorf("Error validating input file: %s", scanErr)
 	}
 	isMultiSiteSqlDump := res.IsMultiSite
+	debuglog.Printf(cmd.Context(), "vip:vip-import-sql", "Site type: target_multisite=%t dump_multisite=%t", isMultiSite, isMultiSiteSqlDump)
 
 	// Static-validation report (import mode): problems throw with the
 	// joined error output + --skip-validate advice (vip-import-sql.js:436).
@@ -744,6 +748,8 @@ func runImportSQL(cmd *cobra.Command, args []string) error {
 		output = ""
 	}
 
+	debuglog.Printf(cmd.Context(), "@automattic/vip:bin:vip-import-sql", "Options: remote=%t skip_validate=%t skip_backup=%t headers=%d replacements=%d", isURL, skipValidate, skipBackup, len(headers), len(searchReplace))
+
 	trackEvent("import_sql_command_execute", map[string]any{"is_url": isURL})
 
 	if err := importSQLGates(gateInput{
@@ -831,7 +837,7 @@ func runImportSQL(cmd *cobra.Command, args []string) error {
 	switch {
 	case localSearchReplaceNeeded(isURL, inPlace, output, searchReplace):
 		_ = pt.StepRunning("replace")
-		res, srErr := searchreplace.Run(fileNameOrURL, searchReplace, searchreplace.Options{
+		res, srErr := searchreplace.RunContext(cmd.Context(), fileNameOrURL, searchReplace, searchreplace.Options{
 			InPlace: inPlace, Output: output,
 		})
 		if srErr != nil {
@@ -902,6 +908,7 @@ func runImportSQL(cmd *cobra.Command, args []string) error {
 		input.Md5 = &checksum
 		input.SearchReplace = []*gql.AppEnvironmentImportSearchReplace{}
 		_ = pt.StepSuccess("upload")
+		debuglog.Printf(cmd.Context(), "@automattic/vip:bin:vip-import-sql", "Upload complete. Initiating the import.")
 		trackEvent("import_sql_upload_complete", nil)
 	}
 
@@ -917,6 +924,7 @@ func runImportSQL(cmd *cobra.Command, args []string) error {
 		_ = pt.StepFailed("queue_import")
 		return failWithError(fmt.Errorf("StartImport call failed: %s", err))
 	}
+	debuglog.Printf(cmd.Context(), "@automattic/vip:bin:vip-import-sql", "Import queued")
 	_ = pt.StepSuccess("queue_import")
 
 	return importSQLCheckStatus(cmd, pt, renderer, ae, domain, false)

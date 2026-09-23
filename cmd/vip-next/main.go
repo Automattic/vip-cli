@@ -11,6 +11,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"log/slog"
 	"os"
@@ -22,6 +23,7 @@ import (
 	"github.com/Automattic/vip/cmd/vip-next/commands"
 	"github.com/Automattic/vip/internal/appctx"
 	"github.com/Automattic/vip/internal/auth"
+	"github.com/Automattic/vip/internal/debuglog"
 	"github.com/Automattic/vip/internal/envalias"
 	"github.com/Automattic/vip/internal/exit"
 	"github.com/Automattic/vip/internal/gql"
@@ -82,6 +84,9 @@ func cliErrorHook(tracker *telemetry.Tracker) func(error) {
 }
 
 func runWithDeps(argv []string, deps runDeps) error {
+	// As in Node, DEBUG applies during login bootstrap; command flags take
+	// precedence once the command parser installs its invocation context.
+	deps.Tracker.SetContext(debuglog.WithLogger(context.Background(), os.Getenv("DEBUG"), os.Stderr))
 	rewritten, app, env, err := envalias.Rewrite(argv)
 	if err != nil {
 		return err
@@ -117,7 +122,7 @@ func runWithDeps(argv []string, deps runDeps) error {
 
 	var rootRef *cobra.Command
 	executeRoot := func() error {
-		rc := &rootContext{aliasApp: app, aliasEnv: env}
+		rc := &rootContext{aliasApp: app, aliasEnv: env, tracker: deps.Tracker}
 		rootRef = newRootCmd(rc)
 		rootRef.SetArgs(prepareArgs(rootRef, rewritten))
 		finish := installUpdateNotifier(rootRef, deps.StartUpdateNotice)
@@ -134,6 +139,7 @@ func runWithDeps(argv []string, deps runDeps) error {
 	apiHost := defaultAPIHost()
 	k := deps.NewKeychain(apiHost)
 	store := auth.NewStore(k)
+	deps.Tracker.SetPendoTokenSource(store.Load)
 	if !auth.ShouldBypassAuth(argv) {
 		return withAuthenticatedSession(!isNonInteractiveArgv(argv), authBootstrapDeps{
 			Keychain: k,
@@ -256,7 +262,52 @@ func defaultAPIHost() string {
 // its omitted-value default and drop the "n" on the floor, inverting Node,
 // where "n" DISABLES the service. See internal/nodeflags.
 func prepareArgs(root *cobra.Command, argv []string) []string {
+	argv = normalizeDebugValues(root, argv)
+	argv = prepareWPDebugArgs(root, argv)
 	return nodeflags.NormalizeOptionalValues(root, argv)
+}
+
+// WP-CLI owns every token after "wp". Cobra disables parsing for that command,
+// including flags before it, so consume only VIP's leading debug selector here.
+func prepareWPDebugArgs(root *cobra.Command, argv []string) []string {
+	var kept []string
+	selector := ""
+	found := false
+	for i := 0; i < len(argv); i++ {
+		tok := argv[i]
+		if tok == "wp" {
+			if !found {
+				return argv
+			}
+			_ = root.PersistentFlags().Set("debug", selector)
+			return append(kept, argv[i:]...)
+		}
+		if tok == "--" || !strings.HasPrefix(tok, "-") {
+			return argv
+		}
+		if tok == "-d" || tok == "--debug" {
+			selector, found = "*", true
+			if i+1 < len(argv) && argv[i+1] != "wp" && !strings.HasPrefix(argv[i+1], "-") {
+				i++
+				selector = argv[i]
+			}
+			continue
+		}
+		if strings.HasPrefix(tok, "--debug=") || strings.HasPrefix(tok, "-d=") {
+			_, selector, _ = strings.Cut(tok, "=")
+			found = true
+			continue
+		}
+		kept = append(kept, tok)
+		// Skip values of other leading global flags without changing them.
+		if tok == "--app" || tok == "--env" {
+			if i+1 < len(argv) {
+				i++
+				kept = append(kept, argv[i])
+			}
+		}
+	}
+	return argv
 }
 
 // normalizeWPArgs reshapes a post-envalias argv so cobra can route the
@@ -276,7 +327,12 @@ func prepareArgs(root *cobra.Command, argv []string) []string {
 // non-"--" token is "wp"). Everything else passes through untouched.
 func normalizeWPArgs(argv []string) (out []string, yes bool) {
 	cmdIdx := -1
-	for i, tok := range argv {
+	for i := 0; i < len(argv); i++ {
+		tok := argv[i]
+		if (tok == "--debug" || tok == "-d") && i+1 < len(argv) && argv[i+1] != "wp" && !strings.HasPrefix(argv[i+1], "-") {
+			i++ // A separated debug namespace is not the command name.
+			continue
+		}
 		if tok == "--" || strings.HasPrefix(tok, "-") {
 			continue
 		}

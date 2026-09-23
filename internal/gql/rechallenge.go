@@ -10,6 +10,7 @@ import (
 
 	json "encoding/json/v2"
 
+	"github.com/Automattic/vip/internal/debuglog"
 	"github.com/Automattic/vip/internal/rechallenge"
 )
 
@@ -20,8 +21,8 @@ type RechallengeConfig struct {
 	TokenCache *rechallenge.TokenCache
 	Runner     *rechallenge.Runner
 	// Context, if non-nil, supplies the context used for Parker calls.
-	// Defaults to context.Background(); production should pass the cobra
-	// command's ctx so SIGINT cancels the flow.
+	// Defaults to the request context, preserving command diagnostics and
+	// cancellation through the flow.
 	Context func() context.Context
 	// Interactive, when non-nil, replaces the default
 	// rechallenge.IsInteractiveContext(nil) fallback for the Runner's
@@ -65,13 +66,13 @@ type rechallengeDoer struct {
 	cfg  RechallengeConfig
 }
 
-func (r *rechallengeDoer) ctx() context.Context {
+func (r *rechallengeDoer) ctx(fallback context.Context) context.Context {
 	if r.cfg.Context != nil {
 		if c := r.cfg.Context(); c != nil {
 			return c
 		}
 	}
-	return context.Background()
+	return fallback
 }
 
 func (r *rechallengeDoer) Do(req *http.Request) (*http.Response, error) {
@@ -98,6 +99,8 @@ func (r *rechallengeDoer) Do(req *http.Request) (*http.Response, error) {
 	if r.cfg.TokenCache != nil {
 		if tok, err := r.cfg.TokenCache.Get(scope); err == nil && tok != nil {
 			attachElevatedHeader(req, *tok)
+		} else if err != nil {
+			debuglog.Printf(req.Context(), "@automattic/vip:rechallenge:link", "preflight error: unable to load elevated token")
 		}
 	}
 
@@ -128,13 +131,14 @@ func (r *rechallengeDoer) Do(req *http.Request) (*http.Response, error) {
 	if r.cfg.Wait != nil {
 		wait = r.cfg.Wait()
 	}
-	tok, runErr := r.cfg.Runner.Run(r.ctx(), rechallenge.RunInput{
+	tok, runErr := r.cfg.Runner.Run(r.ctx(req.Context()), rechallenge.RunInput{
 		RequestedOperation: scope,
 		Extension:          *ext,
 		Interactive:        interactive,
 		Wait:               wait,
 	})
 	if runErr != nil || tok == nil {
+		debuglog.Printf(req.Context(), "@automattic/vip:rechallenge:link", "rechallenge flow failed for %s", scope)
 		r.reportStepUpFailure(scope, runErr)
 		// Surface the ORIGINAL error response upstream.
 		return resp, nil

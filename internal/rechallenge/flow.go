@@ -6,6 +6,8 @@ import (
 	"io"
 	"os"
 	"time"
+
+	"github.com/Automattic/vip/internal/debuglog"
 )
 
 // Tracker is the minimal telemetry interface the runner needs.
@@ -121,6 +123,7 @@ func (r *Runner) Run(ctx context.Context, in RunInput) (*ElevatedToken, error) {
 		return nil, NewInteractionRequiredError(scope)
 	}
 
+	debuglog.Printf(ctx, "@automattic/vip:rechallenge:client", "createSession scope=%s", scope)
 	session, err := r.Client.CreateSession(CreateSessionInput{
 		Path:               in.Extension.CreateSessionPath,
 		RequestedOperation: scope,
@@ -182,6 +185,11 @@ func (r *Runner) Run(ctx context.Context, in RunInput) (*ElevatedToken, error) {
 		}
 
 		if !ss.Status.IsTerminal() {
+			status := "unknown"
+			if ss.Status == StatusPending {
+				status = "pending"
+			}
+			debuglog.Printf(ctx, "@automattic/vip:rechallenge:flow", "still %s; polling again", status)
 			continue
 		}
 

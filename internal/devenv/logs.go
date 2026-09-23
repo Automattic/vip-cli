@@ -3,6 +3,7 @@ package devenv
 import (
 	"context"
 
+	"github.com/Automattic/vip/internal/debuglog"
 	"github.com/Automattic/vip/internal/devenv/devlog"
 )
 
@@ -27,6 +28,7 @@ func logsArgs(o LogOptions) []string {
 
 // Logs streams an env's container logs, tee'd through the unified log.
 func Logs(ctx context.Context, slug string, o LogOptions) error {
+	debuglog.Printf(ctx, debugNamespace, "Will display logs for environment %q: service=%q follow=%t", slug, o.Service, o.Follow)
 	r, err := newRunner(ctx)
 	if err != nil {
 		return err

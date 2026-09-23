@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/Automattic/vip/internal/appctx"
+	"github.com/Automattic/vip/internal/debuglog"
 	"github.com/Automattic/vip/internal/envvar"
 	"github.com/Automattic/vip/internal/exit"
 )
@@ -75,6 +76,7 @@ func runEnvvarSet(cmd *cobra.Command, args []string) error {
 	}
 
 	// Validate name (Node parity: validateName, then NEW_RELIC block).
+	debuglog.Printf(cmd.Context(), "@automattic/vip:bin:config:envvar", "Request: Set environment variable %q for app_id=%d env_id=%d", name, ae.App.ID, ae.Env.ID)
 	if err := envvar.ValidateName(name); err != nil {
 		fmt.Fprintln(cmd.OutOrStdout(), color.RedString(err.Error()))
 		trackEvent("envvar_set_command_error", map[string]any{"error": "invalid_name"})

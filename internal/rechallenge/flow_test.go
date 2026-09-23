@@ -11,6 +11,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/Automattic/vip/internal/debuglog"
 )
 
 type fakeTracker struct {
@@ -77,7 +79,9 @@ func TestFlowHappyPathVerified(t *testing.T) {
 		Sleep:      func(_ context.Context, _ time.Duration) error { return nil },
 	}
 
-	tok, err := r.Run(context.Background(), RunInput{
+	var diagnostics bytes.Buffer
+	debugCtx := debuglog.WithLogger(context.Background(), "@automattic/vip:rechallenge:*", &diagnostics)
+	tok, err := r.Run(debugCtx, RunInput{
 		RequestedOperation: "doThing",
 		Interactive:        true,
 		Extension: Extension{
@@ -93,6 +97,16 @@ func TestFlowHappyPathVerified(t *testing.T) {
 	}
 	if tok.Token != "opaque" {
 		t.Errorf("token = %q", tok.Token)
+	}
+	for _, want := range []string{"createSession scope=doThing", "still pending; polling again"} {
+		if !strings.Contains(diagnostics.String(), want) {
+			t.Errorf("missing %q in diagnostics: %q", want, diagnostics.String())
+		}
+	}
+	for _, secret := range []string{"opaque", "https://example/v/c1"} {
+		if strings.Contains(diagnostics.String(), secret) {
+			t.Fatal("rechallenge diagnostic leaked credentials")
+		}
 	}
 	if atomic.LoadInt32(&openCalled) != 1 {
 		t.Errorf("OpenURL called %d times, want 1", openCalled)

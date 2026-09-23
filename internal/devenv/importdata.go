@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/Automattic/vip/internal/appctx"
+	"github.com/Automattic/vip/internal/debuglog"
 	"github.com/Automattic/vip/internal/devenv/dockercli"
 	"github.com/Automattic/vip/internal/searchreplace"
 )
@@ -207,6 +208,7 @@ func containerID(ctx context.Context, r importRunner, slug, service string) (str
 // ImportSQL imports a SQL file into a running env, optionally search-replacing
 // it first. The real docker cp + exec are exercised under the devenv_e2e gate.
 func ImportSQL(ctx context.Context, slug, file string, o ImportOptions) error {
+	debuglog.Printf(ctx, debugNamespace, "Will import SQL into environment %q: inPlace=%t searchReplacePairs=%d", slug, o.InPlace, len(o.SearchReplace))
 	// --in-place rewrites the user's own dump irreversibly. Node reaches
 	// searchAndReplace from here via resolveImportPath (dev-environment-core.ts:854)
 	// with no batchMode, so its "This operation is not reversible" confirm
@@ -296,7 +298,7 @@ func importSQL(ctx context.Context, r importRunner, slug, file string, o ImportO
 	// `wp search-replace` after the import instead (see importMyDumperDump).
 	resolved := file
 	if !isMyDumper && len(o.SearchReplace) > 0 {
-		res, err := searchreplace.Run(file, searchReplacePairs(o.SearchReplace), searchreplace.Options{InPlace: o.InPlace})
+		res, err := searchreplace.RunContext(ctx, file, searchReplacePairs(o.SearchReplace), searchreplace.Options{InPlace: o.InPlace})
 		if err != nil {
 			return err
 		}
@@ -476,6 +478,7 @@ func decompressDumpToTemp(src string) (path string, cleanup func(), err error) {
 
 // ImportMedia copies a local media directory's contents into the env uploads.
 func ImportMedia(ctx context.Context, slug, srcDir string) error {
+	debuglog.Printf(ctx, debugNamespace, "Will import media into environment %q", slug)
 	r, err := newRunner(ctx)
 	if err != nil {
 		return err
