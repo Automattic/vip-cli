@@ -283,10 +283,15 @@ func TestUnauthorizedCredentialSourceNodeGoParity(t *testing.T) {
 						} else if !strings.Contains(result.Stderr, "vip logout") || strings.Contains(result.Stderr, "VIP_CLI_TOKEN") {
 							t.Fatalf("wrong stored recovery guidance: %q", result.Stderr)
 						}
-						if previous != "" && previous != result.Stderr {
-							t.Fatalf("Node and Go 401 messages differ: %q != %q", previous, result.Stderr)
+						// Apply the harness's existing platform-noise rules before comparing auth errors.
+						stderr, err := normalizeStderr(result.Stderr, nil)
+						if err != nil {
+							t.Fatal(err)
 						}
-						previous = result.Stderr
+						if previous != "" && previous != stderr {
+							t.Fatalf("Node and Go 401 messages differ: %q != %q", previous, stderr)
+						}
+						previous = stderr
 					}
 					if requests != 2 {
 						t.Fatalf("401 was retried: got %d requests, want one per runtime", requests)
