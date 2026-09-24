@@ -195,7 +195,7 @@ const rootCmd = async function () {
 		}
 	}
 
-	if ( skipsLogin || token?.valid() ) {
+	if ( skipsLogin || ( ! isLoginCommand && token?.valid() ) ) {
 		await runCmd();
 	} else {
 		token = await runLoginFlow();

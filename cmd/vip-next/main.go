@@ -14,6 +14,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"net/http"
 	"os"
 	"strings"
 
@@ -225,10 +226,11 @@ func configureAuthenticated(
 // expired. So a bypassed invocation gets the same client as an authed one, with
 // two deliberate differences:
 //
-//   - the token is best-effort. A missing or unreadable credential yields an
+//   - stored credentials are best-effort. A missing or unreadable credential yields an
 //     empty bearer and the command 401s, exactly as Node does; it must never
 //     turn into a hard error here, because `--version` and `--help` reach this
-//     path on machines that have never logged in.
+//     path on machines that have never logged in. An invalid environment PAT
+//     instead fails when an API request is attempted, preserving local commands.
 //   - no rechallenge middleware. Step-up approval needs a real session, and
 //     nothing reachable without a login performs a step-up-guarded mutation.
 //
@@ -248,6 +250,14 @@ func configureBypassed(apiHost string, store *auth.Store, tracker *telemetry.Tra
 		gql.NewErrorMiddleware(gql.ErrorConfig{ExitOnError: true}),
 		gql.NewRetryMiddleware(gql.RetryConfig{}),
 	}
+	if err != nil && auth.EnvironmentTokenConfigured() {
+		// Bypassing the login prompt must not hide an explicitly configured
+		// invalid PAT. Defer the error until a request so help/version and
+		// local commands remain available without valid API credentials.
+		middleware = append([]gql.Middleware{func(gql.Doer) gql.Doer {
+			return authErrorDoer{err: err}
+		}}, middleware...)
+	}
 	gqlClient := graphql.NewClient(
 		apiHost+"/graphql",
 		gql.HTTPClientWithMiddleware(apiHost, raw, middleware),
@@ -260,6 +270,12 @@ func configureBypassed(apiHost string, store *auth.Store, tracker *telemetry.Tra
 		Tracker:      tracker,
 		AppCtxConfig: appctx.AppContextConfig{Client: gqlClient},
 	})
+}
+
+type authErrorDoer struct{ err error }
+
+func (d authErrorDoer) Do(*http.Request) (*http.Response, error) {
+	return nil, d.err
 }
 
 // defaultAPIHost returns the VIP API host, preferring the API_HOST env var.
