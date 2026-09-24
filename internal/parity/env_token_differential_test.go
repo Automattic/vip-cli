@@ -238,3 +238,61 @@ func TestEnvironmentPATInvalidDoesNotBlockVersionOrLogout(t *testing.T) {
 		}
 	}
 }
+
+func TestUnauthorizedCredentialSourceNodeGoParity(t *testing.T) {
+	rig, skip := differentialAvailable(t)
+	if skip != "" {
+		t.Skip(LoudSkip("TestUnauthorizedCredentialSourceNodeGoParity", skip))
+	}
+	for _, source := range []struct {
+		name, raw   string
+		environment bool
+	}{
+		{"environment", validEnvironmentFixtureToken(t), true},
+		{"stored", "", false},
+	} {
+		t.Run(source.name, func(t *testing.T) {
+			for _, response := range []struct{ name, body, reason string }{
+				{"json", `{}`, "You are not authorized to perform this request"},
+				{"non-json", `not-json`, "You are not authorized to perform this request"},
+				{"inactivity", `{"code":"token-disabled-inactivity"}`, "Your token has expired due to inactivity"},
+			} {
+				t.Run(response.name, func(t *testing.T) {
+					requests := 0
+					rig.serve(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+						requests++
+						w.Header().Set("Content-Type", "application/json")
+						w.WriteHeader(http.StatusUnauthorized)
+						_, _ = w.Write([]byte(response.body))
+					}))
+					var previous string
+					for _, bin := range []string{rig.nodeBin, rig.goBin} {
+						result, err := Run(RunSpec{Binary: bin, Argv: []string{"whoami"}, Env: FixtureEnv(map[string]string{
+							"API_HOST": rig.srv.URL, "VIP_CLI_TOKEN": source.raw, "VIP_TOKEN_OVERRIDE": rig.token,
+						})})
+						if err != nil {
+							t.Fatal(err)
+						}
+						if result.ExitCode != 1 || result.Stdout != "" || !strings.Contains(result.Stderr, response.reason) {
+							t.Fatalf("%s: exit=%d stdout=%q stderr=%q", bin, result.ExitCode, result.Stdout, result.Stderr)
+						}
+						if source.environment {
+							if !strings.Contains(result.Stderr, "replace the token in VIP_CLI_TOKEN") || !strings.Contains(result.Stderr, "unset VIP_CLI_TOKEN") || strings.Contains(result.Stderr, "vip logout") {
+								t.Fatalf("wrong environment recovery guidance: %q", result.Stderr)
+							}
+						} else if !strings.Contains(result.Stderr, "vip logout") || strings.Contains(result.Stderr, "VIP_CLI_TOKEN") {
+							t.Fatalf("wrong stored recovery guidance: %q", result.Stderr)
+						}
+						if previous != "" && previous != result.Stderr {
+							t.Fatalf("Node and Go 401 messages differ: %q != %q", previous, result.Stderr)
+						}
+						previous = result.Stderr
+					}
+					if requests != 2 {
+						t.Fatalf("401 was retried: got %d requests, want one per runtime", requests)
+					}
+				})
+			}
+		})
+	}
+}
