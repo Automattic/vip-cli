@@ -31,7 +31,9 @@ import (
 // environment found" error / DEFAULT_SLUG fallback.
 func ResolveSlug(cmd *cobra.Command) (string, error) {
 	if s, _ := cmd.Flags().GetString("slug"); s != "" {
-		return nodeflags.ProcessSlug(s), nil
+		slug := nodeflags.ProcessSlug(s)
+		devEnvTrackingResolved(cmd, slug)
+		return slug, nil
 	}
 	if err := rejectAppEnvAlias(cmd); err != nil {
 		return "", err
@@ -46,10 +48,15 @@ func ResolveSlug(cmd *cobra.Command) (string, error) {
 // options before calling getEnvironmentName (vip-dev-env-sync-sql.js:98).
 func ResolveLocalSlug(cmd *cobra.Command) (string, error) {
 	if s, _ := cmd.Flags().GetString("slug"); s != "" {
-		return nodeflags.ProcessSlug(s), nil
+		slug := nodeflags.ProcessSlug(s)
+		devEnvTrackingResolved(cmd, slug)
+		return slug, nil
 	}
 	slug, err := configFileSlug(cmd)
 	if err != nil || slug != "" {
+		if err == nil {
+			devEnvTrackingResolved(cmd, slug)
+		}
 		return slug, err
 	}
 	names := instancedata.AllNames()
@@ -57,10 +64,15 @@ func ResolveLocalSlug(cmd *cobra.Command) (string, error) {
 	case 0:
 		return "", errors.New("no dev environments found; create one with `vip dev-env create`")
 	case 1:
+		devEnvTrackingResolved(cmd, names[0])
 		return names[0], nil
 	}
 	if appctx.IsInteractive(cmd) {
-		return appctx.Select(cmd, "Which environment?", names)
+		slug, err := appctx.Select(cmd, "Which environment?", names)
+		if err == nil {
+			devEnvTrackingResolved(cmd, slug)
+		}
+		return slug, err
 	}
 	return "", fmt.Errorf("multiple environments found; specify --slug: %w", appctx.ErrNonInteractive)
 }

@@ -324,6 +324,7 @@ func runDevEnvCreate(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+	devEnvTrackingCreate(cmd, cfg.Slug)
 	ctx, finish := openDevEnvLog(cmd, cfg.Slug, true)
 	defer finish()
 	if err := devenv.Create(ctx, cfg); err != nil {
@@ -612,6 +613,7 @@ func devEnvStartCmd() *cobra.Command {
 					msg := fmt.Sprintf("Found an existing Lando environment %q. vip-next will take it over — reusing its database and removing the old Lando containers (your data volume is kept). This process is irreversible. Continue?", slug)
 					confirmed, cerr := appctx.Confirm(cmd, msg, false)
 					if cerr == appctx.ErrNonInteractive || (!confirmed && cerr == nil) {
+						devEnvTrackingCancelled(cmd)
 						fmt.Fprintln(cmd.OutOrStdout(), "Command cancelled")
 						return nil
 					}
@@ -690,6 +692,7 @@ func devEnvDestroyCmd() *cobra.Command {
 					return err
 				}
 				if !ok {
+					devEnvTrackingCancelled(cmd)
 					return nil
 				}
 			}
@@ -766,8 +769,12 @@ func devEnvPurgeCmd() *cobra.Command {
 					return err
 				}
 				if !ok {
+					devEnvTrackingCancelled(cmd)
 					return nil
 				}
+			}
+			if len(instancedata.AllNames()) > 0 {
+				devEnvTrackingBegin(cmd, map[string]any{"all": true})
 			}
 			return devenv.Purge(cmd.Context(), soft)
 		}}

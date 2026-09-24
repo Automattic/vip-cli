@@ -1140,18 +1140,35 @@ export async function getTagChoices(): Promise<
 	} );
 }
 
-// Credentials stored in instance data must never be sent as event props (PLTFRM-2820)
-const TRACKING_EXCLUDED_KEYS: ReadonlySet< string > = new Set( [
-	'adminPassword',
-	'autologinKey',
-] );
+// Keep this list in sync with vip-next's devEnvTrackingInfo. Instance data may
+// contain credentials and user-defined fields that must stay local (PLTFRM-2820).
+const TRACKING_ALLOWED_KEYS = [
+	'siteSlug',
+	'wpTitle',
+	'multisite',
+	'wordpress',
+	'muPlugins',
+	'appCode',
+	'mediaRedirectDomain',
+	'phpmyadmin',
+	'xdebug',
+	'xdebugConfig',
+	'mariadb',
+	'php',
+	'elasticsearch',
+	'mailpit',
+	'photon',
+	'cron',
+	'pullAfter',
+	'version',
+] as const;
 
 export function getEnvTrackingInfo( slug: string ): Record< string, unknown > {
 	try {
 		const envData = readEnvironmentData( slug );
 		const result: Record< string, unknown > = { slug };
-		for ( const key of Object.keys( envData ) ) {
-			if ( TRACKING_EXCLUDED_KEYS.has( key ) ) {
+		for ( const key of TRACKING_ALLOWED_KEYS ) {
+			if ( ! Object.hasOwn( envData, key ) ) {
 				continue;
 			}
 
@@ -1164,7 +1181,9 @@ export function getEnvTrackingInfo( slug: string ): Record< string, unknown > {
 			result[ snakeCasedKey ] = value;
 		}
 
-		result.php = ( result.php as string ).replace( /^[^:]+:/, '' );
+		if ( typeof result.php === 'string' ) {
+			result.php = result.php.replace( /^[^:]+:/, '' );
+		}
 
 		return result;
 	} catch {
