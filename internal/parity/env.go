@@ -67,12 +67,11 @@ var scenarioEnvPassthrough = []string{
 // same on every machine; a scenario's own Env map overrides any of them.
 //
 //   - API_HOST      dead loopback (see FixtureAPIHost)
-//   - VIP_TOKEN_OVERRIDE  a deterministic fake JWT that authenticates the GO
-//     binary without touching the host keychain. It does nothing for Node and
-//     never did: the variable has never existed upstream (`git log --all -S` on
-//     Automattic/vip returns zero commits), Token.get() reads getKeychain() and
-//     nothing else. Scenarios that run the real Node binary seed a credential
-//     instead — see keychain.go and differential_test.go. Keeping the override
+//   - VIP_TOKEN_OVERRIDE  a deterministic fake JWT that authenticates the Go
+//     binary without touching the host keychain. Node does not use this
+//     test-only override; its production VIP_CLI_TOKEN source is separate.
+//     Scenarios that run the real Node binary seed a credential instead — see
+//     keychain.go and differential_test.go. Keeping the override
 //     here is what stops the ~50 mock-only scenarios from having to write
 //     credentials at all.
 //   - NODE_ENV/GO_ENV     test mode: suppresses Node's update-notifier network

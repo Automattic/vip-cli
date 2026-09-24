@@ -137,7 +137,17 @@ func runWithDeps(argv []string, deps runDeps) error {
 	// on the authed path. `rewritten` has the alias stripped, which would
 	// wrongly bypass them.
 	apiHost := defaultAPIHost()
-	k := deps.NewKeychain(apiHost)
+	var k *keychain.Keychain
+	if auth.EnvironmentTokenConfigured() {
+		// The environment PAT is resolved before any stored credential. Keep
+		// service names for session wiring without constructing a backend.
+		k = &keychain.Keychain{
+			Service:       keychain.ServiceNameForHost(apiHost),
+			LegacyService: keychain.LegacyServiceNameForHost(apiHost),
+		}
+	} else {
+		k = deps.NewKeychain(apiHost)
+	}
 	store := auth.NewStore(k)
 	deps.Tracker.SetPendoTokenSource(store.Load)
 	if !auth.ShouldBypassAuth(argv) {
@@ -166,7 +176,11 @@ func configureAuthenticated(
 		Backend: session.Keychain.Backend,
 		Service: rechallenge.ServiceNameForHost(apiHost),
 	}
-	elevatedCache := &rechallenge.TokenCache{Keychain: elevatedKeychain}
+	elevatedCache := &rechallenge.TokenCache{
+		Keychain:           elevatedKeychain,
+		PrimaryFingerprint: rechallenge.TokenFingerprint(session.Raw),
+		MemoryOnly:         session.Source == auth.SourceEnvironment,
+	}
 	rechallengeRunner := &rechallenge.Runner{
 		Client:     &rechallenge.Client{APIHost: apiHost, BearerToken: session.Raw},
 		TokenCache: elevatedCache,

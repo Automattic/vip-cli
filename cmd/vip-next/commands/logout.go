@@ -22,6 +22,10 @@ func LogoutCmd() *cobra.Command {
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			if auth.EnvironmentTokenConfigured() {
+				fmt.Fprintf(cmd.OutOrStdout(), "The %s environment variable is still active. Unset it to stop authenticating with that token; stored credentials were left untouched.\n", auth.EnvironmentTokenName)
+				return nil
+			}
 			cfg := GetConfig()
 			k := keychain.New(cfg.APIHost)
 			store := auth.NewStore(k)

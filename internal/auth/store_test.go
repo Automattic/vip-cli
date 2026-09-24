@@ -3,7 +3,9 @@ package auth
 import (
 	"errors"
 	"os"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/Automattic/vip/internal/keychain"
 )
@@ -335,5 +337,47 @@ func TestStoreDeleteHookErrorIsNotFatal(t *testing.T) {
 	// proceeds even if tokenCache.clearAll throws).
 	if err := s.Delete(); err != nil {
 		t.Fatalf("Delete returned hook error; want nil so logout proceeds: %v", err)
+	}
+}
+
+func TestResolveEnvironmentPATBeforeKeychain(t *testing.T) {
+	valid := makeJWT(t, map[string]any{"id": 7, "iat": time.Now().Add(-time.Minute).Unix()})
+	t.Setenv("VIP_CLI_TOKEN", "  "+valid+"  ")
+	// A nil keychain proves this path cannot attempt a keychain read.
+	got, err := NewStore(nil).Resolve()
+	if err != nil {
+		t.Fatalf("Resolve: %v", err)
+	}
+	if got.Raw != valid || got.Source != SourceEnvironment {
+		t.Fatalf("Resolve = %+v, want environment PAT", got)
+	}
+}
+
+func TestResolveInvalidEnvironmentPATDoesNotFallBack(t *testing.T) {
+	expired := makeJWT(t, map[string]any{"id": 7, "iat": time.Now().Add(-2 * time.Hour).Unix(), "exp": time.Now().Add(-time.Hour).Unix()})
+	missingID := makeJWT(t, map[string]any{"iat": time.Now().Add(-time.Minute).Unix()})
+	for _, tc := range []struct{ name, raw string }{
+		{"malformed", "not-a-jwt"},
+		{"expired", expired},
+		{"missing-id", missingID},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Setenv("VIP_CLI_TOKEN", tc.raw)
+			if _, err := NewStore(nil).Resolve(); err == nil || !strings.Contains(err.Error(), "VIP_CLI_TOKEN") {
+				t.Fatalf("Resolve error = %v, want actionable environment-token error", err)
+			}
+		})
+	}
+}
+
+func TestResolveBlankEnvironmentPATUsesStoredToken(t *testing.T) {
+	t.Setenv("VIP_CLI_TOKEN", "   ")
+	s := newTestStore()
+	if err := s.Save("stored-token"); err != nil {
+		t.Fatal(err)
+	}
+	got, err := s.Resolve()
+	if err != nil || got.Raw != "stored-token" || got.Source != SourceStored {
+		t.Fatalf("Resolve = %+v, %v; want stored-token source", got, err)
 	}
 }

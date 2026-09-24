@@ -156,3 +156,25 @@ func TestLogoutCmdTokenPurge(t *testing.T) {
 		t.Fatalf("Load after logout = %v, want ErrNoToken", err)
 	}
 }
+
+func TestLogoutCmdEnvironmentPATDoesNotRevokeStoredToken(t *testing.T) {
+	t.Setenv("GO_ENV", "test")
+	t.Setenv("VIP_TOKEN_OVERRIDE", "stored-token")
+	t.Setenv("VIP_CLI_TOKEN", "environment-token")
+	var logoutHits int
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/logout" {
+			logoutHits++
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer srv.Close()
+
+	out, err := runLogoutCmd(t, srv)
+	if err != nil {
+		t.Fatalf("LogoutCmd: %v", err)
+	}
+	if logoutHits != 0 || !strings.Contains(out, "VIP_CLI_TOKEN") {
+		t.Fatalf("logout hits = %d, output = %q; want no revocation and environment guidance", logoutHits, out)
+	}
+}

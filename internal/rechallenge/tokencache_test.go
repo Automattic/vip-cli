@@ -137,3 +137,35 @@ func TestServiceNameForElevatedTokens(t *testing.T) {
 		t.Errorf("non-prod = %q", got)
 	}
 }
+
+func TestTokenCacheRejectsAnotherPrimaryPAT(t *testing.T) {
+	first := newTestCache()
+	first.PrimaryFingerprint = "fingerprint-A"
+	if err := first.Set("doThing", ElevatedToken{Token: "for-A", ExpiresAt: time.Now().Add(time.Hour)}); err != nil {
+		t.Fatal(err)
+	}
+	second := &TokenCache{Keychain: first.Keychain, PrimaryFingerprint: "fingerprint-B"}
+	got, err := second.Get("doThing")
+	if err != nil || got != nil {
+		t.Fatalf("Get with changed primary = %+v, %v; want no elevated token", got, err)
+	}
+}
+
+func TestTokenCacheEnvironmentModeNeedsNoKeychain(t *testing.T) {
+	cache := &TokenCache{MemoryOnly: true, PrimaryFingerprint: "fingerprint-env"}
+	tok := ElevatedToken{Token: "for-env", ExpiresAt: time.Now().Add(time.Hour)}
+	if err := cache.Set("doThing", tok); err != nil {
+		t.Fatalf("Set: %v", err)
+	}
+	got, err := cache.Get("doThing")
+	if err != nil || got == nil || got.Token != tok.Token {
+		t.Fatalf("Get = %+v, %v; want in-memory elevated token", got, err)
+	}
+	if err := cache.ClearAll(); err != nil {
+		t.Fatalf("ClearAll: %v", err)
+	}
+	got, err = cache.Get("doThing")
+	if err != nil || got != nil {
+		t.Fatalf("Get after ClearAll = %+v, %v; want nil", got, err)
+	}
+}

@@ -377,3 +377,47 @@ func TestIsNonInteractiveArgvBoundaries(t *testing.T) {
 		})
 	}
 }
+
+func TestWithAuthenticatedSessionUsesEnvironmentPATWithoutKeychain(t *testing.T) {
+	raw := validBootstrapRaw(t, 42)
+	t.Setenv("VIP_CLI_TOKEN", raw)
+	backend := &bootstrapBackend{getErr: errors.New("keychain must not be read")}
+	k := newBootstrapKeychain(backend)
+	loginCalls := 0
+	err := withAuthenticatedSession(true, authBootstrapDeps{
+		Keychain: k,
+		Store:    auth.NewStore(k),
+		Login: func() (*auth.Token, error) {
+			loginCalls++
+			return nil, errors.New("login must not run")
+		},
+	}, func(session *authSession) error {
+		if session.Raw != raw || session.Source != auth.SourceEnvironment {
+			t.Fatalf("session = %+v, want environment identity", session)
+		}
+		return nil
+	})
+	if err != nil || loginCalls != 0 {
+		t.Fatalf("withAuthenticatedSession = %v, login calls = %d", err, loginCalls)
+	}
+}
+
+func TestWithAuthenticatedSessionRejectsInvalidEnvironmentPATWithoutLogin(t *testing.T) {
+	t.Setenv("VIP_CLI_TOKEN", "not-a-jwt")
+	k := newBootstrapKeychain(&bootstrapBackend{getErr: errors.New("keychain must not be read")})
+	loginCalls := 0
+	err := withAuthenticatedSession(true, authBootstrapDeps{
+		Keychain: k,
+		Store:    auth.NewStore(k),
+		Login: func() (*auth.Token, error) {
+			loginCalls++
+			return nil, nil
+		},
+	}, func(*authSession) error {
+		t.Fatal("invalid environment PAT reached the command")
+		return nil
+	})
+	if err == nil || !strings.Contains(err.Error(), "VIP_CLI_TOKEN") || loginCalls != 0 {
+		t.Fatalf("error = %v, login calls = %d", err, loginCalls)
+	}
+}

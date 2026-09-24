@@ -2,8 +2,10 @@ package auth
 
 import (
 	"errors"
+	"fmt"
 	"log/slog"
 	"os"
+	"strings"
 
 	"github.com/Automattic/vip/internal/keychain"
 )
@@ -11,6 +13,23 @@ import (
 var ErrNoToken = errors.New("auth: no token stored")
 
 const legacyFallbackDisabledValue = "1"
+const EnvironmentTokenName = "VIP_CLI_TOKEN"
+
+type TokenSource string
+
+const (
+	SourceEnvironment TokenSource = "environment"
+	SourceStored      TokenSource = "stored"
+)
+
+type Credential struct {
+	Raw    string
+	Source TokenSource
+}
+
+func EnvironmentTokenConfigured() bool {
+	return strings.TrimSpace(os.Getenv(EnvironmentTokenName)) != ""
+}
 
 type Store struct {
 	K *keychain.Keychain
@@ -34,7 +53,27 @@ func (s *Store) Save(rawJWT string) error {
 	return err
 }
 
+func (s *Store) Resolve() (Credential, error) {
+	if raw := strings.TrimSpace(os.Getenv(EnvironmentTokenName)); raw != "" {
+		tok, err := ParseToken(raw)
+		if err != nil {
+			return Credential{}, fmt.Errorf("the token in %s is malformed; replace it with a Personal Access Token from %s, or unset %s to use stored credentials", EnvironmentTokenName, TokenURL, EnvironmentTokenName)
+		}
+		if !tok.Valid() {
+			return Credential{}, fmt.Errorf("the token in %s is expired or invalid; replace it with a Personal Access Token from %s, or unset %s to use stored credentials", EnvironmentTokenName, TokenURL, EnvironmentTokenName)
+		}
+		return Credential{Raw: tok.Raw, Source: SourceEnvironment}, nil
+	}
+	raw, err := s.loadStored()
+	return Credential{Raw: raw, Source: SourceStored}, err
+}
+
 func (s *Store) Load() (string, error) {
+	credential, err := s.Resolve()
+	return credential.Raw, err
+}
+
+func (s *Store) loadStored() (string, error) {
 	v, err := s.LoadPrimary()
 	if err == nil {
 		return v, nil
@@ -57,28 +96,10 @@ func (s *Store) Load() (string, error) {
 	return v, err
 }
 
-// tokenOverride returns VIP_TOKEN_OVERRIDE, but only in test mode.
-//
-// Node gates the same variable on NODE_ENV=test (src/lib/token.ts:105). Go has
-// no NODE_ENV, so the gate is GO_ENV=test — the equivalent this repo had already
-// settled on before this change: internal/telemetry/tracker.go:83 opts telemetry
-// out on GO_ENV=test, and internal/parity/env.go pins GO_ENV alongside NODE_ENV
-// for every harness subprocess. NODE_ENV=test is accepted too, so a shell set up
-// to drive both CLIs keeps working with one variable.
-//
-// Honest scope: this is NOT a security boundary. Anyone who can set
-// VIP_TOKEN_OVERRIDE in this process's environment can set GO_ENV as well, and
-// Node's gate is no stronger. What it does buy is the removal of a much likelier
-// non-adversarial failure: a VIP_TOKEN_OVERRIDE left exported in a CI image, a
-// shell profile or a .env from an earlier test run silently becoming the
-// identity every real command authenticates as — including `logout`, which read
-// the override to decide what to revoke but deleted the keychain credential, so
-// the two were different tokens.
-//
-// A gate that an env-var-capable attacker could not defeat would have to be
-// compile-time (a build tag, or testing.Testing()). Both were rejected: the
-// parity harness drives the SHIPPING binary and needs the hatch, so a
-// compile-time gate would mean shipping one binary and testing another.
+// tokenOverride returns VIP_TOKEN_OVERRIDE only in test mode. It is a Go-only
+// parity-test hatch, distinct from the production VIP_CLI_TOKEN source.
+// A test-mode gate prevents a stale override from silently changing the
+// identity of a normal invocation; it is not a security boundary.
 func tokenOverride() string {
 	if os.Getenv("GO_ENV") != "test" && os.Getenv("NODE_ENV") != "test" {
 		return ""

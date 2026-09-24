@@ -1,0 +1,14 @@
+name: env-token-whoami
+description: |
+  Run real Node and Go whoami commands with the same environment PAT while
+  different stored/test credentials exist; compare output and wire identity.
+argv: ["whoami"]
+env:
+  NODE_ENV: test
+  GO_ENV: test
+  DO_NOT_TRACK: "1"
+recording: whoami-baseline
+expect:
+  exit_code: 0
+normalize:
+  stdout: []
