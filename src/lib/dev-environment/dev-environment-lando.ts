@@ -3,7 +3,7 @@ import debugLib from 'debug';
 import Dockerode from 'dockerode';
 import { execFile } from 'node:child_process';
 import { lookup } from 'node:dns/promises';
-import { mkdir, rename, unlink, stat, writeFile } from 'node:fs/promises';
+import { mkdir, rename, unlink, stat, writeFile, access, constants } from 'node:fs/promises';
 import { cpus, EOL, totalmem, userInfo } from 'node:os';
 import path, { dirname } from 'node:path';
 import { promisify } from 'node:util';
@@ -23,6 +23,7 @@ import { DEV_ENVIRONMENT_NOT_FOUND } from '../constants/dev-environment';
 import env from '../env';
 import UserError from '../user-error';
 import { xdgData } from '../xdg-data';
+import { getExeName, getInstallDir, installBinary, updateDomains } from './hosts-updater';
 
 import type { NetworkInspectInfo } from 'dockerode';
 import type App from 'lando/lib/app';
@@ -502,12 +503,44 @@ export async function bootstrapLando( options: LandoBootstrapOptions = {} ): Pro
 	}
 }
 
-export async function landoStart( lando: Lando, instancePath: string ): Promise< void > {
+const autofixedApps = new WeakSet< App >();
+
+function installDnsAutofixer( app: App ): void {
+	if ( autofixedApps.has( app ) ) {
+		return;
+	}
+
+	autofixedApps.add( app );
+	app.events.on( 'post-start', 9, async () => {
+		const urlsToScan: string[] = [];
+		app.info
+			.filter( service => service.urls.length )
+			.forEach( service => {
+				service.urls.forEach( url => {
+					if ( ! /^https?:\/\/(localhost|127\.0\.0\.1):/.exec( url ) && ! url.includes( '*' ) ) {
+						urlsToScan.push( url );
+					}
+				} );
+			} );
+
+		await tryResolveDomains( urlsToScan, true );
+	} );
+}
+
+export async function landoStart(
+	lando: Lando,
+	instancePath: string,
+	autoFixDomainResolution = false
+): Promise< void > {
 	const started = new Date();
 	try {
 		debug( 'Will start lando app on path:', instancePath );
 
 		const app = await getLandoApplication( lando, instancePath );
+		if ( autoFixDomainResolution ) {
+			installDnsAutofixer( app );
+		}
+
 		await app.start();
 	} finally {
 		const duration = new Date().getTime() - started.getTime();
@@ -541,12 +574,19 @@ export async function landoLogs( lando: Lando, instancePath: string, options: La
 	}
 }
 
-export async function landoRebuild( lando: Lando, instancePath: string ): Promise< void > {
+export async function landoRebuild(
+	lando: Lando,
+	instancePath: string,
+	autoFixDomainResolution = false
+): Promise< void > {
 	const started = new Date();
 	try {
 		debug( 'Will rebuild lando app on path:', instancePath );
 
 		const app = await getLandoApplication( lando, instancePath );
+		if ( autoFixDomainResolution ) {
+			installDnsAutofixer( app );
+		}
 
 		await ensureNoOrphantProxyContainer( lando );
 		await app.rebuild();
@@ -776,7 +816,7 @@ async function getExtraServicesConnections(
 	return extraServices;
 }
 
-async function tryResolveDomains( urls: string[] ): Promise< void > {
+export async function tryResolveDomains( urls: string[], autofix: boolean ): Promise< void > {
 	const domains = [
 		...new Set(
 			urls
@@ -793,6 +833,7 @@ async function tryResolveDomains( urls: string[] ): Promise< void > {
 	];
 
 	const domainsToFix: string[] = [];
+	const pendingWarnings: string[] = [];
 	for ( const domain of domains ) {
 		try {
 			// eslint-disable-next-line no-await-in-loop
@@ -801,19 +842,37 @@ async function tryResolveDomains( urls: string[] ): Promise< void > {
 
 			if ( address.address !== '127.0.0.1' ) {
 				domainsToFix.push( domain );
-				console.warn(
-					chalk.yellow.bold( 'WARNING:' ),
+				pendingWarnings.push(
 					`${ domain } resolves to ${ address.address } instead of 127.0.0.1. Things may not work as expected.`
 				);
 			}
 		} catch ( err ) {
 			const msg = err instanceof Error ? err.message : 'Unknown error';
 			domainsToFix.push( domain );
-			console.warn( chalk.yellow.bold( 'WARNING:' ), `Failed to resolve ${ domain }: ${ msg }` );
+			pendingWarnings.push( `Failed to resolve ${ domain }: ${ msg }` );
 		}
 	}
 
 	if ( domainsToFix.length ) {
+		if ( autofix ) {
+			console.log( chalk.green( 'Attempting to fix domain resolution issues...' ) );
+			const result = await autofixDomains( domainsToFix );
+			if ( result instanceof Error ) {
+				// Autofix failed — surface the original DNS warnings so the user knows what went wrong
+				pendingWarnings.forEach( msg => console.warn( chalk.yellow.bold( 'WARNING:' ), msg ) );
+				console.error( chalk.red( result.message ) );
+				if ( result.cause ) {
+					console.error( chalk.red( 'Cause: ' ), ( result.cause as Error ).message );
+				}
+			} else {
+				// Autofix succeeded — suppress the warnings so a clean start looks clean
+				console.log( chalk.green( 'Domain resolution issues fixed successfully.' ) );
+				return;
+			}
+		} else {
+			pendingWarnings.forEach( msg => console.warn( chalk.yellow.bold( 'WARNING:' ), msg ) );
+		}
+
 		console.warn(
 			chalk.yellow( 'Please add the following lines to the hosts file on your system:\n' )
 		);
@@ -824,6 +883,48 @@ async function tryResolveDomains( urls: string[] ): Promise< void > {
 			)
 		);
 	}
+}
+
+function ensureError( error: unknown ): Error {
+	if ( error instanceof Error ) {
+		return error;
+	}
+
+	return new Error( String( error ) );
+}
+
+const AUTOFIX_DOWNLOAD_TIMEOUT_MS = 30_000;
+
+async function autofixDomains( domains: string[] ): Promise< true | Error > {
+	const dir = await getInstallDir();
+	const filename = getExeName();
+	let binary: string = path.join( dir, filename );
+
+	try {
+		await access( binary, constants.X_OK );
+	} catch {
+		try {
+			binary = await installBinary( 'latest', dir, AUTOFIX_DOWNLOAD_TIMEOUT_MS );
+		} catch ( err: unknown ) {
+			return new Error(
+				'Failed to install hosts updater binary, cannot autofix domain resolution issues.',
+				{ cause: ensureError( err ) }
+			);
+		}
+	}
+
+	const fixableDomains = domains.filter( domain => ! domain.includes( '*' ) );
+	if ( fixableDomains.length ) {
+		try {
+			await updateDomains( binary, fixableDomains );
+		} catch ( err ) {
+			return new Error( 'Failed to update hosts file, cannot autofix domain resolution issues.', {
+				cause: ensureError( err ),
+			} );
+		}
+	}
+
+	return true;
 }
 
 async function getRunningServicesForProject(
@@ -861,7 +962,7 @@ export async function checkEnvHealth(
 		} );
 
 	const urlsToScan = Object.keys( urls ).filter( url => ! url.includes( '*' ) );
-	await tryResolveDomains( urlsToScan );
+	await tryResolveDomains( urlsToScan, false );
 	app.urls.forEach( entry => {
 		// We use different status codes to see if the service is up.
 		// We may consider the service is up when Lando considers it is down.
