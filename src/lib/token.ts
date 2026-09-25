@@ -1,5 +1,5 @@
 import { jwtDecode } from 'jwt-decode';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 
 import { API_HOST, PRODUCTION_API_HOST } from './api/constants';
 import { getKeychain } from './keychain';
@@ -12,6 +12,18 @@ interface Payload {
 
 // Config
 export const SERVICE = 'vip-go-cli';
+export const ENV_TOKEN_NAME = 'VIP_CLI_TOKEN';
+export const TOKEN_URL = 'https://dashboard.wpvip.com/me/cli/token';
+
+export type TokenSource = 'environment' | 'stored';
+export interface ResolvedToken {
+	token: Token;
+	source: TokenSource;
+}
+
+export class EnvTokenError extends Error {}
+
+const environmentUUIDs = new Map< string, string >();
 export default class Token {
 	private readonly _raw?: string;
 	private readonly _id?: number;
@@ -79,6 +91,16 @@ export default class Token {
 	}
 
 	public static async uuid(): Promise< string > {
+		const environmentToken = process.env[ ENV_TOKEN_NAME ]?.trim();
+		if ( environmentToken ) {
+			const fingerprint = createHash( 'sha256' ).update( environmentToken ).digest( 'hex' );
+			let uuid = environmentUUIDs.get( fingerprint );
+			if ( ! uuid ) {
+				uuid = randomUUID();
+				environmentUUIDs.set( fingerprint, uuid );
+			}
+			return uuid;
+		}
 		const service = Token.getServiceName( '-uuid' );
 
 		const keychain = await getKeychain();
@@ -103,11 +125,37 @@ export default class Token {
 		return keychain.setPassword( service, token );
 	}
 
-	public static async get(): Promise< Token > {
+	public static isEnvironmentSet(): boolean {
+		return Boolean( process.env[ ENV_TOKEN_NAME ]?.trim() );
+	}
+
+	public static async resolve(): Promise< ResolvedToken > {
+		const environmentToken = process.env[ ENV_TOKEN_NAME ]?.trim();
+		if ( environmentToken ) {
+			let token: Token;
+			try {
+				token = new Token( environmentToken );
+			} catch {
+				throw new EnvTokenError(
+					`The token in ${ ENV_TOKEN_NAME } is malformed. Replace it with a Personal Access Token from ${ TOKEN_URL }, or unset ${ ENV_TOKEN_NAME } to use stored credentials.`
+				);
+			}
+			if ( ! token.valid() ) {
+				throw new EnvTokenError(
+					`The token in ${ ENV_TOKEN_NAME } is expired or invalid. Replace it with a Personal Access Token from ${ TOKEN_URL }, or unset ${ ENV_TOKEN_NAME } to use stored credentials.`
+				);
+			}
+			return { token, source: 'environment' };
+		}
+
 		const service = Token.getServiceName();
 		const keychain = await getKeychain();
-		const token = await keychain.getPassword( service );
-		return new Token( token ?? '' );
+		const raw = await keychain.getPassword( service );
+		return { token: new Token( raw ?? '' ), source: 'stored' };
+	}
+
+	public static async get(): Promise< Token > {
+		return ( await Token.resolve() ).token;
 	}
 
 	public static async purge(): Promise< boolean > {

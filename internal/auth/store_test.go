@@ -2,8 +2,9 @@ package auth
 
 import (
 	"errors"
-	"os"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/Automattic/vip/internal/keychain"
 )
@@ -41,7 +42,7 @@ func newTestStore() *Store {
 }
 
 func TestStoreSaveAndLoad(t *testing.T) {
-	t.Setenv("VIP_TOKEN_OVERRIDE", "")
+	t.Setenv("VIP_CLI_TOKEN", "")
 	s := newTestStore()
 	if err := s.Save("jwt.payload.sig"); err != nil {
 		t.Fatalf("Save: %v", err)
@@ -56,7 +57,7 @@ func TestStoreSaveAndLoad(t *testing.T) {
 }
 
 func TestStoreLoadFallsBackToLegacyWhenPrimaryMissing(t *testing.T) {
-	t.Setenv("VIP_TOKEN_OVERRIDE", "")
+	t.Setenv("VIP_CLI_TOKEN", "")
 	s := newTestStore()
 	be := s.K.Backend.(*memBackend)
 	if err := be.Set("vip-go-cli", "vip-go-cli", "legacy-token"); err != nil {
@@ -73,7 +74,7 @@ func TestStoreLoadFallsBackToLegacyWhenPrimaryMissing(t *testing.T) {
 }
 
 func TestStoreLoadPrimaryDoesNotReturnLegacyToken(t *testing.T) {
-	t.Setenv("VIP_TOKEN_OVERRIDE", "")
+	t.Setenv("VIP_CLI_TOKEN", "")
 	s := newTestStore()
 	be := s.K.Backend.(*memBackend)
 	if err := be.Set("vip-go-cli", "vip-go-cli", "legacy-token"); err != nil {
@@ -86,7 +87,7 @@ func TestStoreLoadPrimaryDoesNotReturnLegacyToken(t *testing.T) {
 }
 
 func TestStoreLoadPrefersPrimaryEvenWhenInvalid(t *testing.T) {
-	t.Setenv("VIP_TOKEN_OVERRIDE", "")
+	t.Setenv("VIP_CLI_TOKEN", "")
 	s := newTestStore()
 	be := s.K.Backend.(*memBackend)
 	if err := be.Set("vip-go-cli", "vip-go-cli", "valid-legacy-token"); err != nil {
@@ -106,7 +107,7 @@ func TestStoreLoadPrefersPrimaryEvenWhenInvalid(t *testing.T) {
 }
 
 func TestStoreSaveWritesOnlyPrimaryAndClearsFallbackMarker(t *testing.T) {
-	t.Setenv("VIP_TOKEN_OVERRIDE", "")
+	t.Setenv("VIP_CLI_TOKEN", "")
 	s := newTestStore()
 	be := s.K.Backend.(*memBackend)
 	if err := be.Set("vip-go-cli", "vip-go-cli", "legacy-token"); err != nil {
@@ -131,7 +132,7 @@ func TestStoreSaveWritesOnlyPrimaryAndClearsFallbackMarker(t *testing.T) {
 }
 
 func TestStoreDeleteLeavesLegacyAndDisablesFallback(t *testing.T) {
-	t.Setenv("VIP_TOKEN_OVERRIDE", "")
+	t.Setenv("VIP_CLI_TOKEN", "")
 	s := newTestStore()
 	be := s.K.Backend.(*memBackend)
 	if err := be.Set("vip-go-cli", "vip-go-cli", "legacy-token"); err != nil {
@@ -153,7 +154,7 @@ func TestStoreDeleteLeavesLegacyAndDisablesFallback(t *testing.T) {
 }
 
 func TestStoreDeleteWithoutPrimaryStillDisablesLegacyFallback(t *testing.T) {
-	t.Setenv("VIP_TOKEN_OVERRIDE", "")
+	t.Setenv("VIP_CLI_TOKEN", "")
 	s := newTestStore()
 	be := s.K.Backend.(*memBackend)
 	if err := be.Set("vip-go-cli", "vip-go-cli", "legacy-token"); err != nil {
@@ -191,122 +192,33 @@ func TestStoreDelete(t *testing.T) {
 	}
 }
 
-// TestStoreLoadIgnoresOverrideOutsideTestMode pins cutover item 2.15.
-// Node honours VIP_TOKEN_OVERRIDE only under NODE_ENV=test
-// (src/lib/token.ts:105); vip-next honoured it unconditionally, which turned a
-// test escape hatch into a live production auth path. GO_ENV is the Go-side
-// equivalent this repo already uses (internal/telemetry/tracker.go:83,
-// internal/parity/env.go pins both).
-func TestStoreLoadIgnoresOverrideOutsideTestMode(t *testing.T) {
-	for _, mode := range []map[string]string{
-		{"GO_ENV": "", "NODE_ENV": ""},
-		{"GO_ENV": "production", "NODE_ENV": "production"},
-		{"GO_ENV": "development", "NODE_ENV": ""},
+// A retired test variable must neither replace a stored identity nor create
+// a session, even when either runtime's test mode is enabled.
+func TestStoreIgnoresRetiredTokenOverride(t *testing.T) {
+	for _, mode := range []struct{ name, goEnv, nodeEnv string }{
+		{"normal", "", ""}, {"go-test", "test", ""}, {"node-test", "", "test"},
 	} {
-		for k, v := range mode {
-			t.Setenv(k, v)
-		}
-		t.Setenv("VIP_TOKEN_OVERRIDE", "ambient-attacker-token")
-
-		s := newTestStore()
-		if err := s.Save("keychain-token"); err != nil {
-			t.Fatalf("Save: %v", err)
-		}
-		got, err := s.Load()
-		if err != nil {
-			t.Fatalf("Load (%v): %v", mode, err)
-		}
-		if got != "keychain-token" {
-			t.Errorf("Load with %v = %q, want the stored credential", mode, got)
-		}
-		primary, err := s.LoadPrimary()
-		if err != nil {
-			t.Fatalf("LoadPrimary (%v): %v", mode, err)
-		}
-		if primary != "keychain-token" {
-			t.Errorf("LoadPrimary with %v = %q, want the stored credential", mode, primary)
-		}
-	}
-}
-
-// TestLogoutRevokesTheSameTokenItDeletes reproduces the compounding half of
-// 2.15. `vip logout` reads the bearer to revoke with LoadPrimary and then purges
-// the keychain with Delete. While the override was honoured unconditionally,
-// those were two DIFFERENT tokens: `VIP_TOKEN_OVERRIDE=x vip-next logout`
-// revoked x server-side and deleted the user's real credential locally, leaving
-// a live session nobody could log out of.
-func TestLogoutRevokesTheSameTokenItDeletes(t *testing.T) {
-	t.Setenv("GO_ENV", "")
-	t.Setenv("NODE_ENV", "")
-	t.Setenv("VIP_TOKEN_OVERRIDE", "some-other-session")
-
-	s := newTestStore()
-	if err := s.Save("the-credential-logout-will-delete"); err != nil {
-		t.Fatalf("Save: %v", err)
-	}
-	revoked, err := s.LoadPrimary()
-	if err != nil {
-		t.Fatalf("LoadPrimary: %v", err)
-	}
-	if err := s.Delete(); err != nil {
-		t.Fatalf("Delete: %v", err)
-	}
-	if revoked != "the-credential-logout-will-delete" {
-		t.Errorf("logout would revoke %q but delete the stored credential", revoked)
-	}
-}
-
-// TestStoreLoadIgnoresOverrideWithNoStoredToken is the other half: outside test
-// mode the override must not manufacture a session out of nothing.
-func TestStoreLoadIgnoresOverrideWithNoStoredToken(t *testing.T) {
-	t.Setenv("GO_ENV", "")
-	t.Setenv("NODE_ENV", "")
-	t.Setenv("VIP_TOKEN_OVERRIDE", "ambient-attacker-token")
-
-	s := newTestStore()
-	if _, err := s.Load(); !errors.Is(err, ErrNoToken) {
-		t.Errorf("Load = %v, want ErrNoToken", err)
-	}
-}
-
-func TestStoreLoadHonorsOverride(t *testing.T) {
-	t.Setenv("GO_ENV", "test")
-	s := newTestStore()
-	// Set a token in the keychain so we confirm the env var wins over it.
-	if err := s.Save("keychain-token"); err != nil {
-		t.Fatalf("Save: %v", err)
-	}
-	t.Setenv("VIP_TOKEN_OVERRIDE", "override-token")
-	got, err := s.Load()
-	if err != nil {
-		t.Fatalf("Load with override: %v", err)
-	}
-	if got != "override-token" {
-		t.Errorf("Load = %q, want %q", got, "override-token")
-	}
-}
-
-func TestStoreLoadHonorsOverrideWhenKeychainEmpty(t *testing.T) {
-	t.Setenv("NODE_ENV", "test")
-	s := newTestStore()
-	// No token in keychain; env var should still provide a value.
-	t.Setenv("VIP_TOKEN_OVERRIDE", "env-only-token")
-	got, err := s.Load()
-	if err != nil {
-		t.Fatalf("Load with override (empty keychain): %v", err)
-	}
-	if got != "env-only-token" {
-		t.Errorf("Load = %q, want %q", got, "env-only-token")
-	}
-}
-
-// Ensure the override is not active when the env var is unset (regression guard).
-func TestStoreLoadNoOverrideWhenEnvUnset(t *testing.T) {
-	s := newTestStore()
-	os.Unsetenv("VIP_TOKEN_OVERRIDE")
-	_, err := s.Load()
-	if !errors.Is(err, ErrNoToken) {
-		t.Errorf("expected ErrNoToken without override, got %v", err)
+		t.Run(mode.name, func(t *testing.T) {
+			t.Setenv("GO_ENV", mode.goEnv)
+			t.Setenv("NODE_ENV", mode.nodeEnv)
+			t.Setenv("VIP_CLI_TOKEN", "")
+			t.Setenv("VIP_TOKEN_OVERRIDE", "retired-override")
+			s := newTestStore()
+			if _, err := s.Load(); !errors.Is(err, ErrNoToken) {
+				t.Fatalf("empty store: Load error = %v, want ErrNoToken", err)
+			}
+			if err := s.Save("stored-token"); err != nil {
+				t.Fatal(err)
+			}
+			credential, err := s.Resolve()
+			if err != nil || credential.Raw != "stored-token" || credential.Source != SourceStored {
+				t.Fatalf("Resolve = %+v, %v; want stored identity", credential, err)
+			}
+			primary, err := s.LoadPrimary()
+			if err != nil || primary != "stored-token" {
+				t.Fatalf("LoadPrimary = %q, %v; want stored identity for revocation", primary, err)
+			}
+		})
 	}
 }
 
@@ -335,5 +247,47 @@ func TestStoreDeleteHookErrorIsNotFatal(t *testing.T) {
 	// proceeds even if tokenCache.clearAll throws).
 	if err := s.Delete(); err != nil {
 		t.Fatalf("Delete returned hook error; want nil so logout proceeds: %v", err)
+	}
+}
+
+func TestResolveEnvironmentPATBeforeKeychain(t *testing.T) {
+	valid := makeJWT(t, map[string]any{"id": 7, "iat": time.Now().Add(-time.Minute).Unix()})
+	t.Setenv("VIP_CLI_TOKEN", "  "+valid+"  ")
+	// A nil keychain proves this path cannot attempt a keychain read.
+	got, err := NewStore(nil).Resolve()
+	if err != nil {
+		t.Fatalf("Resolve: %v", err)
+	}
+	if got.Raw != valid || got.Source != SourceEnvironment {
+		t.Fatalf("Resolve = %+v, want environment PAT", got)
+	}
+}
+
+func TestResolveInvalidEnvironmentPATDoesNotFallBack(t *testing.T) {
+	expired := makeJWT(t, map[string]any{"id": 7, "iat": time.Now().Add(-2 * time.Hour).Unix(), "exp": time.Now().Add(-time.Hour).Unix()})
+	missingID := makeJWT(t, map[string]any{"iat": time.Now().Add(-time.Minute).Unix()})
+	for _, tc := range []struct{ name, raw string }{
+		{"malformed", "not-a-jwt"},
+		{"expired", expired},
+		{"missing-id", missingID},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Setenv("VIP_CLI_TOKEN", tc.raw)
+			if _, err := NewStore(nil).Resolve(); err == nil || !strings.Contains(err.Error(), "VIP_CLI_TOKEN") {
+				t.Fatalf("Resolve error = %v, want actionable environment-token error", err)
+			}
+		})
+	}
+}
+
+func TestResolveBlankEnvironmentPATUsesStoredToken(t *testing.T) {
+	t.Setenv("VIP_CLI_TOKEN", "   ")
+	s := newTestStore()
+	if err := s.Save("stored-token"); err != nil {
+		t.Fatal(err)
+	}
+	got, err := s.Resolve()
+	if err != nil || got.Raw != "stored-token" || got.Source != SourceStored {
+		t.Fatalf("Resolve = %+v, %v; want stored-token source", got, err)
 	}
 }

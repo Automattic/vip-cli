@@ -82,3 +82,70 @@ describe( 'token tests', () => {
 		} );
 	} );
 } );
+
+// Credential source selection must never touch a stored credential when an
+// environment PAT was explicitly supplied.
+describe( 'environment PAT resolution', () => {
+	const original = process.env.VIP_CLI_TOKEN;
+	const valid =
+		'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiaWQiOjcsImlhdCI6MTUxNjIzOTAyMn0.RTJMXHhhiaCxQberZ5Pre7SBU3Ci8EvCyaOXoqG3pNA';
+	let keychainSpy;
+
+	beforeEach( () => {
+		delete process.env.VIP_CLI_TOKEN;
+		keychainSpy = jest
+			.spyOn( require( '../../src/lib/keychain' ), 'getKeychain' )
+			.mockResolvedValue( {
+				getPassword: jest.fn().mockResolvedValue( valid ),
+				setPassword: jest.fn().mockResolvedValue( true ),
+				deletePassword: jest.fn().mockResolvedValue( true ),
+			} );
+	} );
+
+	afterEach( () => {
+		keychainSpy.mockRestore();
+		if ( original === undefined ) {
+			delete process.env.VIP_CLI_TOKEN;
+		} else {
+			process.env.VIP_CLI_TOKEN = original;
+		}
+	} );
+
+	it( 'uses the trimmed environment PAT without reading the keychain', async () => {
+		process.env.VIP_CLI_TOKEN = `  ${ valid }  `;
+		const resolved = await Token.resolve();
+		expect( resolved.source ).toBe( 'environment' );
+		expect( resolved.token.raw ).toBe( valid );
+		expect( keychainSpy ).not.toHaveBeenCalled();
+	} );
+
+	it( 'uses a process-local analytics ID without keychain access for an environment PAT', async () => {
+		process.env.VIP_CLI_TOKEN = valid;
+		const first = await Token.uuid();
+		const second = await Token.uuid();
+		expect( first ).toBeTruthy();
+		expect( second ).toBe( first );
+		expect( keychainSpy ).not.toHaveBeenCalled();
+	} );
+
+	it( 'uses the stored PAT when the environment value is blank', async () => {
+		process.env.VIP_CLI_TOKEN = '   ';
+		const resolved = await Token.resolve();
+		expect( resolved.source ).toBe( 'stored' );
+		expect( resolved.token.raw ).toBe( valid );
+		expect( keychainSpy ).toHaveBeenCalledTimes( 1 );
+	} );
+
+	it.each( [
+		[ 'malformed', 'not-a-jwt' ],
+		[
+			'expired',
+			'eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MiwiaWF0IjoxNTE1NzExMDY5LCJleHAiOjE1MTU3OTc0Njl9.signature',
+		],
+		[ 'missing id', 'eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1MTYyMzkwMjJ9.signature' ],
+	] )( 'rejects a %s environment PAT without falling back', async ( _label, raw ) => {
+		process.env.VIP_CLI_TOKEN = raw;
+		await expect( Token.resolve() ).rejects.toThrow( /VIP_CLI_TOKEN/ );
+		expect( keychainSpy ).not.toHaveBeenCalled();
+	} );
+} );

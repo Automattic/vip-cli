@@ -122,7 +122,7 @@ func TestM7aImportSQLScenarios(t *testing.T) {
 				scenario.Env = map[string]string{}
 			}
 			scenario.Env["API_HOST"] = srv.URL
-			scenario.Env["VIP_TOKEN_OVERRIDE"] = makeTestToken(t)
+			scenario.Env["VIP_CLI_TOKEN"] = makeTestToken(t)
 
 			res, err := Run(RunSpec{
 				Binary: goBin,

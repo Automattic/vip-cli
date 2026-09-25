@@ -272,7 +272,7 @@ func TestWPScenarios(t *testing.T) {
 
 		env := baseWPEnv()
 		env["API_HOST"] = srv.URL
-		env["VIP_TOKEN_OVERRIDE"] = makeTestToken(t)
+		env["VIP_CLI_TOKEN"] = makeTestToken(t)
 
 		res, err := Run(RunSpec{
 			Binary: goBin,
@@ -307,7 +307,7 @@ func TestWPScenarios(t *testing.T) {
 
 		env := baseWPEnv()
 		env["API_HOST"] = srv.URL
-		env["VIP_TOKEN_OVERRIDE"] = makeTestToken(t)
+		env["VIP_CLI_TOKEN"] = makeTestToken(t)
 		env["VIP_NON_INTERACTIVE"] = "1"
 
 		// @parityapp.production → resolve-app.json in wp-production-confirm-decline
@@ -350,7 +350,7 @@ func TestWPScenarios(t *testing.T) {
 
 		env := baseWPEnv()
 		env["API_HOST"] = srv.URL
-		env["VIP_TOKEN_OVERRIDE"] = makeTestToken(t)
+		env["VIP_CLI_TOKEN"] = makeTestToken(t)
 
 		// Use --yes to skip any production confirm (develop doesn't need it,
 		// but included for clarity). Pass a simple wp subcommand.
@@ -400,7 +400,7 @@ func TestWPScenarios(t *testing.T) {
 
 		env := baseWPEnv()
 		env["API_HOST"] = srv.URL
-		env["VIP_TOKEN_OVERRIDE"] = makeTestToken(t)
+		env["VIP_CLI_TOKEN"] = makeTestToken(t)
 
 		res, err := Run(RunSpec{
 			Binary: goBin,

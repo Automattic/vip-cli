@@ -11,10 +11,12 @@ import { RetryLink } from '@apollo/client/link/retry';
 import chalk from 'chalk';
 import debugLib from 'debug';
 import { Kind, OperationTypeNode } from 'graphql';
+import { Headers, type HeadersInit } from 'undici';
 
 import { API_URL } from './api/constants';
 import { safeGraphQLErrorDebugInfo } from './api/error-debug';
 import http from './api/http';
+import { ENV_TOKEN_NAME } from './token';
 
 // Config — re-exported from ./api/constants so modules in the rechallenge tree
 // can import them without pulling in the full api.ts graph (which would create
@@ -91,7 +93,7 @@ export default function API( {
 } = {} ): ApolloClient {
 	const errorLink = new ErrorLink( ( { error, operation } ) => {
 		if ( ! silenceAuthErrors && error instanceof ServerError && error.statusCode === 401 ) {
-			let message;
+			let message = 'You are not authorized to perform this request';
 			try {
 				const result = JSON.parse( error.bodyText ) as unknown;
 				if (
@@ -103,11 +105,19 @@ export default function API( {
 					message = 'Your token has expired due to inactivity';
 				}
 			} catch {
-				// If we can't parse the body, use the default message
-				message = 'You are not authorized to perform this request';
+				// Keep the default message when the response body is not JSON.
 			}
 
-			message += '; please log out with `vip logout`, then try again.';
+			const environmentToken = process.env[ ENV_TOKEN_NAME ]?.trim();
+			const { headers } = operation.getContext() as { headers?: HeadersInit };
+			const explicitAuthorization = new Headers( headers ).get( 'authorization' );
+			const usesEnvironmentToken =
+				environmentToken &&
+				( explicitAuthorization === null ||
+					explicitAuthorization === `Bearer ${ environmentToken }` );
+			message += usesEnvironmentToken
+				? `; replace the token in ${ ENV_TOKEN_NAME }, or unset ${ ENV_TOKEN_NAME } to use stored credentials.`
+				: '; please log out with `vip logout`, then try again.';
 			console.error( chalk.red( 'Unauthorized:' ), message );
 			process.exit( 1 );
 		}

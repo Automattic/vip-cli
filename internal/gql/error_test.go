@@ -201,3 +201,57 @@ func TestErrorMiddlewareWithAllowGQLErrorsDoesNotAffect401(t *testing.T) {
 		t.Errorf("401 must still print 'Unauthorized:'; got %q", stderr.String())
 	}
 }
+
+func TestErrorMiddleware401CredentialSourceGuidance(t *testing.T) {
+	for _, source := range []struct {
+		name, token, requestToken string
+		environment               bool
+	}{
+		{"environment", "environment-pat-sentinel", "environment-pat-sentinel", true},
+		{"stored", "", "stored-pat-sentinel", false},
+		{"blank-environment", "   ", "stored-pat-sentinel", false},
+		{"overridden", "environment-pat-sentinel", "deploy-token-sentinel", false},
+	} {
+		t.Run(source.name, func(t *testing.T) {
+			t.Setenv("VIP_CLI_TOKEN", source.token)
+			for _, response := range []struct{ name, body, reason string }{
+				{"json", `{}`, "You are not authorized to perform this request"},
+				{"non-json", `not-json`, "You are not authorized to perform this request"},
+				{"inactivity", `{"code":"token-disabled-inactivity"}`, "Your token has expired due to inactivity"},
+			} {
+				t.Run(response.name, func(t *testing.T) {
+					srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+						w.WriteHeader(http.StatusUnauthorized)
+						_, _ = w.Write([]byte(response.body))
+					}))
+					defer srv.Close()
+					var stderr bytes.Buffer
+					code := 0
+					c := NewClient(Config{APIHost: srv.URL, Token: source.requestToken, TestMode: true, Middleware: []Middleware{
+						NewErrorMiddleware(ErrorConfig{Stderr: &stderr, Exit: func(n int) { code = n }}),
+					}})
+					req, _ := http.NewRequest("POST", srv.URL+"/graphql", strings.NewReader(`{"query":"query { me { id } }"}`))
+					resp, err := c.Do(req)
+					if err != nil {
+						t.Fatal(err)
+					}
+					defer resp.Body.Close()
+					message := stderr.String()
+					if code != 1 || !strings.Contains(message, response.reason) {
+						t.Fatalf("exit=%d message=%q", code, message)
+					}
+					if source.environment {
+						if !strings.Contains(message, "replace the token in VIP_CLI_TOKEN") || !strings.Contains(message, "unset VIP_CLI_TOKEN to use stored credentials") || strings.Contains(message, "vip logout") {
+							t.Fatalf("environment PAT recovery guidance: %q", message)
+						}
+					} else if !strings.Contains(message, "please log out with `vip logout`") || strings.Contains(message, "VIP_CLI_TOKEN") {
+						t.Fatalf("stored PAT recovery guidance: %q", message)
+					}
+					if strings.Contains(message, "environment-pat-sentinel") {
+						t.Fatal("error leaked the token")
+					}
+				})
+			}
+		})
+	}
+}
