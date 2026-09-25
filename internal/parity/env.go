@@ -67,27 +67,20 @@ var scenarioEnvPassthrough = []string{
 // same on every machine; a scenario's own Env map overrides any of them.
 //
 //   - API_HOST      dead loopback (see FixtureAPIHost)
-//   - VIP_TOKEN_OVERRIDE  a deterministic fake JWT that authenticates the Go
-//     binary without touching the host keychain. Node does not use this
-//     test-only override; its production VIP_CLI_TOKEN source is separate.
-//     Scenarios that run the real Node binary seed a credential instead — see
-//     keychain.go and differential_test.go. Keeping the override
-//     here is what stops the ~50 mock-only scenarios from having to write
-//     credentials at all.
-//   - NODE_ENV/GO_ENV     test mode: suppresses Node's update-notifier network
-//     call, and is the gate Go still applies to the token override
-//     (internal/auth/store.go tokenOverride).
+//   - VIP_CLI_TOKEN a valid synthetic PAT for both runtimes. Stored-session
+//     scenarios explicitly clear it and seed credentials for an ephemeral host.
+//   - NODE_ENV/GO_ENV test mode: suppresses update-notifier network calls
 //   - DO_NOT_TRACK        no telemetry from either CLI. Note this does NOT stop
-//     Node from creating its "<service>-uuid" keychain entry: trackEvent calls
+//     a stored Node session from creating its "<service>-uuid" entry: trackEvent calls
 //     Token.uuid() (src/lib/tracker.ts:55) before any opt-out check, which is
 //     why that name is in ParityKeychainServices.
 func scenarioEnvPinned() map[string]string {
 	return map[string]string{
-		"API_HOST":           FixtureAPIHost,
-		"VIP_TOKEN_OVERRIDE": FixtureToken(),
-		"NODE_ENV":           "test",
-		"GO_ENV":             "test",
-		"DO_NOT_TRACK":       "1",
+		"API_HOST":      FixtureAPIHost,
+		"VIP_CLI_TOKEN": FixtureToken(),
+		"NODE_ENV":      "test",
+		"GO_ENV":        "test",
+		"DO_NOT_TRACK":  "1",
 	}
 }
 

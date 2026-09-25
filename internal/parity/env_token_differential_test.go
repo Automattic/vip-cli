@@ -39,6 +39,7 @@ func TestEnvironmentPATNodeGoParity(t *testing.T) {
 	if skip != "" {
 		t.Skip(LoudSkip("TestEnvironmentPATNodeGoParity", skip))
 	}
+	rig.ensureStoredCredentials(t)
 	response, err := os.ReadFile("../../testdata/parity/recordings/whoami-baseline/me-response.json")
 	if err != nil {
 		t.Fatal(err)
@@ -57,8 +58,7 @@ func TestEnvironmentPATNodeGoParity(t *testing.T) {
 	envPAT := validEnvironmentFixtureToken(t)
 	scenario.Env = rig.scenarioEnv(scenario)
 	scenario.Env["VIP_CLI_TOKEN"] = envPAT
-	// Go's test-only override and Node's seeded store contain a different PAT.
-	scenario.Env["VIP_TOKEN_OVERRIDE"] = rig.token
+	// Both stored credentials contain a different PAT.
 	diff, err := CompareBinaries(scenario, rig.nodeBin, rig.goBin)
 	if err != nil {
 		t.Fatal(err)
@@ -76,6 +76,7 @@ func TestEnvironmentPATInvalidFailsWithoutRequest(t *testing.T) {
 	if skip != "" {
 		t.Skip(LoudSkip("TestEnvironmentPATInvalidFailsWithoutRequest", skip))
 	}
+	rig.ensureStoredCredentials(t)
 	cases := map[string]string{
 		"malformed":  "not-a-jwt",
 		"missing-id": environmentFixtureToken(t, map[string]any{"iat": time.Now().Add(-time.Minute).Unix()}),
@@ -87,7 +88,6 @@ func TestEnvironmentPATInvalidFailsWithoutRequest(t *testing.T) {
 			rig.serve(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { requests++ }))
 			env := FixtureEnv(map[string]string{
 				"API_HOST": rig.srv.URL, "VIP_CLI_TOKEN": raw,
-				"VIP_TOKEN_OVERRIDE": rig.token,
 			})
 			for _, bin := range []string{rig.nodeBin, rig.goBin} {
 				result, err := Run(RunSpec{Binary: bin, Argv: []string{"whoami"}, Env: env})
@@ -110,6 +110,7 @@ func TestEnvironmentPATLogoutDoesNotRevokeStoredSession(t *testing.T) {
 	if skip != "" {
 		t.Skip(LoudSkip("TestEnvironmentPATLogoutDoesNotRevokeStoredSession", skip))
 	}
+	rig.ensureStoredCredentials(t)
 	logoutRequests := 0
 	rig.serve(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/logout" {
@@ -118,7 +119,6 @@ func TestEnvironmentPATLogoutDoesNotRevokeStoredSession(t *testing.T) {
 	}))
 	env := FixtureEnv(map[string]string{
 		"API_HOST": rig.srv.URL, "VIP_CLI_TOKEN": validEnvironmentFixtureToken(t),
-		"VIP_TOKEN_OVERRIDE": rig.token,
 	})
 	for _, bin := range []string{rig.nodeBin, rig.goBin} {
 		result, err := Run(RunSpec{Binary: bin, Argv: []string{"logout"}, Env: env})
@@ -131,6 +131,34 @@ func TestEnvironmentPATLogoutDoesNotRevokeStoredSession(t *testing.T) {
 	}
 	if logoutRequests != 0 {
 		t.Fatalf("environment logout revoked a server-side token %d times", logoutRequests)
+	}
+	// Clearing the environment source must reveal the original stored session.
+	if err := goKeychainOp(rig.srv.URL, "verify", rig.token); err != nil {
+		t.Fatal(err)
+	}
+	response, err := os.ReadFile("../../testdata/parity/recordings/whoami-baseline/me-response.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var authorizations []string
+	rig.serve(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		authorizations = append(authorizations, r.Header.Get("Authorization"))
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write(response)
+	}))
+	for _, bin := range []string{rig.nodeBin, rig.goBin} {
+		result, err := Run(RunSpec{Binary: bin, Argv: []string{"whoami"}, Env: FixtureEnv(map[string]string{
+			"API_HOST": rig.srv.URL, "VIP_CLI_TOKEN": "",
+		})})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if result.ExitCode != 0 {
+			t.Fatalf("stored session after environment logout: exit=%d stderr=%q", result.ExitCode, result.Stderr)
+		}
+	}
+	if len(authorizations) != 2 || authorizations[0] != "Bearer "+rig.token || authorizations[1] != "Bearer "+rig.token {
+		t.Fatalf("original stored sessions were not reused by both runtimes (%d requests)", len(authorizations))
 	}
 }
 
@@ -206,9 +234,10 @@ func TestStoredPATExplicitLoginStartsFlow(t *testing.T) {
 	if skip != "" {
 		t.Skip(LoudSkip("TestStoredPATExplicitLoginStartsFlow", skip))
 	}
+	rig.ensureStoredCredentials(t)
 	for _, bin := range []string{rig.nodeBin, rig.goBin} {
 		result, err := Run(RunSpec{Binary: bin, Argv: []string{"login"}, Stdin: []byte("n\n"),
-			Env: FixtureEnv(map[string]string{"API_HOST": rig.srv.URL, "VIP_TOKEN_OVERRIDE": rig.token}),
+			Env: FixtureEnv(map[string]string{"API_HOST": rig.srv.URL, "VIP_CLI_TOKEN": ""}),
 		})
 		if err != nil {
 			t.Fatal(err)
@@ -244,6 +273,7 @@ func TestUnauthorizedCredentialSourceNodeGoParity(t *testing.T) {
 	if skip != "" {
 		t.Skip(LoudSkip("TestUnauthorizedCredentialSourceNodeGoParity", skip))
 	}
+	rig.ensureStoredCredentials(t)
 	for _, source := range []struct {
 		name, raw   string
 		environment bool
@@ -268,7 +298,7 @@ func TestUnauthorizedCredentialSourceNodeGoParity(t *testing.T) {
 					var previous string
 					for _, bin := range []string{rig.nodeBin, rig.goBin} {
 						result, err := Run(RunSpec{Binary: bin, Argv: []string{"whoami"}, Env: FixtureEnv(map[string]string{
-							"API_HOST": rig.srv.URL, "VIP_CLI_TOKEN": source.raw, "VIP_TOKEN_OVERRIDE": rig.token,
+							"API_HOST": rig.srv.URL, "VIP_CLI_TOKEN": source.raw,
 						})})
 						if err != nil {
 							t.Fatal(err)

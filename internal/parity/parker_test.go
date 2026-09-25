@@ -131,7 +131,7 @@ func TestBuildParkerEnvPinsLoopbackAndClearsProxies(t *testing.T) {
 	parent := []string{
 		"PATH=/usr/bin",
 		"API_HOST=https://api.wpvip.com",
-		"VIP_TOKEN_OVERRIDE=old-token",
+		"VIP_CLI_TOKEN=old-token",
 		"HTTP_PROXY=http://proxy.test",
 		"http_proxy=http://lower-proxy.test",
 		"VIP_PROXY=socks5://proxy.test",
@@ -144,7 +144,7 @@ func TestBuildParkerEnvPinsLoopbackAndClearsProxies(t *testing.T) {
 		"NODE_ENV":             "test",
 		"GO_ENV":               "test",
 		"DO_NOT_TRACK":         "1",
-		"VIP_TOKEN_OVERRIDE":   parkerTestToken,
+		"VIP_CLI_TOKEN":        parkerTestToken,
 		"HTTP_PROXY":           "",
 		"HTTPS_PROXY":          "",
 		"ALL_PROXY":            "",
@@ -421,7 +421,7 @@ func TestRunParkerScenariosUsesOnePinnedEnvironment(t *testing.T) {
 	}
 	for _, spec := range specs {
 		env := envMap(spec.Env)
-		if env["API_HOST"] != ParkerAPIHost || env["VIP_TOKEN_OVERRIDE"] != parkerTestToken {
+		if env["API_HOST"] != ParkerAPIHost || env["VIP_CLI_TOKEN"] != parkerTestToken {
 			t.Fatalf("unpinned run env: %+v", env)
 		}
 	}

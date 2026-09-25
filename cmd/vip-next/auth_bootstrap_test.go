@@ -83,7 +83,7 @@ func parsedBootstrapToken(t *testing.T, raw string) *auth.Token {
 }
 
 func TestWithAuthenticatedSessionUsesValidStoredToken(t *testing.T) {
-	t.Setenv("VIP_TOKEN_OVERRIDE", "")
+	t.Setenv("VIP_CLI_TOKEN", "")
 	backend := &bootstrapBackend{}
 	k := newBootstrapKeychain(backend)
 	store := auth.NewStore(k)
@@ -117,7 +117,7 @@ func TestWithAuthenticatedSessionUsesValidStoredToken(t *testing.T) {
 }
 
 func TestWithAuthenticatedSessionUsesLegacyTokenWhenPrimaryMissing(t *testing.T) {
-	t.Setenv("VIP_TOKEN_OVERRIDE", "")
+	t.Setenv("VIP_CLI_TOKEN", "")
 	backend := &bootstrapBackend{}
 	k := newBootstrapKeychain(backend)
 	raw := validBootstrapRaw(t, 10000)
@@ -148,7 +148,7 @@ func TestWithAuthenticatedSessionUsesLegacyTokenWhenPrimaryMissing(t *testing.T)
 }
 
 func TestWithAuthenticatedSessionLogsInWhenMissingAndResumes(t *testing.T) {
-	t.Setenv("VIP_TOKEN_OVERRIDE", "")
+	t.Setenv("VIP_CLI_TOKEN", "")
 	backend := &bootstrapBackend{}
 	k := newBootstrapKeychain(backend)
 	store := auth.NewStore(k)
@@ -179,7 +179,7 @@ func TestWithAuthenticatedSessionLogsInWhenMissingAndResumes(t *testing.T) {
 }
 
 func TestWithAuthenticatedSessionRefreshesInvalidTokenAndResumes(t *testing.T) {
-	t.Setenv("VIP_TOKEN_OVERRIDE", "")
+	t.Setenv("VIP_CLI_TOKEN", "")
 	backend := &bootstrapBackend{}
 	k := newBootstrapKeychain(backend)
 	store := auth.NewStore(k)
@@ -213,7 +213,7 @@ func TestWithAuthenticatedSessionRefreshesInvalidTokenAndResumes(t *testing.T) {
 }
 
 func TestWithAuthenticatedSessionStopsCleanlyOnCancel(t *testing.T) {
-	t.Setenv("VIP_TOKEN_OVERRIDE", "")
+	t.Setenv("VIP_CLI_TOKEN", "")
 	k := newBootstrapKeychain(&bootstrapBackend{})
 	nextCalls := 0
 	err := withAuthenticatedSession(true, authBootstrapDeps{
@@ -233,7 +233,7 @@ func TestWithAuthenticatedSessionStopsCleanlyOnCancel(t *testing.T) {
 }
 
 func TestWithAuthenticatedSessionStopsCleanlyOnHandledValidationError(t *testing.T) {
-	t.Setenv("VIP_TOKEN_OVERRIDE", "")
+	t.Setenv("VIP_CLI_TOKEN", "")
 	k := newBootstrapKeychain(&bootstrapBackend{})
 	nextCalls := 0
 	err := withAuthenticatedSession(true, authBootstrapDeps{
@@ -253,7 +253,7 @@ func TestWithAuthenticatedSessionStopsCleanlyOnHandledValidationError(t *testing
 }
 
 func TestWithAuthenticatedSessionSurfacesUnexpectedLoginError(t *testing.T) {
-	t.Setenv("VIP_TOKEN_OVERRIDE", "")
+	t.Setenv("VIP_CLI_TOKEN", "")
 	k := newBootstrapKeychain(&bootstrapBackend{})
 	want := errors.New("browser exploded")
 	nextCalls := 0
@@ -274,7 +274,7 @@ func TestWithAuthenticatedSessionSurfacesUnexpectedLoginError(t *testing.T) {
 }
 
 func TestWithAuthenticatedSessionNonInteractiveMissingFailsWithoutLogin(t *testing.T) {
-	t.Setenv("VIP_TOKEN_OVERRIDE", "")
+	t.Setenv("VIP_CLI_TOKEN", "")
 	k := newBootstrapKeychain(&bootstrapBackend{})
 	loginCalls := 0
 	nextCalls := 0
@@ -298,7 +298,7 @@ func TestWithAuthenticatedSessionNonInteractiveMissingFailsWithoutLogin(t *testi
 }
 
 func TestWithAuthenticatedSessionNonInteractiveInvalidFailsWithoutLogin(t *testing.T) {
-	t.Setenv("VIP_TOKEN_OVERRIDE", "")
+	t.Setenv("VIP_CLI_TOKEN", "")
 	backend := &bootstrapBackend{}
 	k := newBootstrapKeychain(backend)
 	store := auth.NewStore(k)
@@ -327,7 +327,7 @@ func TestWithAuthenticatedSessionNonInteractiveInvalidFailsWithoutLogin(t *testi
 }
 
 func TestWithAuthenticatedSessionSurfacesKeychainLoadError(t *testing.T) {
-	t.Setenv("VIP_TOKEN_OVERRIDE", "")
+	t.Setenv("VIP_CLI_TOKEN", "")
 	want := errors.New("keychain unavailable")
 	k := newBootstrapKeychain(&bootstrapBackend{getErr: want})
 	loginCalls := 0

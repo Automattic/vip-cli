@@ -62,6 +62,11 @@ func TestKeychainMutatorsRefuseNonEphemeralNames(t *testing.T) {
 	if err := SeedNodeKeychainToken("/nonexistent/vip.js", nodeProductionAPIHost, "a.b.c"); err == nil {
 		t.Fatal("SeedNodeKeychainToken against the production API host = nil, want refusal")
 	}
+	for _, op := range []string{"seed", "verify", "clear"} {
+		if err := goKeychainOp(nodeProductionAPIHost, op, "a.b.c"); err == nil {
+			t.Fatalf("Go credential %s against production was allowed", op)
+		}
+	}
 	if err := CleanupParityKeychainServices([]string{real}); err == nil {
 		t.Fatalf("CleanupParityKeychainServices([%q]) = nil, want refusal", real)
 	}
@@ -174,12 +179,15 @@ func TestParityKeychainServicesCoversBothCLIs(t *testing.T) {
 //
 // Together this is what makes the `vip*` service count identical before and
 // after `make test-parity-unit`, and keeps it identical as scenarios are added
-// — the run seeds ONE credential regardless of how many differentials there
-// are (see differential_test.go).
+// — auth-specific differentials share one stored credential per runtime
+// (see differential_test.go).
 //
 // Sweep failures are reported but never fail the suite: this is hygiene, not an
 // assertion about the code under test.
 func TestMain(m *testing.M) {
+	if os.Getenv("VIP_PARITY_GO_KEYCHAIN_OP") != "" {
+		os.Exit(m.Run()) // A fixture helper must never sweep its parent's credentials.
+	}
 	reportSweep("pre-run (orphans from an interrupted run)")
 	code := m.Run()
 	teardownDifferentialRig()

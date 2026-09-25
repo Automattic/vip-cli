@@ -14,18 +14,8 @@ import (
 )
 
 const (
-	// ParkerAPIHost is `localhost`, NOT 127.0.0.1, and the distinction is
-	// load-bearing. Node derives its keychain service name from API_HOST
-	// (Token.getServiceName), so 127.0.0.1:4000 and localhost:4000 are two
-	// DIFFERENT credentials for the same server. Nothing can seed the
-	// 127.0.0.1 one: the parity keychain guard refuses it (port 4000 is below
-	// the ephemeral floor) precisely because vip-go-cli:http---127-0-0-1-4000
-	// is the namespace a developer's own local-Parker login lives in — writing
-	// there would clobber it and the cleanup would delete it.
-	//
-	// `localhost` is where `vip login` against a local Parker actually puts the
-	// token, so Node finds a real credential with no seeding at all. Both
-	// resolve to the same loopback server; verified answering on both.
+	// ParkerAPIHost is the existing local API endpoint. Both runtimes use a
+	// generated environment PAT, independently of any stored developer session.
 	ParkerAPIHost   = "http://localhost:4000"
 	ParkerContainer = "parker_app"
 	//nolint:gosec // G101: a path to a helper script, not a credential.
@@ -244,19 +234,16 @@ func ValidateResolvedParkerScenario(s *Scenario, ctx ParkerContext) error {
 
 // BuildParkerEnv builds the environment for the live local-Parker gate.
 //
-// API_HOST stays on localhost so Node reads its normal local-Parker credential
-// from the stable keychain namespace. The generated token authenticates Go and
-// context discovery through the test-only override; the harness deliberately
-// does not write or clean Node's stable developer credential. Color controls
-// are scrubbed and TERM is pinned so byte comparisons do not depend on the
-// launching terminal or CI provider.
+// Both runtimes and context discovery use the generated environment PAT against
+// local Parker. The harness does not read or mutate a developer's stored login.
+// Color controls are scrubbed and TERM is pinned for consistent byte comparisons.
 func BuildParkerEnv(parent []string, token string) []string {
 	overrides := map[string]string{
 		"API_HOST":             ParkerAPIHost,
 		"NODE_ENV":             "test",
 		"GO_ENV":               "test",
 		"DO_NOT_TRACK":         "1",
-		"VIP_TOKEN_OVERRIDE":   token,
+		"VIP_CLI_TOKEN":        token,
 		"HTTP_PROXY":           "",
 		"HTTPS_PROXY":          "",
 		"ALL_PROXY":            "",

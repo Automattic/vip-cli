@@ -21,7 +21,7 @@ import (
 func TestPendoUsesCommandSession(t *testing.T) {
 	for _, mode := range []string{"stored", "bypassed", "login"} {
 		t.Run(mode, func(t *testing.T) {
-			for _, name := range []string{"DO_NOT_TRACK", "GO_ENV", "NODE_ENV", "VIP_TOKEN_OVERRIDE", "WPVIP_DEPLOY_TOKEN", "VIP_PROXY", "vip_proxy", "VIP_USE_SYSTEM_PROXY"} {
+			for _, name := range []string{"DO_NOT_TRACK", "GO_ENV", "NODE_ENV", "VIP_CLI_TOKEN", "WPVIP_DEPLOY_TOKEN", "VIP_PROXY", "vip_proxy", "VIP_USE_SYSTEM_PROXY"} {
 				t.Setenv(name, "")
 			}
 			raw := validBootstrapRaw(t, 10000)
@@ -103,7 +103,7 @@ func TestPendoDebugFlagReachesClient(t *testing.T) {
 }
 
 func TestPendoImplicitLoginUsesDebugEnvironment(t *testing.T) {
-	for _, name := range []string{"DO_NOT_TRACK", "GO_ENV", "NODE_ENV", "VIP_TOKEN_OVERRIDE", "WPVIP_DEPLOY_TOKEN"} {
+	for _, name := range []string{"DO_NOT_TRACK", "GO_ENV", "NODE_ENV", "VIP_CLI_TOKEN", "WPVIP_DEPLOY_TOKEN"} {
 		t.Setenv(name, "")
 	}
 	t.Setenv("DEBUG", "@automattic/vip:analytics:clients:pendo")

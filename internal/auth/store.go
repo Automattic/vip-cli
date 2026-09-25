@@ -96,24 +96,9 @@ func (s *Store) loadStored() (string, error) {
 	return v, err
 }
 
-// tokenOverride returns VIP_TOKEN_OVERRIDE only in test mode. It is a Go-only
-// parity-test hatch, distinct from the production VIP_CLI_TOKEN source.
-// A test-mode gate prevents a stale override from silently changing the
-// identity of a normal invocation; it is not a security boundary.
-func tokenOverride() string {
-	if os.Getenv("GO_ENV") != "test" && os.Getenv("NODE_ENV") != "test" {
-		return ""
-	}
-	return os.Getenv("VIP_TOKEN_OVERRIDE")
-}
-
-// LoadPrimary returns only vip-next's credential (or, in test mode, an explicit
-// override). Callers that mutate server-side session state, such as logout, must
-// not act on the read-only legacy fallback returned by Load.
+// LoadPrimary returns only vip-next's stored credential. Callers that mutate
+// server-side session state must not act on Load's read-only legacy fallback.
 func (s *Store) LoadPrimary() (string, error) {
-	if override := tokenOverride(); override != "" {
-		return override, nil
-	}
 	v, err := s.K.Get(s.K.Account())
 	if errors.Is(err, keychain.ErrNotFound) {
 		return "", ErrNoToken
