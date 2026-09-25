@@ -82,3 +82,24 @@ func TestEnvironmentPATBypassedAPICommand(t *testing.T) {
 		})
 	}
 }
+
+func TestInvalidEnvironmentPATBypassedWhoamiDoesNotRequest(t *testing.T) {
+	t.Setenv("VIP_CLI_TOKEN", "not-a-jwt")
+	t.Setenv("DO_NOT_TRACK", "1")
+	requests := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requests++
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"data":{"me":{"id":84,"displayName":"Fixture User","isVIP":true}}}`))
+	}))
+	defer srv.Close()
+	t.Setenv("API_HOST", srv.URL)
+	err := runWithDeps([]string{"whoami", "help"}, runDeps{
+		Tracker:     &telemetry.Tracker{Disabled: true},
+		NewKeychain: func(string) *keychain.Keychain { t.Fatal("must not construct keychain"); return nil },
+		NewLogin:    func(*auth.Store) func() (*auth.Token, error) { t.Fatal("must not login"); return nil },
+	})
+	if err == nil || !strings.Contains(err.Error(), "VIP_CLI_TOKEN") || requests != 0 {
+		t.Fatalf("invalid PAT: error=%v requests=%d; want PAT error before request", err, requests)
+	}
+}

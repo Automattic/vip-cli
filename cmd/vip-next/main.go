@@ -213,6 +213,7 @@ func configureAuthenticated(
 		APIHost:      apiHost,
 		Token:        session.Raw,
 		Middleware:   middleware,
+		HTTPClient:   gql.NewClient(gql.Config{APIHost: apiHost, Token: session.Raw, Middleware: middleware}),
 		GQLClient:    gqlClient,
 		Tracker:      tracker,
 		AppCtxConfig: appctx.AppContextConfig{Client: gqlClient},
@@ -222,8 +223,8 @@ func configureAuthenticated(
 // configureBypassed wires the runtime for an invocation that skipped the login
 // flow. Node's vip.js bypass is ONLY about the prompt: `runCmd()` still calls
 // the API, and src/lib/api/http.ts attaches `Bearer ${(await Token.get()).raw}`
-// to every request whatever that token turns out to be — present, absent,
-// expired. So a bypassed invocation gets the same client as an authed one, with
+// to requests without explicit credentials, whether the stored token is present,
+// absent, or expired. A bypassed invocation gets the same client as an authed one, with
 // two deliberate differences:
 //
 //   - stored credentials are best-effort. A missing or unreadable credential yields an
@@ -250,22 +251,26 @@ func configureBypassed(apiHost string, store *auth.Store, tracker *telemetry.Tra
 		gql.NewErrorMiddleware(gql.ErrorConfig{ExitOnError: true}),
 		gql.NewRetryMiddleware(gql.RetryConfig{}),
 	}
+	patMiddleware := middleware
 	if err != nil && auth.EnvironmentTokenConfigured() {
 		// Bypassing the login prompt must not hide an explicitly configured
 		// invalid PAT. Defer the error until a request so help/version and
 		// local commands remain available without valid API credentials.
-		middleware = append([]gql.Middleware{func(gql.Doer) gql.Doer {
+		// Keep this guard on the default PAT client: deploy clients reuse the
+		// middleware with their own WPVIP_DEPLOY_TOKEN credentials.
+		patMiddleware = append([]gql.Middleware{func(gql.Doer) gql.Doer {
 			return authErrorDoer{err: err}
 		}}, middleware...)
 	}
 	gqlClient := graphql.NewClient(
 		apiHost+"/graphql",
-		gql.HTTPClientWithMiddleware(apiHost, raw, middleware),
+		gql.HTTPClientWithMiddleware(apiHost, raw, patMiddleware),
 	)
 	commands.SetConfig(commands.Config{
 		APIHost:      apiHost,
 		Token:        raw,
 		Middleware:   middleware,
+		HTTPClient:   gql.NewClient(gql.Config{APIHost: apiHost, Token: raw, Middleware: patMiddleware}),
 		GQLClient:    gqlClient,
 		Tracker:      tracker,
 		AppCtxConfig: appctx.AppContextConfig{Client: gqlClient},

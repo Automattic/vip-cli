@@ -210,16 +210,20 @@ func TestEnvironmentPATInvalidBypassedCommandDoesNotRequest(t *testing.T) {
 		requests++
 		w.WriteHeader(http.StatusUnauthorized)
 	}))
-	for _, bin := range []string{rig.nodeBin, rig.goBin} {
-		result, err := Run(RunSpec{Binary: bin,
-			Argv: []string{"config", "envvar", "get", "help", "--app", "example", "--env", "develop"},
-			Env:  FixtureEnv(map[string]string{"API_HOST": rig.srv.URL, "VIP_CLI_TOKEN": "not-a-jwt"}),
-		})
-		if err != nil {
-			t.Fatal(err)
-		}
-		if result.ExitCode == 0 || !strings.Contains(result.Stderr+result.Stdout, "VIP_CLI_TOKEN") {
-			t.Errorf("%s: exit=%d stdout=%q stderr=%q; want environment PAT error", bin, result.ExitCode, result.Stdout, result.Stderr)
+	for _, argv := range [][]string{
+		{"config", "envvar", "get", "help", "--app", "example", "--env", "develop"},
+		{"whoami", "help"}, // Raw HTTP client, rather than the shared genqlient client.
+	} {
+		for _, bin := range []string{rig.nodeBin, rig.goBin} {
+			result, err := Run(RunSpec{Binary: bin, Argv: argv,
+				Env: FixtureEnv(map[string]string{"API_HOST": rig.srv.URL, "VIP_CLI_TOKEN": "not-a-jwt"}),
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if result.ExitCode == 0 || !strings.Contains(result.Stderr+result.Stdout, "VIP_CLI_TOKEN") {
+				t.Errorf("%s %v: exit=%d stdout=%q stderr=%q; want environment PAT error", bin, argv, result.ExitCode, result.Stdout, result.Stderr)
+			}
 		}
 	}
 	if requests != 0 {
