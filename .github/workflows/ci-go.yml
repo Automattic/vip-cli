@@ -147,7 +147,7 @@ jobs:
         run: ./.buildkite/test-windows-installer-download.ps1
       - name: Set up Windows installer build tooling
         if: runner.os == 'Windows'
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '8.0.x'
       - name: Test binary and installer signing isolation
