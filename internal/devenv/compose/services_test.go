@@ -169,14 +169,11 @@ func TestElasticsearchServiceMemoryLimit(t *testing.T) {
 }
 
 func TestMailpitAndPhotonAndInitServices(t *testing.T) {
-	if mailpitService().Image != "axllent/mailpit:latest" {
+	if mailpitService().Image != "ghcr.io/automattic/vip-container-images/mailpit_openssl:latest" {
 		t.Fatal("mailpit image wrong")
 	}
-	// The axllent/mailpit image ENTRYPOINT is already ["/mailpit"]; the EJS
-	// `command: /mailpit` only worked under Lando (which strips the image
-	// entrypoint). In raw compose, command is appended → `/mailpit /mailpit` →
-	// "unknown command /mailpit" and the container exits 1. So set NO command and
-	// let the entrypoint run.
+	// The VIP image inherits /mailpit as its entrypoint. A Compose command
+	// would become an argument to that entrypoint, so leave it empty.
 	if got := mailpitService().Command; got != "" {
 		t.Fatalf("mailpit Command = %q, want empty (image entrypoint /mailpit runs it; a command duplicates the entrypoint)", got)
 	}
