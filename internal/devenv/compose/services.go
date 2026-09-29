@@ -251,16 +251,13 @@ func elasticsearchService() *Service {
 	}
 }
 
-// mailpitService ports the EJS mailpit service (lines 256-270). The EJS sets
-// `command: /mailpit`, but that only worked under Lando (which strips the image
-// entrypoint). The axllent/mailpit image ENTRYPOINT is already ["/mailpit"], so
-// in raw docker compose a `command: /mailpit` is appended → `/mailpit /mailpit`
-// → "unknown command /mailpit" and the container exits 1. We set NO command and
-// let the entrypoint run (same Lando-vs-raw-compose trap as demo-app-code's
-// `exit 0`).
+// mailpitService ports the EJS mailpit service (lines 256-270). The VIP image
+// inherits /mailpit as its entrypoint. Lando strips that entrypoint before
+// running its `command: /mailpit`, while raw Compose retains it. Leave Command
+// empty here so Compose runs the image entrypoint without a duplicate argument.
 func mailpitService() *Service {
 	return &Service{
-		Image: "axllent/mailpit:latest",
+		Image: "ghcr.io/automattic/vip-container-images/mailpit_openssl:latest",
 		Ports: []string{":1025", ":8025"},
 		Environment: map[string]string{
 			"LANDO_NO_USER_PERMS": "1",
