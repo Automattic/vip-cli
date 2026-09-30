@@ -6,7 +6,6 @@ import {
 	createEnvironment,
 	getEnvironmentPath,
 } from '../../../src/lib/dev-environment/dev-environment-core';
-import fixture from '../../../testdata/parity/devenv-nginx.json';
 
 describe( 'dev-env nginx media routing', () => {
 	let directory;
@@ -27,7 +26,15 @@ describe( 'dev-env nginx media routing', () => {
 		fs.rmSync( directory, { recursive: true, force: true } );
 	} );
 
-	it.each( fixture.modes )( 'materializes $name routing', async mode => {
+	it.each( [
+		[ 'disabled', false, '', '' ],
+		[ 'bare-domain', false, 'example.test', 'https://example.test/$1' ],
+		[ 'https', false, 'https://example.test', 'https://example.test/$1' ],
+		[ 'http-path', false, 'http://example.test/media', 'http://example.test/media/$1' ],
+		[ 'photon', true, '', '' ],
+		[ 'photon-and-redirect', true, 'https://example.test', 'https://example.test/$1' ],
+		[ 'trailing-slash', true, 'example.test/media/', 'https://example.test/media//$1' ],
+	] )( 'materializes %s routing', async ( name, photon, mediaRedirectDomain, target ) => {
 		await createEnvironment(
 			{ config: { domain: 'vipdev.site' } },
 			{
@@ -37,19 +44,17 @@ describe( 'dev-env nginx media routing', () => {
 				wordpress: { mode: 'image', tag: '7.1' },
 				muPlugins: { mode: 'image' },
 				appCode: { mode: 'image' },
-				mediaRedirectDomain: mode.mediaRedirectDomain,
-				photon: mode.photon,
+				mediaRedirectDomain,
+				photon,
 			}
 		);
 		const conf = fs.readFileSync(
 			path.join( getEnvironmentPath( 'nginx-unit' ), 'nginx', 'extra.conf' ),
 			'utf8'
 		);
-		for ( const directive of mode.contains ) {
-			expect( conf ).toContain( directive );
-		}
-		expect( conf.includes( 'photon:9000' ) ).toBe( mode.photon );
-		expect( conf.includes( 'rewrite' ) ).toBe( Boolean( mode.mediaRedirectDomain ) );
-		expect( conf.includes( 'location' ) ).toBe( mode.name !== 'disabled' );
+		expect( conf ).toContain( target );
+		expect( conf.includes( 'photon:9000' ) ).toBe( photon );
+		expect( conf.includes( 'rewrite' ) ).toBe( Boolean( mediaRedirectDomain ) );
+		expect( conf.includes( 'location' ) ).toBe( name !== 'disabled' );
 	} );
 } );

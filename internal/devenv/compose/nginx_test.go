@@ -1,49 +1,40 @@
 package compose
 
 import (
-	"encoding/json"
-	"os"
 	"strings"
 	"testing"
 
 	"github.com/Automattic/vip/internal/devenv/instancedata"
 )
 
-// The same fixtures are exercised against the Node materializer and live nginx
-// in internal/parity. This catches dropped instance-data fields and branches
-// without requiring Docker in ordinary unit tests.
+// Catch dropped settings and normalization regressions without Docker.
+// internal/parity checks the resulting routes in real nginx.
 func TestRenderNginxMediaRouting(t *testing.T) {
-	body, err := os.ReadFile("../../../testdata/parity/devenv-nginx.json")
-	if err != nil {
-		t.Fatal(err)
-	}
-	var fixture struct {
-		Modes []struct {
-			Name                string
-			Photon              bool
-			MediaRedirectDomain string
-			Contains            []string
-		}
-	}
-	if err := json.Unmarshal(body, &fixture); err != nil {
-		t.Fatal(err)
-	}
-	for _, mode := range fixture.Modes {
-		t.Run(mode.Name, func(t *testing.T) {
-			data := &instancedata.InstanceData{Photon: mode.Photon, MediaRedirectDomain: mode.MediaRedirectDomain}
+	for _, mode := range []struct {
+		name, domain, target string
+		photon               bool
+	}{
+		{name: "disabled"},
+		{name: "bare-domain", domain: "example.test", target: "https://example.test/$1"},
+		{name: "https", domain: "https://example.test", target: "https://example.test/$1"},
+		{name: "http-path", domain: "http://example.test/media", target: "http://example.test/media/$1"},
+		{name: "photon", photon: true},
+		{name: "photon-and-redirect", photon: true, domain: "https://example.test", target: "https://example.test/$1"},
+		{name: "trailing-slash", photon: true, domain: "example.test/media/", target: "https://example.test/media//$1"},
+	} {
+		t.Run(mode.name, func(t *testing.T) {
+			data := &instancedata.InstanceData{Photon: mode.photon, MediaRedirectDomain: mode.domain}
 			conf := RenderNginxConf(NewView(data, Options{}))
-			for _, directive := range mode.Contains {
-				if !strings.Contains(conf, directive) {
-					t.Errorf("missing media routing directive %q in:\n%s", directive, conf)
-				}
+			if mode.target != "" && !strings.Contains(conf, mode.target) {
+				t.Errorf("missing redirect target %q in:\n%s", mode.target, conf)
 			}
-			if strings.Contains(conf, "photon:9000") != mode.Photon {
+			if strings.Contains(conf, "photon:9000") != mode.photon {
 				t.Errorf("Photon route does not match enabled service:\n%s", conf)
 			}
-			if strings.Contains(conf, "rewrite") != (mode.MediaRedirectDomain != "") {
+			if strings.Contains(conf, "rewrite") != (mode.domain != "") {
 				t.Errorf("redirect route does not match enabled redirect:\n%s", conf)
 			}
-			if mode.Name == "disabled" && strings.Contains(conf, "location") {
+			if mode.name == "disabled" && strings.Contains(conf, "location") {
 				t.Errorf("disabled rendering overrides default nginx routes:\n%s", conf)
 			}
 		})
