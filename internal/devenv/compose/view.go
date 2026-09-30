@@ -62,10 +62,11 @@ type View struct {
 	AutologinKey  string
 	AdminPassword string
 
-	PHPMyAdmin    bool
-	Elasticsearch bool
-	Mailpit       bool
-	Photon        bool
+	PHPMyAdmin          bool
+	Elasticsearch       bool
+	Mailpit             bool
+	Photon              bool
+	MediaRedirectDomain string
 
 	MuPluginsLocal bool
 	MuPluginsDir   string
@@ -103,6 +104,7 @@ func NewView(d *instancedata.InstanceData, opts Options) View {
 		Elasticsearch:       truthyRaw(d.Elasticsearch),
 		Mailpit:             d.Mailpit,
 		Photon:              d.Photon,
+		MediaRedirectDomain: d.MediaRedirectDomain,
 		MuPluginsLocal:      d.MuPlugins.Mode == "local",
 		MuPluginsDir:        d.MuPlugins.Dir,
 		AppCodeLocal:        d.AppCode.Mode == "local",
@@ -116,6 +118,11 @@ func NewView(d *instancedata.InstanceData, opts Options) View {
 	}
 
 	v.MultisiteEnabled, v.MultisiteSubdomain = multisite(d.Multisite)
+	// Match Node's preProcessInstanceData: retain URLs and paths verbatim,
+	// but make a bare domain absolute. Do not normalize trailing slashes.
+	if v.MediaRedirectDomain != "" && !strings.HasPrefix(v.MediaRedirectDomain, "http") {
+		v.MediaRedirectDomain = "https://" + v.MediaRedirectDomain
+	}
 
 	if d.MariaDB != "" {
 		v.DatabaseImage = "mariadb:" + d.MariaDB

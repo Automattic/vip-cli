@@ -17,10 +17,73 @@ func RenderEnvFile(v View) string {
 	return fmt.Sprintf("LANDO_HOST_USER_ID=%s\nLANDO_HOST_GROUP_ID=%s\n", v.HostUID, v.HostGID)
 }
 
-// RenderNginxConf renders nginx/extra.conf. The Node template is currently
-// empty boilerplate; emit a minimal valid file.
-func RenderNginxConf(_ View) string {
-	return "# VIP dev-env extra nginx configuration\n"
+// RenderNginxConf ports assets/dev-env.nginx.template.conf.ejs. Missing
+// uploads redirect before Photon runs; existing images with query parameters
+// go to Photon, while other existing files are served locally by nginx.
+func RenderNginxConf(v View) string {
+	var b strings.Builder
+	b.WriteString("# VIP dev-env extra nginx configuration\n")
+	if v.Photon {
+		b.WriteString(`
+location ^~ /wp-content/uploads/ {
+    expires max;
+    log_not_found off;
+`)
+		if v.MediaRedirectDomain != "" {
+			fmt.Fprintf(&b, `    if (!-f $request_filename) {
+        rewrite ^/(.*)$ %s redirect;
+    }
+`, nginxRedirectTarget(v.MediaRedirectDomain))
+		}
+		b.WriteString(`
+    include fastcgi_params;
+    fastcgi_param DOCUMENT_ROOT /usr/share/webapps/photon;
+    fastcgi_param SCRIPT_FILENAME /usr/share/webapps/photon/index.php;
+    fastcgi_param SCRIPT_NAME /index.php;
+
+    if ($request_uri ~* \.(gif|jpe?g|png)\?) {
+        fastcgi_pass photon:9000;
+    }
+}
+`)
+	} else if v.MediaRedirectDomain != "" {
+		fmt.Fprintf(&b, `
+location ^~ /wp-content/uploads {
+    expires max;
+    log_not_found off;
+    try_files $uri @prod_site;
+}
+
+location @prod_site {
+    rewrite ^/(.*)$ %s redirect;
+}
+`, nginxRedirectTarget(v.MediaRedirectDomain))
+	}
+	return b.String()
+}
+
+// EJS's <%= interpolation XML-escapes its value. Preserve that behavior, then
+// quote it as one nginx argument so config delimiters cannot add directives.
+// Keep nginx variables (including the appended $1 capture) intact, as in Node.
+// URL controls must be percent-encoded: nginx decodes \r/\n escapes back to
+// control bytes, which would then be copied into the Location response header.
+func nginxRedirectTarget(domain string) string {
+	escaped := strings.NewReplacer("&", "&amp;", "<", "&lt;", ">", "&gt;", `"`, "&#34;", "'", "&#39;").Replace(domain)
+	var target strings.Builder
+	target.WriteByte('"')
+	for i := 0; i < len(escaped); i++ {
+		c := escaped[i]
+		switch {
+		case c < 0x20 || c == 0x7f:
+			fmt.Fprintf(&target, "%%%02X", c)
+		case c == '\\':
+			target.WriteString(`\\`)
+		default:
+			target.WriteByte(c)
+		}
+	}
+	target.WriteString(`/$1"`)
+	return target.String()
 }
 
 // SetupStep is a post-start command the lifecycle runs in the php service.
