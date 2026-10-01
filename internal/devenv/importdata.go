@@ -358,7 +358,10 @@ func importMysqldump(ctx context.Context, r importRunner, slug, src string) erro
 		return err
 	}
 	// Run the import via the compose runner (tees output to terminal + log).
-	return r.Compose(ctx, slug, importSQLArgs(dest)...)
+	if err := r.Compose(ctx, slug, importSQLArgs(dest)...); err != nil {
+		return err
+	}
+	return sanitizeImportedCredentials(ctx, r, slug)
 }
 
 // importMyDumperDump handles a MyDumper-format dump: stream the dump into
@@ -374,6 +377,9 @@ func importMysqldump(ctx context.Context, r importRunner, slug, src string) erro
 // container myloader 0.21.3 — so this is the streaming bug, not the container.
 func importMyDumperDump(ctx context.Context, r importRunner, slug, file, sourceDB string, o ImportOptions) error {
 	if err := importMyDumper(ctx, r, slug, file, sourceDB, o.Quiet); err != nil {
+		return err
+	}
+	if err := sanitizeImportedCredentials(ctx, r, slug); err != nil {
 		return err
 	}
 	return wpSearchReplace(ctx, r, slug, o.SearchReplace, o.Quiet)

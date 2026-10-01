@@ -1,7 +1,16 @@
 import debugLib from 'debug';
 import { randomInt } from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
 
-import { exec, readEnvironmentData, writeEnvironmentData } from './dev-environment-core';
+import UserError from '../user-error';
+import {
+	exec,
+	getEnvironmentPath,
+	readEnvironmentData,
+	writeEnvironmentData,
+} from './dev-environment-core';
+import { landoShell } from './dev-environment-lando';
 
 import type Lando from 'lando';
 
@@ -78,4 +87,42 @@ export const flushCache = async ( lando: Lando, slug: string, quiet?: boolean ) 
 
 export const executeQuery = async ( lando: Lando, slug: string, query: string ) => {
 	await exec( lando, slug, [ 'wp', 'db', 'query', query ] );
+};
+
+/** Remove imported credentials without bootstrapping WordPress or Jetpack. */
+export const sanitizeImportedCredentials = async ( lando: Lando, slug: string ) => {
+	const sql = fs.readFileSync(
+		path.join( __dirname, '../../../assets/dev-env-import-cleanup.sql' ),
+		'utf8'
+	);
+	try {
+		await exec( lando, slug, [ 'db', '--execute', sql ] );
+		const cacheFlush = fs
+			.readFileSync(
+				path.join( __dirname, '../../../assets/dev-env-import-cache-flush.php' ),
+				'utf8'
+			)
+			.replace( /^<\?php\s*/, '' );
+		if ( ! lando.tasks?.some( task => task.command === 'ssh' ) ) {
+			throw new Error( 'Lando shell task is unavailable; local object cache was not invalidated.' );
+		}
+		await landoShell( lando, getEnvironmentPath( slug ), 'php', 'www-data', [
+			'php',
+			'-r',
+			cacheFlush,
+		] );
+	} catch ( error ) {
+		throw new UserError(
+			`Database imported, but local connection credential cleanup failed: ${
+				( error as Error ).message
+			}`
+		);
+	} finally {
+		// A failed CALL can leave the temporary routine behind.
+		await exec( lando, slug, [
+			'db',
+			'--execute',
+			'DROP PROCEDURE IF EXISTS vip_local_import_sanitize;\n',
+		] ).catch( () => undefined );
+	}
 };

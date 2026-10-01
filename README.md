@@ -13,6 +13,8 @@ VIP-CLI is a tool for interacting with and managing your [WordPress VIP applicat
 - [RELEASING.md](https://github.com/Automattic/vip-cli/blob/trunk/docs/RELEASING.md) for details on deploying a new release.
 - [SECURITY.md](https://github.com/Automattic/vip-cli/blob/trunk/docs/SECURITY.md) for information if you **found a security issue**.
 
+- [DEV-ENV-IMPORT-CLEANUP.md](docs/DEV-ENV-IMPORT-CLEANUP.md) for local import credential sanitation and runtime parity checks.
+
 ## Further information
 
 - In the [WordPress VIP Lobby](https://lobby.vip.wordpress.com/) find announcements related to [VIP-CLI](https://lobby.vip.wordpress.com/?s=vip-cli) and [API](https://lobby.vip.wordpress.com/?s=vip%20go%20api).

@@ -17,6 +17,7 @@ import {
 	executeQuery,
 	flushCache,
 	reIndexSearch,
+	sanitizeImportedCredentials,
 } from '../lib/dev-environment/dev-environment-database';
 import { bootstrapLando, isContainerRunning } from '../lib/dev-environment/dev-environment-lando';
 import UserError from '../lib/user-error';
@@ -115,12 +116,14 @@ export class DevEnvImportSQLCommand {
 			 */
 			process.stdin.isTTY = false;
 			await exec( lando, this.slug, importArg, { stdio: [ fd.fd, 'pipe', 'pipe' ] } );
+			await sanitizeImportedCredentials( lando, this.slug );
 
 			if ( ! this.options.quiet ) {
 				console.log( `${ chalk.green.bold( 'Success:' ) } Database imported.` );
 			}
 		} finally {
 			process.stdin.isTTY = origIsTTY;
+			await fd.close();
 		}
 
 		if ( searchReplace?.length && ! inPlace ) {
