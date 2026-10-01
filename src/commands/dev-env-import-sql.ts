@@ -16,6 +16,7 @@ import {
 	dataCleanup,
 	executeQuery,
 	flushCache,
+	sanitizeImportedCredentials,
 	reIndexSearch,
 } from '../lib/dev-environment/dev-environment-database';
 import { bootstrapLando, isContainerRunning } from '../lib/dev-environment/dev-environment-lando';
@@ -115,6 +116,7 @@ export class DevEnvImportSQLCommand {
 			 */
 			process.stdin.isTTY = false;
 			await exec( lando, this.slug, importArg, { stdio: [ fd.fd, 'pipe', 'pipe' ] } );
+			await sanitizeImportedCredentials( lando, this.slug );
 
 			if ( ! this.options.quiet ) {
 				console.log( `${ chalk.green.bold( 'Success:' ) } Database imported.` );
