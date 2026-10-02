@@ -99,9 +99,9 @@ export const sanitizeImportedCredentials = async ( lando: Lando, slug: string ) 
 		] );
 	} catch ( error ) {
 		throw new UserError(
-			`Database imported, but local connection credential cleanup failed: ${
+			`Database imported, but credential cleanup attempt failed: ${
 				( error as Error ).message
-			}. Refresh the environment's WordPress image and retry the import.`
+			}. Your import may contain non-local Jetpack credentials.`
 		);
 	}
 };
