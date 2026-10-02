@@ -6,19 +6,9 @@ package parity
 //
 // WHY THIS EXISTS
 //
-// The Node CLI has NEVER had an environment escape hatch for credentials.
-// `Token.get()` reads the OS credential store and nothing else, so the only way
-// to put an identity in front of the real Node binary is to write a real
-// keychain entry.
-//
-// An earlier version of this comment said Node 4.1.0 "removed
-// VIP_TOKEN_OVERRIDE". That was wrong. The variable never existed upstream:
-// `git log --all -S VIP_TOKEN_OVERRIDE` on Automattic/vip returns ZERO commits.
-// It had been hand-injected into this repo's vendored copy of
-// src/lib/token.ts (4 lines, gated on NODE_ENV=test) so that the harness would
-// authenticate — i.e. the reference implementation was edited to make the test
-// pass. The 4.0.4 -> trunk sync deleted that local edit, which is what made the
-// differential start failing. Do not reintroduce it.
+// General command tests authenticate with VIP_CLI_TOKEN. These helpers exist
+// for stored-session tests, which must read actual credentials in each runtime.
+// Do not add test-only authentication paths to the production Node source.
 //
 // DOES THIS WORK IN CI?
 //
@@ -344,7 +334,7 @@ func runNodeKeychainOp(nodeBin, service, op, secret string) (string, error) {
 		"VIP_PARITY_KEYCHAIN_DIST":    dist,
 		"VIP_PARITY_KEYCHAIN_SERVICE": service,
 		"VIP_PARITY_KEYCHAIN_OP":      op,
-		"VIP_TOKEN_OVERRIDE":          "",
+		"VIP_CLI_TOKEN":               "",
 	})
 	if secret != "" {
 		cmd.Stdin = strings.NewReader(secret)
@@ -469,7 +459,7 @@ func CleanupParityCredentials(nodeBin, apiHost string) error {
 
 // svceLine matches the service attribute in `security dump-keychain` output:
 //
-//	    "svce"<blob>="vip-go-cli:http---127-0-0-1-63145-uuid"
+//	"svce"<blob>="vip-go-cli:http---127-0-0-1-63145-uuid"
 var svceLine = regexp.MustCompile(`^\s*"svce"<blob>="(.*)"\s*$`)
 
 // listKeychainServices enumerates the service names in the user's keychain

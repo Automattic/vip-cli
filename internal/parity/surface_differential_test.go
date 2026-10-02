@@ -455,6 +455,9 @@ func TestEverySurfaceScenarioIsClassified(t *testing.T) {
 		if _, ok := edgeWorkerScenarios[base]; ok {
 			continue // edge_workers_differential_test.go runs both roots
 		}
+		if base == "env-token-whoami" {
+			continue // env_token_differential_test.go runs both binaries and checks wire identity
+		}
 		seen++
 		if _, ok := surfaceDifferentialScenarios[base]; ok {
 			continue

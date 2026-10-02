@@ -1,6 +1,8 @@
 package rechallenge
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"regexp"
 	"sync"
@@ -33,30 +35,47 @@ func ServiceNameForHost(apiHost string) string {
 // entry. The on-disk shape is a JSON blob {scope: ElevatedToken}, keeping
 // ClearAll cheap while preserving the Node data shape.
 type TokenCache struct {
-	Keychain *keychain.Keychain
-	mu       sync.Mutex
-	loaded   bool
-	blob     map[string]ElevatedToken
+	Keychain           *keychain.Keychain
+	PrimaryFingerprint string
+	MemoryOnly         bool
+	mu                 sync.Mutex
+	loaded             bool
+	blob               map[string]cachedToken
+}
+
+type cachedToken struct {
+	ElevatedToken
+	PrimaryFingerprint string `json:"primaryTokenFingerprint"`
+}
+
+func TokenFingerprint(raw string) string {
+	sum := sha256.Sum256([]byte(raw))
+	return hex.EncodeToString(sum[:])
 }
 
 func (c *TokenCache) load() error {
 	if c.loaded {
 		return nil
 	}
+	if c.MemoryOnly {
+		c.blob = map[string]cachedToken{}
+		c.loaded = true
+		return nil
+	}
 	raw, err := c.Keychain.Backend.Get(c.Keychain.Service, c.Keychain.Service)
 	if errors.Is(err, keychain.ErrNotFound) {
-		c.blob = map[string]ElevatedToken{}
+		c.blob = map[string]cachedToken{}
 		c.loaded = true
 		return nil
 	}
 	if err != nil {
 		return err
 	}
-	parsed := map[string]ElevatedToken{}
+	parsed := map[string]cachedToken{}
 	if err := json.Unmarshal([]byte(raw), &parsed); err != nil {
 		// Corrupted blob → drop and reset (matches Node).
 		_ = c.Keychain.Backend.Delete(c.Keychain.Service, c.Keychain.Service)
-		c.blob = map[string]ElevatedToken{}
+		c.blob = map[string]cachedToken{}
 		c.loaded = true
 		return nil
 	}
@@ -66,6 +85,9 @@ func (c *TokenCache) load() error {
 }
 
 func (c *TokenCache) write() error {
+	if c.MemoryOnly {
+		return nil
+	}
 	if len(c.blob) == 0 {
 		err := c.Keychain.Backend.Delete(c.Keychain.Service, c.Keychain.Service)
 		if errors.Is(err, keychain.ErrNotFound) {
@@ -92,14 +114,14 @@ func (c *TokenCache) Get(scope string) (*ElevatedToken, error) {
 	if !ok {
 		return nil, nil
 	}
-	if isExpired(tok) {
+	if tok.PrimaryFingerprint != c.PrimaryFingerprint || isExpired(tok.ElevatedToken) {
 		delete(c.blob, scope)
 		if err := c.write(); err != nil {
 			return nil, err
 		}
 		return nil, nil
 	}
-	return &tok, nil
+	return &tok.ElevatedToken, nil
 }
 
 func (c *TokenCache) Set(scope string, tok ElevatedToken) error {
@@ -108,7 +130,7 @@ func (c *TokenCache) Set(scope string, tok ElevatedToken) error {
 	if err := c.load(); err != nil {
 		return err
 	}
-	c.blob[scope] = tok
+	c.blob[scope] = cachedToken{ElevatedToken: tok, PrimaryFingerprint: c.PrimaryFingerprint}
 	return c.write()
 }
 
@@ -129,8 +151,11 @@ func (c *TokenCache) ClearScope(scope string) error {
 func (c *TokenCache) ClearAll() error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.blob = map[string]ElevatedToken{}
+	c.blob = map[string]cachedToken{}
 	c.loaded = true
+	if c.MemoryOnly {
+		return nil
+	}
 	err := c.Keychain.Backend.Delete(c.Keychain.Service, c.Keychain.Service)
 	if errors.Is(err, keychain.ErrNotFound) {
 		return nil
