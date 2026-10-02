@@ -30,7 +30,7 @@ func TestImportSanitizesBeforeWordPress(t *testing.T) {
 			err := importSQL(context.Background(), r, "e", writeDump(t), ImportOptions{Quiet: true})
 			events := strings.Join(r.events, "\n")
 			if fail {
-				if err == nil || !strings.Contains(err.Error(), "credential cleanup failed") {
+				if err == nil || !strings.Contains(err.Error(), "credential cleanup attempt failed") {
 					t.Fatalf("error = %v", err)
 				}
 				if strings.Contains(events, "cache flush") || strings.Contains(events, "dev-env-add-admin") {

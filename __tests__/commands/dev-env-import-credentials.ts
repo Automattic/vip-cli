@@ -66,7 +66,7 @@ describe( 'local import credential sanitation', () => {
 					{ quiet: true, skipValidate: true, inPlace: false },
 					'e'
 				).run()
-			).rejects.toThrow( 'credential cleanup failed' );
+			).rejects.toThrow( 'credential cleanup attempt failed' );
 			expect( jest.mocked( core.exec ).mock.calls.some( call => call[ 2 ][ 0 ] === 'wp' ) ).toBe(
 				false
 			);
