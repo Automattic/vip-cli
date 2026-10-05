@@ -139,6 +139,9 @@ const UPLOAD_PART_SIZE = 16 * MB_IN_BYTES;
 // How many parts will upload at the same time
 const MAX_CONCURRENT_PART_UPLOADS = 5;
 
+// How many times a presigned URL request is retried after a network error, 429 or 5xx
+const SIGNED_REQUEST_RETRIES = 3;
+
 // TODO: Replace with a proper definitions once we convert lib/cli/command.js to TypeScript
 export interface WithId {
 	id: number;
@@ -515,15 +518,18 @@ async function uploadUsingMultipart( {
 	} );
 }
 
-export async function getSignedUploadRequestData( {
-	action,
-	appId,
-	basename,
-	envId,
-	etagResults,
-	uploadId = undefined,
-	partNumber = undefined,
-}: GetSignedUploadRequestDataArgs ): Promise< PresignedRequest > {
+export async function getSignedUploadRequestData(
+	{
+		action,
+		appId,
+		basename,
+		envId,
+		etagResults,
+		uploadId = undefined,
+		partNumber = undefined,
+	}: GetSignedUploadRequestDataArgs,
+	retries = SIGNED_REQUEST_RETRIES
+): Promise< PresignedRequest > {
 	const WPVIP_DEPLOY_TOKEN = process.env.WPVIP_DEPLOY_TOKEN;
 	const reqOptions = {
 		method: 'POST',
@@ -534,13 +540,36 @@ export async function getSignedUploadRequestData( {
 			Authorization: `Bearer ${ WPVIP_DEPLOY_TOKEN }`,
 		};
 	}
-	const response = await http( '/upload/site-import-presigned-url', reqOptions );
+	// A large upload makes one of these requests per part, so a single network blip
+	// would otherwise abort the whole upload. The JSON body is re-serialized on every
+	// call, so retrying is safe.
+	for ( let attempt = 0; ; attempt++ ) {
+		const isLastAttempt = attempt >= retries;
+		let response;
+		try {
+			// eslint-disable-next-line no-await-in-loop
+			response = await http( '/upload/site-import-presigned-url', reqOptions );
+		} catch ( err ) {
+			if ( isLastAttempt ) {
+				throw withCauseMessage( err );
+			}
+		}
 
-	if ( response.status !== 200 ) {
-		throw new Error( ( await response.text() ) || response.statusText );
+		if ( response?.status === 200 ) {
+			return response.json() as Promise< PresignedRequest >;
+		}
+
+		const isRetryableStatus = response && ( response.status === 429 || response.status >= 500 );
+		if ( response && ( ! isRetryableStatus || isLastAttempt ) ) {
+			// eslint-disable-next-line no-await-in-loop
+			throw new Error( ( await response.text() ) || response.statusText );
+		}
+
+		// eslint-disable-next-line no-await-in-loop
+		await response?.body?.cancel();
+		// eslint-disable-next-line no-await-in-loop
+		await setTimeout( Math.pow( 2, attempt ) * 1000 ); // 1000, 2000, 4000
 	}
-
-	return response.json() as Promise< PresignedRequest >;
 }
 
 export async function checkFileAccess( fileName: string ): Promise< void > {
