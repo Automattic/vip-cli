@@ -14,6 +14,7 @@ import {
 	getFileHash,
 	getFileMeta,
 	getPartBoundaries,
+	getSignedUploadRequestData,
 	parseEtagHeader,
 	uploadImportFileToS3,
 	uploadParts,
@@ -241,6 +242,58 @@ describe( 'client-file-uploader', () => {
 			const headers = fetch.mock.calls[ 0 ][ 1 ].headers;
 			expect( headers.get( 'expect' ) ).toBeNull();
 			expect( headers.get( 'content-type' ) ).toBe( 'application/xml' );
+		} );
+	} );
+
+	describe( 'getSignedUploadRequestData()', () => {
+		// The retry backoff uses `node:timers/promises`, which Jest's fake timers don't
+		// control, so these tests wait for real and keep the retry counts small.
+		const args = { action: 'UploadPart', appId: 1, envId: 2, basename: 'a.tar.gz', partNumber: 3 };
+		const presigned = { url: 'https://s3.example.com/part', options: { method: 'PUT' } };
+		const ok = () => ( { status: 200, json: () => Promise.resolve( presigned ) } );
+		const failing = ( status, text ) => ( {
+			status,
+			statusText: 'Error',
+			text: () => Promise.resolve( text ),
+			body: { cancel: jest.fn( () => Promise.resolve() ) },
+		} );
+
+		beforeEach( () => {
+			http.mockReset();
+		} );
+
+		it( 'should retry after a network error and return the presigned request', async () => {
+			http.mockRejectedValueOnce( new TypeError( 'fetch failed' ) ).mockResolvedValueOnce( ok() );
+
+			await expect( getSignedUploadRequestData( args, 1 ) ).resolves.toEqual( presigned );
+			expect( http ).toHaveBeenCalledTimes( 2 );
+		} );
+
+		it( 'should retry a 5xx response', async () => {
+			const unavailable = failing( 503, 'Service Unavailable' );
+			http.mockResolvedValueOnce( unavailable ).mockResolvedValueOnce( ok() );
+
+			await expect( getSignedUploadRequestData( args, 1 ) ).resolves.toEqual( presigned );
+			expect( unavailable.body.cancel ).toHaveBeenCalled();
+			expect( http ).toHaveBeenCalledTimes( 2 );
+		} );
+
+		it( 'should not retry a 4xx response', async () => {
+			http.mockResolvedValueOnce( failing( 403, 'Forbidden' ) );
+
+			await expect( getSignedUploadRequestData( args, 1 ) ).rejects.toThrow( 'Forbidden' );
+			expect( http ).toHaveBeenCalledTimes( 1 );
+		} );
+
+		it( 'should throw the network error with its cause after exhausting retries', async () => {
+			const err = new TypeError( 'fetch failed' );
+			err.cause = new Error( 'getaddrinfo ENOTFOUND api.wpvip.com' );
+			http.mockRejectedValue( err );
+
+			await expect( getSignedUploadRequestData( args, 1 ) ).rejects.toThrow(
+				'fetch failed: getaddrinfo ENOTFOUND api.wpvip.com'
+			);
+			expect( http ).toHaveBeenCalledTimes( 2 ); // initial attempt + 1 retry
 		} );
 	} );
 
