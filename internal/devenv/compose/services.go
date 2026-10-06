@@ -133,6 +133,11 @@ func phpService(v View) *Service {
 		// <name>") and other LANDO_APP_NAME-dependent tooling resolve it. Set
 		// before the user-env loop below so it stays reserved.
 		"LANDO_APP_NAME": v.SiteSlug,
+		// Shared images consume explicit capabilities instead of Lando metadata.
+		"VIP_DEVENV_MAILPIT":       serviceSetting(v.Mailpit),
+		"VIP_DEVENV_PHOTON":        serviceSetting(v.Photon),
+		"VIP_DEVENV_ELASTICSEARCH": serviceSetting(v.Elasticsearch),
+		"VIP_DEVENV_DEMO_APP":      serviceSetting(!v.AppCodeLocal),
 	}
 	if v.Xdebug {
 		env["XDEBUG"] = "enable"
@@ -189,12 +194,20 @@ func phpService(v View) *Service {
 	}
 }
 
+func serviceSetting(enabled bool) string {
+	if enabled {
+		return "1"
+	}
+	return "0"
+}
+
 // wordpressService ports the EJS wordpress init service (lines 191-203). It is
 // a run-once (initOnly) container that rsyncs the WP core + dev-tools into
 // shared volumes; the initOnly semantics are lifecycle metadata (Task 9).
+// Preserve WP-CLI/user edits to the root config while updating all other core files.
 func wordpressService(v View) *Service {
-	entry := fmt.Sprintf(`/bin/sh -c '/usr/bin/rsync -ac --delete --chown=%s:%s /wp/ /shared/; /usr/bin/rsync -ac --chown=%s:%s --delete /dev-tools-orig/ /dev-tools/'`,
-		"${LANDO_HOST_USER_ID}", "${LANDO_HOST_GROUP_ID}", "${LANDO_HOST_USER_ID}", "${LANDO_HOST_GROUP_ID}")
+	entry := fmt.Sprintf(`/bin/sh -c 'if [ ! -f /shared/wp-config.php ]; then /usr/bin/rsync -ac --chown=%s:%s /wp/wp-config.php /shared/; fi; /usr/bin/rsync -ac --delete --exclude=/wp-config.php --chown=%s:%s /wp/ /shared/; /usr/bin/rsync -ac --chown=%s:%s --delete /dev-tools-orig/ /dev-tools/'`,
+		"${LANDO_HOST_USER_ID}", "${LANDO_HOST_GROUP_ID}", "${LANDO_HOST_USER_ID}", "${LANDO_HOST_GROUP_ID}", "${LANDO_HOST_USER_ID}", "${LANDO_HOST_GROUP_ID}")
 	return &Service{
 		Image:      v.WordPressImage,
 		Entrypoint: entry,

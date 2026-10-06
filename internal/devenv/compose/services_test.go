@@ -135,6 +135,23 @@ func TestPHPServiceSetsAppName(t *testing.T) {
 	}
 }
 
+func TestPHPServiceCapabilities(t *testing.T) {
+	for _, enabled := range []bool{false, true} {
+		v := baseView()
+		v.Mailpit, v.Photon, v.Elasticsearch, v.AppCodeLocal = enabled, enabled, enabled, !enabled
+		v.EnvVars = map[string]string{"VIP_DEVENV_MAILPIT": "hijacked"}
+		want := "0"
+		if enabled {
+			want = "1"
+		}
+		for _, key := range []string{"VIP_DEVENV_MAILPIT", "VIP_DEVENV_PHOTON", "VIP_DEVENV_ELASTICSEARCH", "VIP_DEVENV_DEMO_APP"} {
+			if got := phpService(v).Environment[key]; got != want {
+				t.Errorf("%s = %q, want %q", key, got, want)
+			}
+		}
+	}
+}
+
 func TestWordPressInitService(t *testing.T) {
 	svc := wordpressService(baseView())
 	if svc.Image != "ghcr.io/automattic/vip-container-images/wordpress:trunk" {

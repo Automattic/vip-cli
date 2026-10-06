@@ -13,9 +13,13 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+
+	"strconv"
 	"strings"
 	"testing"
 	"time"
+
+	"gopkg.in/yaml.v3"
 
 	"github.com/Automattic/vip/internal/devenv"
 	"github.com/Automattic/vip/internal/devenv/compose"
@@ -23,21 +27,14 @@ import (
 )
 
 // Exercise both materializers, including their instance-data preprocessing.
-func nginxConfigs(t *testing.T, photon bool, domain string) (string, string) {
+func materializedEnvironments(t *testing.T, data *instancedata.InstanceData) (string, string) {
 	t.Helper()
 	nodeBin := ResolveNodeVipBin(os.Getenv("NODE_VIP_BIN"), DefaultNodeVipBinProbe())
 	if !nodeBin.Ready {
-		t.Skip(LoudSkip("dev-env nginx differential", nodeBin.Reason))
+		t.Skip(LoudSkip("dev-env materializer differential", nodeBin.Reason))
 	}
 	dir := t.TempDir()
 	t.Setenv("XDG_DATA_HOME", dir)
-	data := &instancedata.InstanceData{
-		SiteSlug: "nginx-parity", WPTitle: "Nginx parity", Multisite: json.RawMessage("false"),
-		WordPress: instancedata.WordPressConfig{Mode: "image", Tag: "7.1"},
-		MuPlugins: instancedata.ComponentConfig{Mode: "image"},
-		AppCode:   instancedata.ComponentConfig{Mode: "image"},
-		Photon:    photon, MediaRedirectDomain: domain,
-	}
 	body, err := json.Marshal(data)
 	if err != nil {
 		t.Fatal(err)
@@ -47,10 +44,8 @@ func nginxConfigs(t *testing.T, photon bool, domain string) (string, string) {
 		t.Fatal(err)
 	}
 	script := `const core = require(process.argv[1]);
-const fs = require('node:fs');
-const path = require('node:path');
 core.createEnvironment({config: {domain: 'vipdev.site'}}, JSON.parse(process.argv[2]))
-  .then(() => process.stdout.write(fs.readFileSync(path.join(core.getEnvironmentPath('nginx-parity'), 'nginx/extra.conf'), 'utf8')))
+  .then(() => process.stdout.write(core.getEnvironmentPath(JSON.parse(process.argv[2]).siteSlug)))
   .catch(error => { console.error(error); process.exitCode = 1; });`
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
@@ -60,16 +55,112 @@ core.createEnvironment({config: {domain: 'vipdev.site'}}, JSON.parse(process.arg
 	if err != nil {
 		t.Fatalf("Node materializer: %v\n%s", err, node)
 	}
-	data.SiteSlug = "nginx-go-parity"
+	data.SiteSlug += "-go"
 	goDir, err := devenv.Materialize(data.SiteSlug, compose.NewView(data, compose.Options{}))
 	if err != nil {
 		t.Fatal(err)
 	}
-	goConf, err := os.ReadFile(filepath.Join(goDir, "nginx", "extra.conf"))
-	if err != nil {
-		t.Fatal(err)
+	return string(node), goDir
+}
+
+func nginxConfigs(t *testing.T, photon bool, domain string) (string, string) {
+	t.Helper()
+	nodeDir, goDir := materializedEnvironments(t, &instancedata.InstanceData{
+		SiteSlug: "nginx-parity", WPTitle: "Nginx parity", Multisite: json.RawMessage("false"),
+		WordPress: instancedata.WordPressConfig{Mode: "image", Tag: "7.1"},
+		MuPlugins: instancedata.ComponentConfig{Mode: "image"},
+		AppCode:   instancedata.ComponentConfig{Mode: "image"}, Photon: photon, MediaRedirectDomain: domain,
+	})
+	read := func(dir string) string {
+		t.Helper()
+		body, err := os.ReadFile(filepath.Join(dir, "nginx", "extra.conf"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		return string(body)
 	}
-	return string(node), string(goConf)
+	return read(nodeDir), read(goDir)
+}
+
+func TestDevEnvServiceSettingsDifferential(t *testing.T) {
+	for _, enabled := range []bool{false, true} {
+		t.Run(strconv.FormatBool(enabled), func(t *testing.T) {
+			mode, setting := "local", "0"
+			if enabled {
+				mode, setting = "image", "1"
+			}
+			nodeDir, goDir := materializedEnvironments(t, &instancedata.InstanceData{
+				SiteSlug: "services-parity", WPTitle: "Services parity", Multisite: json.RawMessage("false"),
+				WordPress: instancedata.WordPressConfig{Mode: "image", Tag: "7.1"},
+				MuPlugins: instancedata.ComponentConfig{Mode: "image"},
+				AppCode:   instancedata.ComponentConfig{Mode: mode, Dir: "/tmp/customer"},
+				Mailpit:   enabled, Photon: enabled, Elasticsearch: json.RawMessage(strconv.FormatBool(enabled)),
+			})
+			read := func(dir, name string, into any) {
+				t.Helper()
+				body, err := os.ReadFile(filepath.Join(dir, name))
+				if err != nil {
+					t.Fatal(err)
+				}
+				if err := yaml.Unmarshal(body, into); err != nil {
+					t.Fatal(err)
+				}
+			}
+			type service struct {
+				Environment map[string]string
+				Entrypoint  string
+			}
+			var node struct {
+				Services map[string]struct {
+					Services   service
+					Entrypoint string
+				}
+			}
+			var goProject struct{ Services map[string]service }
+			read(nodeDir, ".lando.yml", &node)
+			read(goDir, "docker-compose.yml", &goProject)
+			for _, key := range []string{"VIP_DEVENV_MAILPIT", "VIP_DEVENV_PHOTON", "VIP_DEVENV_ELASTICSEARCH", "VIP_DEVENV_DEMO_APP"} {
+				if node.Services["php"].Services.Environment[key] != setting || goProject.Services["php"].Environment[key] != setting {
+					t.Errorf("%s: Node=%q Go=%q want=%q", key, node.Services["php"].Services.Environment[key], goProject.Services["php"].Environment[key], setting)
+				}
+			}
+			if node.Services["wordpress"].Entrypoint != goProject.Services["wordpress"].Entrypoint {
+				t.Fatal("WordPress sync commands differ")
+			}
+			if enabled {
+				for runtime, entry := range map[string]string{"node": node.Services["wordpress"].Entrypoint, "go": goProject.Services["wordpress"].Entrypoint} {
+					t.Run(runtime+"-wordpress-sync", func(t *testing.T) {
+						if os.Getenv("VIP_DEVENV_SERVICE_PARITY") != "1" {
+							t.Skip("set VIP_DEVENV_SERVICE_PARITY=1 for isolated Docker WordPress sync parity")
+						}
+						ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+						defer cancel()
+						// Execute the actual generated commands twice, keeping container files private.
+						script := `set -e
+printf '<?php // image config\n' > /wp/wp-config.php
+printf before > /wp/vip-sync-core.txt
+eval "$1"
+grep -q 'image config' /shared/wp-config.php
+printf '// user setting\n' >> /shared/wp-config.php
+printf updated > /wp/vip-sync-core.txt
+printf obsolete > /shared/vip-sync-removed.txt
+eval "$1"
+grep -q 'user setting' /shared/wp-config.php
+test "$(cat /shared/vip-sync-core.txt)" = updated
+test ! -e /shared/vip-sync-removed.txt`
+						cmd := exec.CommandContext(ctx, "docker", "run", "--rm", "--pull=never", "--network=none",
+							"-e", "LANDO_HOST_USER_ID=0", "-e", "LANDO_HOST_GROUP_ID=0", "--entrypoint", "/bin/sh",
+							"ghcr.io/automattic/vip-container-images/wordpress:7.1", "-c", script, "--", entry)
+						cmd.Env = FixtureEnv(map[string]string{"DOCKER_HOST": os.Getenv("DOCKER_HOST"), "DOCKER_CONTEXT": os.Getenv("DOCKER_CONTEXT")})
+						if out, err := cmd.CombinedOutput(); err != nil {
+							t.Fatalf("WordPress sync: %v\n%s", err, out)
+						}
+					})
+				}
+			}
+
+		})
+	}
 }
 
 // Opt-in: only owned nginx/Photon containers and copied temporary files.

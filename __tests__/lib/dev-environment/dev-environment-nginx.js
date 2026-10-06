@@ -1,3 +1,4 @@
+import { load } from 'js-yaml';
 import fs from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -7,7 +8,7 @@ import {
 	getEnvironmentPath,
 } from '../../../src/lib/dev-environment/dev-environment-core';
 
-describe( 'dev-env nginx media routing', () => {
+describe( 'dev-env materialization', () => {
 	let directory;
 	let previousDataHome;
 
@@ -56,5 +57,35 @@ describe( 'dev-env nginx media routing', () => {
 		expect( conf.includes( 'photon:9000' ) ).toBe( photon );
 		expect( conf.includes( 'rewrite' ) ).toBe( Boolean( mediaRedirectDomain ) );
 		expect( conf.includes( 'location' ) ).toBe( name !== 'disabled' );
+	} );
+	it.each( [ false, true ] )( 'materializes service capabilities: %s', async enabled => {
+		await createEnvironment(
+			{ config: { domain: 'vipdev.site' } },
+			{
+				siteSlug: 'services-unit',
+				wpTitle: 'Services test',
+				multisite: false,
+				wordpress: { mode: 'image', tag: '7.1' },
+				muPlugins: { mode: 'image' },
+				appCode: enabled ? { mode: 'image' } : { mode: 'local', dir: '/tmp/customer' },
+				mailpit: enabled,
+				photon: enabled,
+				elasticsearch: enabled,
+				mediaRedirectDomain: '',
+			},
+			undefined,
+			{ VIP_DEVENV_MAILPIT: 'hijacked' }
+		);
+		const config = load(
+			fs.readFileSync( path.join( getEnvironmentPath( 'services-unit' ), '.lando.yml' ), 'utf8' )
+		);
+		for ( const key of [
+			'VIP_DEVENV_MAILPIT',
+			'VIP_DEVENV_PHOTON',
+			'VIP_DEVENV_ELASTICSEARCH',
+			'VIP_DEVENV_DEMO_APP',
+		] ) {
+			expect( config.services.php.services.environment[ key ] ).toBe( enabled ? '1' : '0' );
+		}
 	} );
 } );

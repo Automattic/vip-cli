@@ -97,7 +97,7 @@ type SetupStep struct {
 // service user. The lifecycle (Plan 4) executes these after `up`.
 func SetupSteps(v View) []SetupStep {
 	steps := []SetupStep{
-		{AsRoot: true, Command: "chown www-data:www-data /wp/wp-content/mu-plugins /wp/config /wp/log /wp/wp-content/uploads /wp"},
+		{AsRoot: true, Command: "chown www-data:www-data /wp/wp-content/mu-plugins /wp/config /wp/log /wp/wp-content/uploads /wp /wp/wp-config.php"},
 	}
 	if !v.AppCodeLocal {
 		steps = append(steps, SetupStep{AsRoot: true, Command: "chown www-data:www-data /wp/wp-content/plugins"})
