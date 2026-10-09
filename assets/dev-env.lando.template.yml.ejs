@@ -266,7 +266,7 @@ services:
     sslExpose: false
     type: compose
     services:
-      image: axllent/mailpit:latest
+      image: ghcr.io/automattic/vip-container-images/mailpit_openssl:latest
       command: /mailpit
       ports:
         - ":1025"
