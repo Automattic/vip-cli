@@ -29,7 +29,7 @@ func (f *fakeTracker) Track(name string, _ map[string]any) {
 func TestFlowUnsupportedVersion(t *testing.T) {
 	cache := newTestCache()
 	tr := &fakeTracker{}
-	r := &Runner{Tracker: tr, TokenCache: cache}
+	r := &Runner{Tracker: tr, TokenCache: cache, OpenURL: func(string) { t.Error("unsupported version must not open a browser") }}
 	_, err := r.Run(context.Background(), RunInput{
 		RequestedOperation: "doThing",
 		Extension: Extension{
@@ -75,8 +75,13 @@ func TestFlowHappyPathVerified(t *testing.T) {
 		Tracker:    tr,
 		TokenCache: cache,
 		Stdout:     &out,
-		OpenURL:    func(string) { atomic.AddInt32(&openCalled, 1) },
-		Sleep:      func(_ context.Context, _ time.Duration) error { return nil },
+		OpenURL: func(url string) {
+			atomic.AddInt32(&openCalled, 1)
+			if url != "https://example/v/c1" {
+				t.Errorf("OpenURL = %q, want verification URL", url)
+			}
+		},
+		Sleep: func(_ context.Context, _ time.Duration) error { return nil },
 	}
 
 	var diagnostics bytes.Buffer
@@ -146,6 +151,7 @@ func TestFlowTerminalCancelled(t *testing.T) {
 		Client:     &Client{APIHost: srv.URL, HTTP: srv.Client()},
 		Tracker:    &fakeTracker{},
 		TokenCache: newTestCache(),
+		OpenURL:    func(string) {},
 		Sleep:      func(_ context.Context, _ time.Duration) error { return nil },
 	}
 	_, err := r.Run(context.Background(), RunInput{
@@ -184,6 +190,7 @@ func TestFlowAbortedByContext(t *testing.T) {
 		Client:     &Client{APIHost: srv.URL, HTTP: srv.Client()},
 		Tracker:    &fakeTracker{},
 		TokenCache: newTestCache(),
+		OpenURL:    func(string) {},
 		Sleep: func(ctx context.Context, _ time.Duration) error {
 			<-ctx.Done()
 			return ctx.Err()
