@@ -15,8 +15,7 @@ import { makeCommandTracker } from '../lib/tracker';
 const examples = [
 	{
 		usage: 'vip @example-app.develop db phpmyadmin',
-		description:
-			"Generate access to a read-only phpMyAdmin web interface for the environment's database.",
+		description: "Generate access to a phpMyAdmin web interface for the environment's database.",
 	},
 	{
 		usage: 'vip @example-app.develop db phpmyadmin --print',
@@ -33,6 +32,7 @@ const appQuery = `
 		name
 		type
 		uniqueLabel
+		isK8sResident
 	}
 `;
 
