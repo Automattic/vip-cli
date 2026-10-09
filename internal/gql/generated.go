@@ -4727,6 +4727,8 @@ type ResolveAppByIDAppEnvironmentsAppEnvironment struct {
 	DefaultDomain *string `json:"defaultDomain"`
 	// Whether the environment is a multisite install.
 	IsMultisite *bool `json:"isMultisite"`
+	// Whether the environment runs on Kubernetes.
+	IsK8sResident *bool `json:"isK8sResident"`
 }
 
 // GetId returns ResolveAppByIDAppEnvironmentsAppEnvironment.Id, and is useful for accessing the field via an interface.
@@ -4751,6 +4753,11 @@ func (v *ResolveAppByIDAppEnvironmentsAppEnvironment) GetDefaultDomain() *string
 
 // GetIsMultisite returns ResolveAppByIDAppEnvironmentsAppEnvironment.IsMultisite, and is useful for accessing the field via an interface.
 func (v *ResolveAppByIDAppEnvironmentsAppEnvironment) GetIsMultisite() *bool { return v.IsMultisite }
+
+// GetIsK8sResident returns ResolveAppByIDAppEnvironmentsAppEnvironment.IsK8sResident, and is useful for accessing the field via an interface.
+func (v *ResolveAppByIDAppEnvironmentsAppEnvironment) GetIsK8sResident() *bool {
+	return v.IsK8sResident
+}
 
 // ResolveAppByIDResponse is returned by ResolveAppByID on success.
 type ResolveAppByIDResponse struct {
@@ -4828,6 +4835,8 @@ type ResolveAppByNameAppsAppListEdgesAppEnvironmentsAppEnvironment struct {
 	DefaultDomain *string `json:"defaultDomain"`
 	// Whether the environment is a multisite install.
 	IsMultisite *bool `json:"isMultisite"`
+	// Whether the environment runs on Kubernetes.
+	IsK8sResident *bool `json:"isK8sResident"`
 }
 
 // GetId returns ResolveAppByNameAppsAppListEdgesAppEnvironmentsAppEnvironment.Id, and is useful for accessing the field via an interface.
@@ -4861,6 +4870,11 @@ func (v *ResolveAppByNameAppsAppListEdgesAppEnvironmentsAppEnvironment) GetDefau
 // GetIsMultisite returns ResolveAppByNameAppsAppListEdgesAppEnvironmentsAppEnvironment.IsMultisite, and is useful for accessing the field via an interface.
 func (v *ResolveAppByNameAppsAppListEdgesAppEnvironmentsAppEnvironment) GetIsMultisite() *bool {
 	return v.IsMultisite
+}
+
+// GetIsK8sResident returns ResolveAppByNameAppsAppListEdgesAppEnvironmentsAppEnvironment.IsK8sResident, and is useful for accessing the field via an interface.
+func (v *ResolveAppByNameAppsAppListEdgesAppEnvironmentsAppEnvironment) GetIsK8sResident() *bool {
+	return v.IsK8sResident
 }
 
 // ResolveAppByNameResponse is returned by ResolveAppByName on success.
@@ -9472,6 +9486,7 @@ query ResolveAppByID ($id: Int!) {
 			uniqueLabel
 			defaultDomain
 			isMultisite
+			isK8sResident
 		}
 	}
 }
@@ -9519,6 +9534,7 @@ query ResolveAppByName ($name: String!) {
 				uniqueLabel
 				defaultDomain
 				isMultisite
+				isK8sResident
 			}
 		}
 	}

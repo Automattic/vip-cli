@@ -76,6 +76,7 @@ type envGetter interface {
 	GetUniqueLabel() *string
 	GetDefaultDomain() *string
 	GetIsMultisite() *bool
+	GetIsK8sResident() *bool
 }
 
 func resolveApp(cmd *cobra.Command, client graphql.Client, appKey, envKey string) (App, []Env, error) {
@@ -168,6 +169,7 @@ func envsFromGetters(getters []envGetter) []Env {
 		if multisite := g.GetIsMultisite(); multisite != nil {
 			e.IsMultisite = *multisite
 		}
+		e.IsK8sResident = g.GetIsK8sResident()
 		if e.ID == 0 && e.Name == "" && e.Type == "" {
 			continue
 		}
