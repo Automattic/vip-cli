@@ -3,6 +3,7 @@
 package parity
 
 import (
+	"bytes"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -10,6 +11,8 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
+
+	json "encoding/json/v2"
 )
 
 // phpmyadminMux returns a shared HTTP handler that answers the operations the
@@ -85,6 +88,84 @@ func phpmyadminMux(t *testing.T, recordingDir string) (http.Handler, func() (en,
 		return atomic.LoadInt32(&enableHits), atomic.LoadInt32(&statusHits), atomic.LoadInt32(&generateHits)
 	}
 	return mux, hits
+}
+
+func phpmyadminResidencyMux(t *testing.T, recordingDir, residency string) (http.Handler, func() map[string]int32) {
+	t.Helper()
+	base, baseHits := phpmyadminMux(t, recordingDir)
+	body, err := os.ReadFile("../../testdata/parity/recordings/" + recordingDir + "/resolve-app.json")
+	if err != nil {
+		t.Fatalf("read resolve-app.json: %v", err)
+	}
+	var response map[string]any
+	if err := json.Unmarshal(body, &response); err != nil {
+		t.Fatalf("decode resolve-app.json: %v", err)
+	}
+	data := response["data"].(map[string]any)
+	apps := data["apps"].(map[string]any)
+	app := apps["edges"].([]any)[0].(map[string]any)
+	env := app["environments"].([]any)[0].(map[string]any)
+	switch residency {
+	case "true":
+		env["isK8sResident"] = true
+	case "false":
+		env["isK8sResident"] = false
+	case "null":
+		env["isK8sResident"] = nil
+	case "missing":
+		delete(env, "isK8sResident")
+	default:
+		t.Fatalf("unknown residency fixture %q", residency)
+	}
+	resolveBody, err := json.Marshal(response)
+	if err != nil {
+		t.Fatalf("encode resolve-app.json: %v", err)
+	}
+
+	var resolves, missingSelection, malformedRequests int32
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			atomic.AddInt32(&malformedRequests, 1)
+			http.Error(w, "read request", http.StatusBadRequest)
+			return
+		}
+		var request struct {
+			OperationName string `json:"operationName"`
+			Query         string `json:"query"`
+		}
+		if err := json.Unmarshal(body, &request); err != nil {
+			atomic.AddInt32(&malformedRequests, 1)
+			http.Error(w, "decode request", http.StatusBadRequest)
+			return
+		}
+		switch request.OperationName {
+		case "App", "ResolveAppByName", "ResolveAppByID":
+			atomic.AddInt32(&resolves, 1)
+			if !strings.Contains(request.Query, "isK8sResident") {
+				atomic.AddInt32(&missingSelection, 1)
+				http.Error(w, "isK8sResident not selected", http.StatusBadRequest)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write(resolveBody)
+		default:
+			r.Body = io.NopCloser(bytes.NewReader(body))
+			base.ServeHTTP(w, r)
+		}
+	})
+	hits := func() map[string]int32 {
+		enable, status, generate := baseHits()
+		return map[string]int32{
+			"ResolveApp":       atomic.LoadInt32(&resolves),
+			"MissingSelection": atomic.LoadInt32(&missingSelection),
+			"MalformedRequest": atomic.LoadInt32(&malformedRequests),
+			"Enable":           enable,
+			"Status":           status,
+			"Generate":         generate,
+		}
+	}
+	return handler, hits
 }
 
 // TestPhpmyadminPrintParity exercises the happy path with --print: the
@@ -177,48 +258,64 @@ func TestPhpmyadminSessionNoteDifferential(t *testing.T) {
 		t.Skip(LoudSkip("TestPhpmyadminSessionNoteDifferential — the phpMyAdmin Node-vs-Go note", skip))
 	}
 
-	const note = "Note: phpMyAdmin sessions are read-only on VIP Kubernetes and read-write on WP Cloud."
 	for _, tc := range []struct {
-		name     string
-		wantNote bool
+		residency string
+		note      string
 	}{
-		{name: "phpmyadmin-print", wantNote: true},
-		{name: "phpmyadmin-silent", wantNote: false},
+		{residency: "true", note: "Note: phpMyAdmin sessions are read-only. If you run a query that writes to DB, it will fail."},
+		{residency: "false", note: ""},
+		{residency: "null", note: "Note: phpMyAdmin sessions are read-only on VIP Kubernetes and read-write on WP Cloud."},
+		{residency: "missing", note: "Note: phpMyAdmin sessions are read-only on VIP Kubernetes and read-write on WP Cloud."},
 	} {
-		t.Run(tc.name, func(t *testing.T) {
-			scenario, err := LoadScenario("../../testdata/parity/" + tc.name + ".yaml")
-			if err != nil {
-				t.Fatalf("LoadScenario: %v", err)
-			}
-			scenario.Env = rig.scenarioEnv(scenario)
-
-			for _, side := range []struct {
-				name string
-				bin  string
-			}{
-				{name: "Node", bin: rig.nodeBin},
-				{name: "Go", bin: rig.goBin},
-			} {
-				res, _ := rig.runSide(t, scenario, side.bin, phpmyadminSurfaceMux)
-				if res.ExitCode != 0 {
-					t.Errorf("%s exit = %d; stdout=%q stderr=%q", side.name, res.ExitCode, res.Stdout, res.Stderr)
+		t.Run(tc.residency, func(t *testing.T) {
+			for _, silent := range []bool{false, true} {
+				name := "phpmyadmin-print"
+				if silent {
+					name = "phpmyadmin-silent"
 				}
-				output := res.Stdout + res.Stderr
-				count := 0
-				for _, line := range strings.Split(output, "\n") {
-					if strings.TrimSpace(line) == note {
-						count++
+				t.Run(name, func(t *testing.T) {
+					scenario, err := LoadScenario("../../testdata/parity/" + name + ".yaml")
+					if err != nil {
+						t.Fatalf("LoadScenario: %v", err)
 					}
-				}
-				if tc.wantNote && count != 1 {
-					t.Errorf("%s note count = %d, want 1; stdout=%q stderr=%q", side.name, count, res.Stdout, res.Stderr)
-				}
-				if !tc.wantNote && (count != 0 || strings.Contains(output, "Note:")) {
-					t.Errorf("%s --silent printed a note; stdout=%q stderr=%q", side.name, res.Stdout, res.Stderr)
-				}
-				if strings.Contains(output, "Note: PHPMyAdmin sessions are read-only.") {
-					t.Errorf("%s printed the obsolete blanket warning: %q", side.name, output)
-				}
+					scenario.Env = rig.scenarioEnv(scenario)
+					mux := func(t *testing.T, recordingDir string) (http.Handler, func() map[string]int32) {
+						return phpmyadminResidencyMux(t, recordingDir, tc.residency)
+					}
+
+					for _, side := range []struct {
+						name string
+						bin  string
+					}{
+						{name: "Node", bin: rig.nodeBin},
+						{name: "Go", bin: rig.goBin},
+					} {
+						res, hits := rig.runSide(t, scenario, side.bin, mux)
+						if res.ExitCode != 0 {
+							t.Errorf("%s exit = %d; stdout=%q stderr=%q", side.name, res.ExitCode, res.Stdout, res.Stderr)
+						}
+						if hits["ResolveApp"] == 0 || hits["MissingSelection"] != 0 || hits["MalformedRequest"] != 0 {
+							t.Errorf("%s app resolution hits = %v, want a query selecting isK8sResident", side.name, hits)
+						}
+						output := res.Stdout + res.Stderr
+						noteCount, matchingCount := 0, 0
+						for _, line := range strings.Split(output, "\n") {
+							line = strings.TrimSpace(line)
+							if strings.HasPrefix(line, "Note:") {
+								noteCount++
+							}
+							if line == tc.note {
+								matchingCount++
+							}
+						}
+						if !silent && tc.note != "" && (noteCount != 1 || matchingCount != 1) {
+							t.Errorf("%s note count = %d, exact matches = %d, want 1/1; stdout=%q stderr=%q", side.name, noteCount, matchingCount, res.Stdout, res.Stderr)
+						}
+						if (silent || tc.note == "") && noteCount != 0 {
+							t.Errorf("%s printed an unexpected note; stdout=%q stderr=%q", side.name, res.Stdout, res.Stderr)
+						}
+					}
+				})
 			}
 		})
 	}
