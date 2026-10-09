@@ -59,7 +59,7 @@ func TestEnsureDraftCreatesReleaseAndTagAtCommit(t *testing.T) {
 	}))
 	defer server.Close()
 
-	release, err := testGitHubClient(server.URL).EnsureDraft(context.Background(), version, commit)
+	release, err := testGitHubClient(t, server.URL).EnsureDraft(context.Background(), version, commit)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -85,7 +85,7 @@ func TestEnsureDraftResumesSameCommitDraft(t *testing.T) {
 		}
 	}))
 	defer server.Close()
-	release, err := testGitHubClient(server.URL).EnsureDraft(context.Background(), "5.0.0-rc.1", commit)
+	release, err := testGitHubClient(t, server.URL).EnsureDraft(context.Background(), "5.0.0-rc.1", commit)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -128,7 +128,7 @@ func TestEnsureDraftFindsDraftWhenTagEndpointOmitsDraft(t *testing.T) {
 	}))
 	defer server.Close()
 
-	release, err := testGitHubClient(server.URL).EnsureDraft(context.Background(), version, commit)
+	release, err := testGitHubClient(t, server.URL).EnsureDraft(context.Background(), version, commit)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -154,7 +154,7 @@ func TestEnsureDraftRejectsTagAtDifferentCommit(t *testing.T) {
 		})
 	}))
 	defer server.Close()
-	_, err := testGitHubClient(server.URL).EnsureDraft(context.Background(), "5.0.0-rc.1", strings.Repeat("b", 40))
+	_, err := testGitHubClient(t, server.URL).EnsureDraft(context.Background(), "5.0.0-rc.1", strings.Repeat("b", 40))
 	if err == nil || !strings.Contains(err.Error(), "different commit") || mutations != 0 {
 		t.Fatalf("error = %v, mutations = %d", err, mutations)
 	}
@@ -179,7 +179,7 @@ func TestEnsureDraftRejectsAnnotatedTag(t *testing.T) {
 	}))
 	defer server.Close()
 
-	_, err := testGitHubClient(server.URL).EnsureDraft(context.Background(), version, commit)
+	_, err := testGitHubClient(t, server.URL).EnsureDraft(context.Background(), version, commit)
 	if err == nil || !strings.Contains(err.Error(), "lightweight tag") {
 		t.Fatalf("error = %v, want lightweight tag error", err)
 	}
@@ -200,7 +200,7 @@ func TestEnsureDraftRejectsMissingTagForExistingDraft(t *testing.T) {
 	}))
 	defer server.Close()
 
-	_, err := testGitHubClient(server.URL).EnsureDraft(context.Background(), version, strings.Repeat("b", 40))
+	_, err := testGitHubClient(t, server.URL).EnsureDraft(context.Background(), version, strings.Repeat("b", 40))
 	if err == nil || !strings.Contains(err.Error(), "has no tag") {
 		t.Fatalf("error = %v, want missing tag error", err)
 	}
@@ -212,7 +212,7 @@ func TestEnsureDraftRejectsPublishedRelease(t *testing.T) {
 		writeJSON(t, w, Release{ID: 44, TagName: "5.0.0-rc.1", Draft: false, Prerelease: true})
 	}))
 	defer server.Close()
-	_, err := testGitHubClient(server.URL).EnsureDraft(context.Background(), "5.0.0-rc.1", strings.Repeat("b", 40))
+	_, err := testGitHubClient(t, server.URL).EnsureDraft(context.Background(), "5.0.0-rc.1", strings.Repeat("b", 40))
 	if err == nil || !strings.Contains(err.Error(), "published") {
 		t.Fatalf("error = %v", err)
 	}
@@ -243,7 +243,7 @@ func TestEnsureDraftResumesExistingMatchingTagWithoutRelease(t *testing.T) {
 		}
 	}))
 	defer server.Close()
-	release, err := testGitHubClient(server.URL).EnsureDraft(context.Background(), version, commit)
+	release, err := testGitHubClient(t, server.URL).EnsureDraft(context.Background(), version, commit)
 	if err != nil || release.ID != 13 || strings.Join(mutations, ",") != "create" {
 		t.Fatalf("release = %#v, error = %v, mutations = %v", release, err, mutations)
 	}
@@ -258,7 +258,7 @@ func TestReplaceAssetsRejectsUnexpectedExistingAsset(t *testing.T) {
 	}))
 	defer server.Close()
 	release := Release{ID: 1, Draft: true, Assets: []ReleaseAsset{{ID: 9, Name: "notes.txt"}}, UploadURL: server.URL + "/uploads{?name,label}"}
-	err := testGitHubClient(server.URL).ReplaceAssets(context.Background(), release, t.TempDir())
+	err := testGitHubClient(t, server.URL).ReplaceAssets(context.Background(), release, t.TempDir())
 	if err == nil || !strings.Contains(err.Error(), "unexpected existing asset") || requests != 0 {
 		t.Fatalf("error = %v, requests = %d", err, requests)
 	}
@@ -299,7 +299,7 @@ func TestReplaceAssetsDeletesKnownAssetsAndUploadsVerifiedFiles(t *testing.T) {
 		Assets:    []ReleaseAsset{{ID: 9, Name: "vip-next-darwin-amd64.tar.gz"}},
 		UploadURL: server.URL + "/uploads{?name,label}",
 	}
-	if err := testGitHubClient(server.URL).ReplaceAssets(context.Background(), release, root); err != nil {
+	if err := testGitHubClient(t, server.URL).ReplaceAssets(context.Background(), release, root); err != nil {
 		t.Fatal(err)
 	}
 	if len(deleted) != 1 || len(uploaded) != len(ExpectedArtifactPaths()) {
@@ -318,7 +318,7 @@ func TestPublishPrereleaseIsLastMutation(t *testing.T) {
 		writeJSON(t, w, Release{ID: 88, Draft: false, Prerelease: true})
 	}))
 	defer server.Close()
-	if err := testGitHubClient(server.URL).PublishPrerelease(context.Background(), Release{ID: 88, TagName: "5.0.0-rc.1", Draft: true}); err != nil {
+	if err := testGitHubClient(t, server.URL).PublishPrerelease(context.Background(), Release{ID: 88, TagName: "5.0.0-rc.1", Draft: true}); err != nil {
 		t.Fatal(err)
 	}
 	if body["draft"] != false || body["prerelease"] != true {
@@ -337,7 +337,7 @@ func TestPublishPrereleaseIgnoresMalformedSuccessfulResponse(t *testing.T) {
 	}))
 	defer server.Close()
 
-	err := testGitHubClient(server.URL).PublishPrerelease(context.Background(), Release{ID: 88, TagName: "5.0.0-rc.1", Draft: true})
+	err := testGitHubClient(t, server.URL).PublishPrerelease(context.Background(), Release{ID: 88, TagName: "5.0.0-rc.1", Draft: true})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -372,8 +372,11 @@ func TestPublishPrereleaseReconcilesAmbiguousTransportError(t *testing.T) {
 	}
 }
 
-func testGitHubClient(baseURL string) *GitHubClient {
-	return &GitHubClient{BaseURL: baseURL, UploadsURL: baseURL, Token: "github-token", HTTPClient: http.DefaultClient}
+func testGitHubClient(t testing.TB, baseURL string) *GitHubClient {
+	t.Helper()
+	client := &http.Client{Transport: http.DefaultTransport.(*http.Transport).Clone()}
+	t.Cleanup(client.CloseIdleConnections)
+	return &GitHubClient{BaseURL: baseURL, UploadsURL: baseURL, Token: "github-token", HTTPClient: client}
 }
 
 func assertGitHubRequest(t *testing.T, r *http.Request) {
