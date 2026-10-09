@@ -232,7 +232,7 @@ export class PhpMyAdminCommand {
 
 		if ( ! this.silent ) {
 			const message =
-				'Note: PHPMyAdmin sessions are read-only. If you run a query that writes to DB, it will fail.';
+				'Note: phpMyAdmin sessions are read-only on VIP Kubernetes and read-write on WP Cloud.';
 			console.log( chalk.yellow( message ) );
 		}
 

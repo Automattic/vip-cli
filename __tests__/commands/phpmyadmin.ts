@@ -70,6 +70,27 @@ describe( 'commands/PhpMyAdminCommand', () => {
 			openUrl.mockReset();
 		} );
 
+		it.each( [ false, true ] )(
+			'prints the platform access note unless silent=%s',
+			async silent => {
+				const noteCmd = new PhpMyAdminCommand( app, env, tracker, silent );
+				const consoleSpy = jest.spyOn( console, 'log' ).mockImplementation( () => {} );
+				try {
+					await noteCmd.run( { print: true } );
+					const notes = consoleSpy.mock.calls.filter(
+						( [ message ] ) =>
+							typeof message === 'string' &&
+							message.includes(
+								'Note: phpMyAdmin sessions are read-only on VIP Kubernetes and read-write on WP Cloud.'
+							)
+					);
+					expect( notes ).toHaveLength( silent ? 0 : 1 );
+				} finally {
+					consoleSpy.mockRestore();
+				}
+			}
+		);
+
 		it( 'should open the generated URL in browser', async () => {
 			await cmd.run();
 			expect( pmaEnabledQueryMockTrue ).toHaveBeenCalledWith( {
