@@ -321,9 +321,8 @@ var surfaceDifferentialExclusions = map[string]string{
 		"stands up an in-process echo server that speaks vip-next's exec preamble; Node would " +
 		"need the same server to speak ITS protocol, which is a separate fake to build. Out of " +
 		"reach for this pass.",
-	"wp-websocket-redirect": "asserts vip-next's deliberate 'requires the Node CLI' redirect " +
-		"(register §3). Node has no such redirect — it just runs the command — so the two " +
-		"implementations are not answering the same question and a diff is meaningless.",
+	"wp-websocket-shell": "TestWPWebsocketShellDifferential drives both binaries through the " +
+		"same stdin prompts, socket events, and per-command API request assertions.",
 	"wp-nodejs-rejected": "needs the same wp transport fake as wp-ssh-happy before Node can " +
 		"reach the environment-type gate.",
 	"wp-production-confirm-decline": "combines the wp transport problem with the " +

@@ -1,1 +1,0 @@
-{"data":{"apps":{"edges":[{"id":42,"name":"parityapp","typeId":2,"environments":[{"id":7,"appId":42,"name":"develop","type":"develop","defaultDomain":"d.example"}],"organization":{"id":1,"name":"Parity Org"}}]}}}
