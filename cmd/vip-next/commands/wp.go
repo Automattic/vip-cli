@@ -484,10 +484,15 @@ func runWPWebsocketCommand(cmd *cobra.Command, ae *appctx.AppEnv, cmdStr string,
 		inputToken = *t
 	}
 
+	// Shell command readers wrap stdin without exposing its file descriptor.
+	stdinTTY := false
+	if input, ok := cmd.InOrStdin().(*os.File); ok {
+		stdinTTY = term.IsTerminal(int(input.Fd()))
+	}
 	// Determine terminal dimensions (same defaults as SSH branch: 15 rows / 100 cols).
-	tty := term.IsTerminal(int(os.Stdout.Fd()))
+	stdoutTTY := term.IsTerminal(int(os.Stdout.Fd()))
 	rows, cols := 15, 100
-	if tty {
+	if stdoutTTY {
 		if w, h, err := term.GetSize(int(os.Stdout.Fd())); err == nil {
 			cols = w
 			rows = h
@@ -501,7 +506,7 @@ func runWPWebsocketCommand(cmd *cobra.Command, ae *appctx.AppEnv, cmdStr string,
 		InputToken: inputToken,
 		Columns:    cols,
 		Rows:       rows,
-		IsTTY:      tty,
+		IsTTY:      stdinTTY,
 		Stdin:      stdin,
 		Stdout:     out,
 		Stderr:     cmd.ErrOrStderr(),

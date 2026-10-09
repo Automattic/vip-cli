@@ -84,8 +84,11 @@ type shellMock struct {
 	needsInput     bool
 	inputOpened    chan struct{}
 	remoteBytes    chan byte
+	finishOnInput  bool
 	reconnect      bool
 	reconnectRuns  int
+	streamRows     int
+	streamColumns  int
 }
 
 func (m *shellMock) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -207,28 +210,36 @@ func (m *shellMock) serveSocket(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	var pendingAck int
+	pendingAck := -1
 	for {
 		messageType, raw, err := ws.Read(ctx)
 		if err != nil {
 			return
 		}
-		if messageType == websocket.MessageBinary && pendingAck > 0 {
+		if messageType == websocket.MessageBinary && pendingAck >= 0 {
 			for _, b := range raw {
 				if m.remoteBytes != nil {
 					m.remoteBytes <- b
 				}
 			}
 			ack := fmt.Sprintf(`43/wp-cli,%d[]`, pendingAck)
-			pendingAck = 0
+			pendingAck = -1
 			if err := ws.Write(ctx, websocket.MessageText, []byte(ack)); err != nil {
 				return
 			}
-			if strings.ContainsRune(string(raw), 3) {
+			if strings.ContainsRune(string(raw), 3) || (m.finishOnInput && strings.ContainsAny(string(raw), "\r\n")) {
 				m.mu.Lock()
 				streamID := m.stdoutStreamID
 				m.mu.Unlock()
 				_ = finishShellStream(ctx, ws, streamID, 0)
+			} else {
+				m.mu.Lock()
+				stdinID := m.stdinStreamID
+				m.mu.Unlock()
+				read := fmt.Sprintf(`42/wp-cli,["$stream-read",%q,65536]`, stdinID)
+				if err := ws.Write(ctx, websocket.MessageText, []byte(read)); err != nil {
+					return
+				}
 			}
 			continue
 		}
@@ -281,7 +292,9 @@ func (m *shellMock) recordStreamID(packet string) string {
 		return ""
 	}
 	var data struct {
-		GUID string `json:"guid"`
+		GUID    string `json:"guid"`
+		Rows    int    `json:"rows"`
+		Columns int    `json:"columns"`
 	}
 	if err := json.Unmarshal(args[2], &data); err != nil {
 		return ""
@@ -292,6 +305,7 @@ func (m *shellMock) recordStreamID(packet string) string {
 	m.streamExitCode = 0
 	m.needsInput = data.GUID == "ws-stdin-guid"
 	m.reconnect = data.GUID == "ws-reconnect-guid"
+	m.streamRows, m.streamColumns = data.Rows, data.Columns
 	if data.GUID == "ws-fail-guid" {
 		m.streamExitCode = 3
 	}
@@ -833,6 +847,120 @@ func testShellInterruptsAcrossCommands(t *testing.T, rig *differentialRig, scena
 		}
 	case <-ctx.Done():
 		t.Fatalf("shell did not exit after Ctrl-C then exit: %v\nstdout: %q", ctx.Err(), stdout.String())
+	}
+}
+
+func TestWPWebsocketShellStdinNormalization(t *testing.T) {
+	rig, skip := differentialAvailable(t)
+	if skip != "" {
+		t.Skip(LoudSkip("TestWPWebsocketShellStdinNormalization", skip))
+	}
+	scenario, err := LoadScenario("../../testdata/parity/wp-websocket-shell.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	scenario.Env = rig.scenarioEnv(scenario)
+	for side, bin := range map[string]string{"node": rig.nodeBin, "go": rig.goBin} {
+		for _, stdinTTY := range []bool{true, false} {
+			t.Run(fmt.Sprintf("%s/stdin_tty=%t", side, stdinTTY), func(t *testing.T) {
+				testShellStdinNormalization(t, rig, scenario, bin, stdinTTY)
+			})
+		}
+	}
+}
+
+func testShellStdinNormalization(t *testing.T, rig *differentialRig, scenario *Scenario, bin string, stdinTTY bool) {
+	t.Helper()
+	appBody, err := os.ReadFile("../../testdata/parity/recordings/wp-websocket-shell/resolve-app.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	mock := &shellMock{
+		appBody: appBody, poll: make(chan string, 2), inputOpened: make(chan struct{}, 1),
+		remoteBytes: make(chan byte, 16), finishOnInput: true,
+	}
+	rig.serve(t, mock)
+	master, slave, err := pty.Open()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer master.Close()
+	defer slave.Close()
+	if err := pty.Setsize(master, &pty.Winsize{Rows: 24, Cols: 100}); err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, bin, scenario.Argv...)
+	cmd.Env = FixtureEnv(scenario.Env)
+	output := newShellOutput()
+	cmd.Stderr = output
+	var input io.WriteCloser
+	if stdinTTY {
+		cmd.Stdin, cmd.Stdout = slave, output
+		input = master
+	} else {
+		input, err = cmd.StdinPipe()
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer input.Close()
+		cmd.Stdout = slave
+		go func() { _, _ = io.Copy(output, master) }()
+	}
+	if err := cmd.Start(); err != nil {
+		t.Fatal(err)
+	}
+	done := make(chan error, 1)
+	go func() { done <- cmd.Wait() }()
+	prompt := "parityapp.develop:~$ "
+	pos := waitForShellOutput(t, output, done, 0, prompt)
+	if _, err := io.WriteString(input, "wp eval read\n"); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case <-mock.inputOpened:
+	case <-ctx.Done():
+		t.Fatalf("remote stdin was not opened: %v\noutput: %q", ctx.Err(), output.String())
+	}
+	if _, err := io.WriteString(input, "input\r"); err != nil {
+		t.Fatal(err)
+	}
+	want := "input\r"
+	if stdinTTY {
+		want = "input\n"
+	}
+	for i := range len(want) {
+		select {
+		case got := <-mock.remoteBytes:
+			if got != want[i] {
+				t.Errorf("remote stdin byte %d = %#x, want %#x", i, got, want[i])
+			}
+		case <-ctx.Done():
+			t.Fatalf("missing remote stdin byte %d: %v\noutput: %q", i, ctx.Err(), output.String())
+		}
+	}
+	wantRows := 24
+	if stdinTTY {
+		wantRows = 15 // stdout is redirected, regardless of stdin's terminal size.
+	}
+	mock.mu.Lock()
+	rows, columns := mock.streamRows, mock.streamColumns
+	mock.mu.Unlock()
+	if rows != wantRows || columns != 100 {
+		t.Errorf("remote dimensions = %dx%d, want %dx100", rows, columns, wantRows)
+	}
+	_ = waitForShellOutput(t, output, done, pos, prompt)
+	if _, err := io.WriteString(input, "exit\n"); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatalf("shell exit: %v\noutput: %q", err, output.String())
+		}
+	case <-ctx.Done():
+		t.Fatalf("shell did not exit: %v\noutput: %q", ctx.Err(), output.String())
 	}
 }
 
