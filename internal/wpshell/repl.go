@@ -13,8 +13,8 @@ import (
 type REPL struct {
 	Prompt string
 	Run    func(command string) error
-	// ReadLine supplies terminal editing when set. It also renders the prompt.
-	ReadLine func() (string, error)
+	// ReadLine supplies terminal editing, suppressing the prompt for continuations.
+	ReadLine func(continuation bool) (string, error)
 }
 
 // Serve reads lines until EOF / exit. Port of the readline 'line' handler
@@ -29,7 +29,7 @@ func (r *REPL) Serve(in *bufio.Reader, out io.Writer) error {
 		var line string
 		var err error
 		if r.ReadLine != nil {
-			line, err = r.ReadLine()
+			line, err = r.ReadLine(seenWP)
 		} else {
 			line, err = in.ReadString('\n')
 			line = strings.TrimSuffix(strings.TrimSuffix(line, "\n"), "\r")

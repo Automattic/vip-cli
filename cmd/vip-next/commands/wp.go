@@ -176,8 +176,8 @@ func runWPShell(cmd *cobra.Command, ae *appctx.AppEnv, info *wpEnvInfo) error {
 		cancel()
 		signal.Stop(signals)
 		<-signalDone
-		if receivedSignal == syscall.SIGTERM {
-			exit.WithCode(128+int(syscall.SIGTERM), nil)
+		if receivedSignal != nil {
+			exit.WithCode(128+int(receivedSignal.(syscall.Signal)), nil)
 		}
 	}()
 	cmd.SetContext(ctx)
@@ -255,7 +255,14 @@ func runWPShell(cmd *cobra.Command, ae *appctx.AppEnv, info *wpEnvInfo) error {
 		defer cmd.SetOut(originalOut)
 		out = terminal
 		cmd.SetOut(out)
-		loop.ReadLine = terminal.ReadLine
+		loop.ReadLine = func(continuation bool) (string, error) {
+			if continuation {
+				terminal.SetPrompt("")
+			} else {
+				terminal.SetPrompt(prompt)
+			}
+			return terminal.ReadLine()
+		}
 	}
 	err := loop.Serve(bufio.NewReader(reader), out)
 	interruptMu.Lock()

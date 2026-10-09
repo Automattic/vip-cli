@@ -2,6 +2,7 @@ package wpshell
 
 import (
 	"bufio"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -19,6 +20,31 @@ func TestREPLRunsValidCommand(t *testing.T) {
 	}
 	if len(ran) != 1 || ran[0] != "option get home" {
 		t.Errorf("ran = %v (leading 'wp ' must be stripped)", ran)
+	}
+}
+
+func TestREPLTerminalContinuation(t *testing.T) {
+	lines := []string{"wp option set k \"line1", "line2\"", "invalid", "exit"}
+	var continuations []bool
+	var ran []string
+	loop := &REPL{
+		Run: func(cmd string) error { ran = append(ran, cmd); return nil },
+		ReadLine: func(continuation bool) (string, error) {
+			continuations = append(continuations, continuation)
+			line := lines[0]
+			lines = lines[1:]
+			return line, nil
+		},
+	}
+	var out strings.Builder
+	if err := loop.Serve(nil, &out); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(continuations, []bool{false, true, false, false}) {
+		t.Errorf("continuation modes = %v", continuations)
+	}
+	if !reflect.DeepEqual(ran, []string{"option set k \"line1\nline2\""}) {
+		t.Errorf("commands = %q", ran)
 	}
 }
 

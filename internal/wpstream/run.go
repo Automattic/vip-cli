@@ -280,6 +280,10 @@ func runOnce(ctx context.Context, opts Options, cli *Client, ss *StreamSocket, o
 		// so a non-zero exit code is not silently lost.
 		select {
 		case exitCode = <-exitCh:
+		case <-disconnected:
+			ss.abortAll(io.ErrUnexpectedEOF)
+			closeRunDone()
+			return Result{}, false
 		case <-time.After(2 * time.Second):
 		case <-ctx.Done():
 		}

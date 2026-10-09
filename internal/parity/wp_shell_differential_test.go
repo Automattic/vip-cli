@@ -84,6 +84,8 @@ type shellMock struct {
 	needsInput     bool
 	inputOpened    chan struct{}
 	remoteBytes    chan byte
+	reconnect      bool
+	reconnectRuns  int
 }
 
 func (m *shellMock) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -130,6 +132,8 @@ func (m *shellMock) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				guid = "ws-fail-guid"
 			} else if request.Variables.Input.Command == "eval read" {
 				guid = "ws-stdin-guid"
+			} else if request.Variables.Input.Command == "eval reconnect" {
+				guid = "ws-reconnect-guid"
 			}
 			_, _ = fmt.Fprintf(w, `{"data":{"triggerWPCLICommandOnAppEnvironment":{"inputToken":"tok-ws","command":{"guid":%q},"sshAuthentication":null}}}`, guid)
 		}
@@ -287,6 +291,7 @@ func (m *shellMock) recordStreamID(packet string) string {
 	m.stdinStreamID = stdinStream.ID
 	m.streamExitCode = 0
 	m.needsInput = data.GUID == "ws-stdin-guid"
+	m.reconnect = data.GUID == "ws-reconnect-guid"
 	if data.GUID == "ws-fail-guid" {
 		m.streamExitCode = 3
 	}
@@ -295,6 +300,30 @@ func (m *shellMock) recordStreamID(packet string) string {
 }
 
 func (m *shellMock) startShellStream(ctx context.Context, ws *websocket.Conn, stdoutID, stdinID string, needsInput bool, exitCode int) error {
+	m.mu.Lock()
+	reconnect := m.reconnect
+	if reconnect {
+		m.reconnectRuns++
+	}
+	run := m.reconnectRuns
+	m.mu.Unlock()
+	if reconnect {
+		if run == 1 {
+			if err := finishShellStream(ctx, ws, stdoutID, 0); err != nil {
+				return err
+			}
+			// Let stdout EOF be observed before the transport drops.
+			time.Sleep(100 * time.Millisecond)
+			ws.CloseNow()
+			return errors.New("simulated disconnect after EOF")
+		}
+		select {
+		case <-time.After(3 * time.Second):
+			return finishShellStream(ctx, ws, stdoutID, 3)
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
 	if !needsInput {
 		return finishShellStream(ctx, ws, stdoutID, exitCode)
 	}
@@ -543,6 +572,64 @@ func TestWPWebsocketShellPTYDifferential(t *testing.T) {
 	}
 }
 
+func TestWPWebsocketShellMultilinePTY(t *testing.T) {
+	rig, skip := differentialAvailable(t)
+	if skip != "" {
+		t.Skip(LoudSkip("TestWPWebsocketShellMultilinePTY", skip))
+	}
+	scenario, err := LoadScenario("../../testdata/parity/wp-websocket-shell.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	scenario.Env = rig.scenarioEnv(scenario)
+	for side, bin := range map[string]string{"node": rig.nodeBin, "go": rig.goBin} {
+		t.Run(side, func(t *testing.T) {
+			appBody, err := os.ReadFile("../../testdata/parity/recordings/wp-websocket-shell/resolve-app.json")
+			if err != nil {
+				t.Fatal(err)
+			}
+			mock := &shellMock{appBody: appBody, poll: make(chan string, 2)}
+			rig.serve(t, mock)
+			ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+			defer cancel()
+			cmd := exec.CommandContext(ctx, bin, scenario.Argv...)
+			cmd.Env = FixtureEnv(scenario.Env)
+			terminal, err := pty.StartWithSize(cmd, &pty.Winsize{Rows: 24, Cols: 100})
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer terminal.Close()
+			output := newShellOutput()
+			go func() { _, _ = io.Copy(output, terminal) }()
+			done := make(chan error, 1)
+			go func() { done <- cmd.Wait() }()
+			prompt := "parityapp.develop:~$ "
+			pos := waitForShellOutput(t, output, done, 0, prompt)
+			if _, err := io.WriteString(terminal, "wp option set key \"line1\nline2\"\n"); err != nil {
+				t.Fatal(err)
+			}
+			_ = waitForShellOutput(t, output, done, pos, prompt)
+			if got := strings.Count(output.String(), prompt); got != 2 {
+				t.Errorf("multiline command showed %d prompts, want 2: %q", got, output.String())
+			}
+			if got := mock.commandsSeen(); !reflect.DeepEqual(got, []string{"option set key \"line1\nline2\""}) {
+				t.Errorf("multiline commands = %q", got)
+			}
+			if _, err := io.WriteString(terminal, "exit\n"); err != nil {
+				t.Fatal(err)
+			}
+			select {
+			case err := <-done:
+				if err != nil {
+					t.Fatalf("shell exit: %v\noutput: %q", err, output.String())
+				}
+			case <-ctx.Done():
+				t.Fatalf("shell did not exit: %v\noutput: %q", ctx.Err(), output.String())
+			}
+		})
+	}
+}
+
 func TestWPWebsocketShellPTYCtrlC(t *testing.T) {
 	rig, skip := differentialAvailable(t)
 	if skip != "" {
@@ -561,24 +648,26 @@ func TestWPWebsocketShellPTYCtrlC(t *testing.T) {
 	}
 }
 
-func TestWPWebsocketShellRestoresTerminalOnSIGTERM(t *testing.T) {
+func TestWPWebsocketShellRestoresTerminalOnSignal(t *testing.T) {
 	rig, skip := differentialAvailable(t)
 	if skip != "" {
-		t.Skip(LoudSkip("TestWPWebsocketShellRestoresTerminalOnSIGTERM", skip))
+		t.Skip(LoudSkip("TestWPWebsocketShellRestoresTerminalOnSignal", skip))
 	}
 	scenario, err := LoadScenario("../../testdata/parity/wp-websocket-shell.yaml")
 	if err != nil {
 		t.Fatal(err)
 	}
 	scenario.Env = rig.scenarioEnv(scenario)
-	for _, active := range []bool{false, true} {
-		t.Run(fmt.Sprintf("command_active=%t", active), func(t *testing.T) {
-			testShellSIGTERM(t, rig, scenario, active)
-		})
+	for _, sig := range []syscall.Signal{syscall.SIGTERM, syscall.SIGINT} {
+		for _, active := range []bool{false, true} {
+			t.Run(fmt.Sprintf("%s/command_active=%t", sig, active), func(t *testing.T) {
+				testShellSignal(t, rig, scenario, active, sig)
+			})
+		}
 	}
 }
 
-func testShellSIGTERM(t *testing.T, rig *differentialRig, scenario *Scenario, active bool) {
+func testShellSignal(t *testing.T, rig *differentialRig, scenario *Scenario, active bool, sig syscall.Signal) {
 	t.Helper()
 	appBody, err := os.ReadFile("../../testdata/parity/recordings/wp-websocket-shell/resolve-app.json")
 	if err != nil {
@@ -631,27 +720,27 @@ func testShellSIGTERM(t *testing.T, rig *differentialRig, scenario *Scenario, ac
 	if reflect.DeepEqual(before, during) {
 		t.Error("Go shell did not put the terminal in raw mode")
 	}
-	if err := cmd.Process.Signal(syscall.SIGTERM); err != nil {
+	if err := cmd.Process.Signal(sig); err != nil {
 		t.Fatal(err)
 	}
 	select {
 	case err := <-done:
 		var exitErr *exec.ExitError
-		if !errors.As(err, &exitErr) || exitErr.ExitCode() != 128+int(syscall.SIGTERM) {
-			t.Errorf("Go shell SIGTERM exit = %v, want status 143", err)
+		if !errors.As(err, &exitErr) || exitErr.ExitCode() != 128+int(sig) {
+			t.Errorf("Go shell %s exit = %v, want status %d", sig, err, 128+int(sig))
 		}
 	case <-ctx.Done():
-		t.Fatalf("Go shell did not stop after SIGTERM: %v\noutput: %q", ctx.Err(), output.String())
+		t.Fatalf("Go shell did not stop after %s: %v\noutput: %q", sig, ctx.Err(), output.String())
 	}
 	after, err := term.GetState(int(slave.Fd()))
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !reflect.DeepEqual(before, after) {
-		t.Errorf("Go shell left the terminal in raw mode after SIGTERM")
+		t.Errorf("Go shell left the terminal in raw mode after %s", sig)
 	}
 	if strings.Contains(output.String(), "context canceled") {
-		t.Errorf("Go shell printed a cancellation error after SIGTERM: %q", output.String())
+		t.Errorf("Go shell printed a cancellation error after %s: %q", sig, output.String())
 	}
 	var wantCommands []string
 	if active {
@@ -744,6 +833,65 @@ func testShellInterruptsAcrossCommands(t *testing.T, rig *differentialRig, scena
 		}
 	case <-ctx.Done():
 		t.Fatalf("shell did not exit after Ctrl-C then exit: %v\nstdout: %q", ctx.Err(), stdout.String())
+	}
+}
+
+func TestWPWebsocketShellReconnectExit(t *testing.T) {
+	rig, skip := differentialAvailable(t)
+	if skip != "" {
+		t.Skip(LoudSkip("TestWPWebsocketShellReconnectExit", skip))
+	}
+	scenario, err := LoadScenario("../../testdata/parity/wp-websocket-shell.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	scenario.Env = rig.scenarioEnv(scenario)
+	for side, bin := range map[string]string{"node": rig.nodeBin, "go": rig.goBin} {
+		t.Run(side, func(t *testing.T) {
+			appBody, err := os.ReadFile("../../testdata/parity/recordings/wp-websocket-shell/resolve-app.json")
+			if err != nil {
+				t.Fatal(err)
+			}
+			mock := &shellMock{appBody: appBody, poll: make(chan string, 2)}
+			rig.serve(t, mock)
+			ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+			defer cancel()
+			cmd := exec.CommandContext(ctx, bin, scenario.Argv...)
+			cmd.Env = FixtureEnv(scenario.Env)
+			stdin, err := cmd.StdinPipe()
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer stdin.Close()
+			output := newShellOutput()
+			cmd.Stdout, cmd.Stderr = output, output
+			if err := cmd.Start(); err != nil {
+				t.Fatal(err)
+			}
+			done := make(chan error, 1)
+			go func() { done <- cmd.Wait() }()
+			prompt := "parityapp.develop:~$ "
+			_ = waitForShellOutput(t, output, done, 0, prompt)
+			if _, err := io.WriteString(stdin, "wp eval reconnect\n"); err != nil {
+				t.Fatal(err)
+			}
+			pos := waitForShellOutput(t, output, done, 0, "Error: WP-CLI command failed with exit code 3")
+			_ = waitForShellOutput(t, output, done, pos, prompt)
+			if got := mock.commandsSeen(); !reflect.DeepEqual(got, []string{"eval reconnect"}) {
+				t.Errorf("reconnect triggered new commands: %q", got)
+			}
+			if _, err := io.WriteString(stdin, "exit\n"); err != nil {
+				t.Fatal(err)
+			}
+			select {
+			case err := <-done:
+				if err != nil {
+					t.Fatalf("shell exit: %v\noutput: %q", err, output.String())
+				}
+			case <-ctx.Done():
+				t.Fatalf("shell did not exit: %v\noutput: %q", ctx.Err(), output.String())
+			}
+		})
 	}
 }
 
