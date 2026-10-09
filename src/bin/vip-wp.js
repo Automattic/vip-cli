@@ -100,7 +100,7 @@ const finishCommand = ( {
 	currentOffset = 0;
 	if ( ! isSubShell ) {
 		subShellRl.close();
-		tracking.then( () => process.exit( exitCode ) );
+		void tracking.catch( () => {} ).finally( () => process.exit( exitCode ) );
 		return;
 	}
 
