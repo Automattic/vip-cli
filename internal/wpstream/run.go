@@ -289,6 +289,8 @@ func runOnce(ctx context.Context, opts Options, cli *Client, ss *StreamSocket, o
 		closeRunDone() // also aborts stdoutStream via watcher (redundant but safe)
 		return Result{}, false
 	case <-ctx.Done():
+		closeRunDone()
+		<-stdoutDone
 		return Result{}, true // caller checks ctx.Err()
 	}
 }

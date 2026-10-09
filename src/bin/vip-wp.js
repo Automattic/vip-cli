@@ -76,6 +76,29 @@ const unpipeStreamsFromProcess = ( { stdin, stdout: outStream } ) => {
 	outStream.unpipe( process.stdout );
 };
 
+const finishCommand = async ( { subShellRl, commonTrackingParams, isSubShell, exitCode = 0 } ) => {
+	if ( currentJob.finished ) {
+		return;
+	}
+	currentJob.finished = true;
+	clearTimeout( currentJob.exitTimer );
+	subShellRl.clearLine();
+	commandRunning = false;
+	await trackEvent( 'wpcli_command_end', commonTrackingParams );
+	currentJob.socket.close();
+	unpipeStreamsFromProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
+	currentOffset = 0;
+	if ( ! isSubShell ) {
+		subShellRl.close();
+		process.exit( exitCode );
+	}
+	if ( exitCode ) {
+		console.log( chalk.red( `Error: WP-CLI command failed with exit code ${ exitCode }` ) );
+	}
+	safeResume( subShellRl );
+	safePrompt( subShellRl );
+};
+
 const bindStreamEvents = ( { subShellRl, commonTrackingParams, isSubShell, stdoutStream } ) => {
 	const criticalErrors = [
 		'ECONNRESET',
@@ -99,24 +122,12 @@ const bindStreamEvents = ( { subShellRl, commonTrackingParams, isSubShell, stdou
 	} );
 
 	stdoutStream.on( 'end', async () => {
-		subShellRl.clearLine();
-		commandRunning = false;
-
-		await trackEvent( 'wpcli_command_end', commonTrackingParams );
-
-		// Tell socket.io to stop trying to connect
-		currentJob.socket.close();
-		unpipeStreamsFromProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
-
-		// Reset offset
-		currentOffset = 0;
-
-		if ( ! isSubShell ) {
-			subShellRl.close();
-			process.exit();
+		// Allow the server's exit event to deliver its status after stdout EOF.
+		if ( ! currentJob.finished ) {
+			currentJob.exitTimer = setTimeout( () => {
+				finishCommand( { subShellRl, commonTrackingParams, isSubShell } );
+			}, 2000 );
 		}
-		safeResume( subShellRl );
-		safePrompt( subShellRl );
 	} );
 };
 
@@ -268,8 +279,7 @@ const bindReconnectEvents = ( {
 
 		currentJob.stdinStream.destroy();
 		currentJob.stdoutStream.destroy();
-		currentJob.socket.close();
-		process.exit( exitCode );
+		await finishCommand( { subShellRl, commonTrackingParams, isSubShell, exitCode } );
 	} );
 
 	currentJob.socket.io.on( 'reconnect_attempt', attempt => {

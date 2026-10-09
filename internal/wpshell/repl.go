@@ -13,6 +13,8 @@ import (
 type REPL struct {
 	Prompt string
 	Run    func(command string) error
+	// ReadLine supplies terminal editing when set. It also renders the prompt.
+	ReadLine func() (string, error)
 }
 
 // Serve reads lines until EOF / exit. Port of the readline 'line' handler
@@ -22,11 +24,20 @@ func (r *REPL) Serve(in *bufio.Reader, out io.Writer) error {
 	state := NewCmdState()
 	seenWP := false
 
-	fmt.Fprint(out, r.Prompt)
+	r.prompt(out)
 	for {
-		line, err := in.ReadString('\n')
-		line = strings.TrimRight(line, "\n")
+		var line string
+		var err error
+		if r.ReadLine != nil {
+			line, err = r.ReadLine()
+		} else {
+			line, err = in.ReadString('\n')
+			line = strings.TrimSuffix(strings.TrimSuffix(line, "\n"), "\r")
+		}
 		atEOF := err == io.EOF
+		if err != nil && !atEOF {
+			return err
+		}
 
 		if !atEOF || line != "" {
 			if r.handleLine(out, state, &seenWP, line) == exitREPL {
@@ -36,6 +47,12 @@ func (r *REPL) Serve(in *bufio.Reader, out io.Writer) error {
 		if atEOF {
 			return nil
 		}
+	}
+}
+
+func (r *REPL) prompt(out io.Writer) {
+	if r.ReadLine == nil {
+		fmt.Fprint(out, r.Prompt)
 	}
 }
 
@@ -49,7 +66,7 @@ const (
 func (r *REPL) handleLine(out io.Writer, state *CmdState, seenWP *bool, line string) lineResult {
 	// Blank line re-prompts (vip-wp.js:451).
 	if line == "" {
-		fmt.Fprint(out, r.Prompt)
+		r.prompt(out)
 		return continueREPL
 	}
 	// exit / exit; quits when not mid-command (vip-wp.js:457).
@@ -63,7 +80,7 @@ func (r *REPL) handleLine(out io.Writer, state *CmdState, seenWP *bool, line str
 	if !*seenWP {
 		ResetState(state)
 		fmt.Fprintln(out, "Error: invalid command, please pass a valid WP-CLI command.")
-		fmt.Fprint(out, r.Prompt)
+		r.prompt(out)
 		return continueREPL
 	}
 
@@ -72,10 +89,11 @@ func (r *REPL) handleLine(out io.Writer, state *CmdState, seenWP *bool, line str
 		return continueREPL // keep accumulating (multiline quote)
 	}
 
-	cmd := strings.TrimPrefix(state.Command, "wp ")
+	cmd := strings.TrimLeft(state.Command, " \t")
+	cmd = strings.TrimLeft(strings.TrimPrefix(cmd, "wp"), " \t")
 	*seenWP = false
 	ResetState(state)
 	_ = r.Run(cmd)
-	fmt.Fprint(out, r.Prompt)
+	r.prompt(out)
 	return continueREPL
 }
