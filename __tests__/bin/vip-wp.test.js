@@ -160,6 +160,9 @@ test.each( [ false, true ] )(
 	'one-shot exit waits for end telemetry (reject=%s)',
 	async shouldReject => {
 		let settle;
+		const exited = new Promise( resolve => {
+			process.exit.mockImplementation( code => resolve( code ) );
+		} );
 		mockTrackEvent.mockImplementation( event =>
 			event === 'wpcli_command_end'
 				? new Promise( ( resolve, reject ) => {
@@ -172,8 +175,7 @@ test.each( [ false, true ] )(
 		expect( process.exit ).not.toHaveBeenCalled();
 		expect( mockSocket.close ).toHaveBeenCalledTimes( 1 );
 		settle();
-		await Promise.resolve();
-		await Promise.resolve();
+		await expect( exited ).resolves.toBe( 3 );
 		expect( process.exit ).toHaveBeenCalledWith( 3 );
 	}
 );
