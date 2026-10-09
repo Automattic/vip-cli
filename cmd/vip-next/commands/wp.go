@@ -158,8 +158,28 @@ func runWPShell(cmd *cobra.Command, ae *appctx.AppEnv, info *wpEnvInfo) error {
 	}
 	prompt := fmt.Sprintf("%s.%s:~$ ", ae.App.Name, identifier)
 	originalCtx := cmd.Context()
-	ctx, cancel := signal.NotifyContext(originalCtx, syscall.SIGINT, syscall.SIGTERM)
-	defer cancel()
+	ctx, cancel := context.WithCancel(originalCtx)
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
+	signalDone := make(chan struct{})
+	var receivedSignal os.Signal
+	go func() {
+		defer close(signalDone)
+		select {
+		case receivedSignal = <-signals:
+			cancel()
+		case <-ctx.Done():
+		}
+	}()
+	// Registered before terminal cleanup so restoration finishes before exit.
+	defer func() {
+		cancel()
+		signal.Stop(signals)
+		<-signalDone
+		if receivedSignal == syscall.SIGTERM {
+			exit.WithCode(128+int(syscall.SIGTERM), nil)
+		}
+	}()
 	cmd.SetContext(ctx)
 	defer cmd.SetContext(originalCtx)
 	var interruptMu sync.Mutex

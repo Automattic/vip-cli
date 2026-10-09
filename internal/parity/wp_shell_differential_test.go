@@ -571,11 +571,20 @@ func TestWPWebsocketShellRestoresTerminalOnSIGTERM(t *testing.T) {
 		t.Fatal(err)
 	}
 	scenario.Env = rig.scenarioEnv(scenario)
+	for _, active := range []bool{false, true} {
+		t.Run(fmt.Sprintf("command_active=%t", active), func(t *testing.T) {
+			testShellSIGTERM(t, rig, scenario, active)
+		})
+	}
+}
+
+func testShellSIGTERM(t *testing.T, rig *differentialRig, scenario *Scenario, active bool) {
+	t.Helper()
 	appBody, err := os.ReadFile("../../testdata/parity/recordings/wp-websocket-shell/resolve-app.json")
 	if err != nil {
 		t.Fatal(err)
 	}
-	mock := &shellMock{appBody: appBody, poll: make(chan string, 2)}
+	mock := &shellMock{appBody: appBody, poll: make(chan string, 2), inputOpened: make(chan struct{}, 1)}
 	rig.serve(t, mock)
 
 	master, slave, err := pty.Open()
@@ -605,6 +614,16 @@ func TestWPWebsocketShellRestoresTerminalOnSIGTERM(t *testing.T) {
 	done := make(chan error, 1)
 	go func() { done <- cmd.Wait() }()
 	_ = waitForShellOutput(t, output, done, 0, "parityapp.develop:~$ ")
+	if active {
+		if _, err := io.WriteString(master, "wp eval read\n"); err != nil {
+			t.Fatal(err)
+		}
+		select {
+		case <-mock.inputOpened:
+		case <-ctx.Done():
+			t.Fatalf("remote stdin was not opened: %v\noutput: %q", ctx.Err(), output.String())
+		}
+	}
 	during, err := term.GetState(int(slave.Fd()))
 	if err != nil {
 		t.Fatal(err)
@@ -616,7 +635,11 @@ func TestWPWebsocketShellRestoresTerminalOnSIGTERM(t *testing.T) {
 		t.Fatal(err)
 	}
 	select {
-	case <-done:
+	case err := <-done:
+		var exitErr *exec.ExitError
+		if !errors.As(err, &exitErr) || exitErr.ExitCode() != 128+int(syscall.SIGTERM) {
+			t.Errorf("Go shell SIGTERM exit = %v, want status 143", err)
+		}
 	case <-ctx.Done():
 		t.Fatalf("Go shell did not stop after SIGTERM: %v\noutput: %q", ctx.Err(), output.String())
 	}
@@ -627,8 +650,15 @@ func TestWPWebsocketShellRestoresTerminalOnSIGTERM(t *testing.T) {
 	if !reflect.DeepEqual(before, after) {
 		t.Errorf("Go shell left the terminal in raw mode after SIGTERM")
 	}
-	if got := mock.commandsSeen(); len(got) != 0 {
-		t.Errorf("SIGTERM caused a command trigger: %q", got)
+	if strings.Contains(output.String(), "context canceled") {
+		t.Errorf("Go shell printed a cancellation error after SIGTERM: %q", output.String())
+	}
+	var wantCommands []string
+	if active {
+		wantCommands = []string{"eval read"}
+	}
+	if got := mock.commandsSeen(); !reflect.DeepEqual(got, wantCommands) {
+		t.Errorf("trigger commands = %q, want %q", got, wantCommands)
 	}
 }
 
