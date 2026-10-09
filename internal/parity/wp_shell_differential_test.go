@@ -1,4 +1,4 @@
-//go:build parity
+//go:build parity && !windows
 
 package parity
 
