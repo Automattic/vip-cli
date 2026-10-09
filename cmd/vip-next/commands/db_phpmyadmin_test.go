@@ -102,6 +102,18 @@ func TestDBPhpmyadminPrintWritesURLToStdout(t *testing.T) {
 	if opened != "" {
 		t.Errorf("--print must not open browser; got %q", opened)
 	}
+	if !strings.Contains(stderr.String(), "Note: phpMyAdmin sessions are read-only on VIP Kubernetes and read-write on WP Cloud.") {
+		t.Errorf("missing platform-specific access note: %q", stderr.String())
+	}
+}
+
+func TestDBPhpmyadminHelpIsPlatformNeutral(t *testing.T) {
+	cmd := DBPhpmyadminCmd()
+	for _, description := range []string{cmd.Short, cmd.Long} {
+		if strings.Contains(description, "read-only") || !strings.Contains(description, "phpMyAdmin web interface") {
+			t.Errorf("misleading command description: %q", description)
+		}
+	}
 }
 
 func TestDBPhpmyadminPrintSilentSuppressesStderr(t *testing.T) {
