@@ -52,11 +52,12 @@ type Result struct {
 // arrives) it re-dials with exponential backoff and resumes from offset.
 //
 // C1/C2 fix: the loop is entirely self-contained; every Engine is explicitly
-// closed before the next attempt or before returning. No goroutine is launched
-// that outlives its engine.
+// closed before the next attempt or before returning. The stdin pump spans
+// attempts so a disconnected stream cannot consume the next attempt's input.
 func Run(ctx context.Context, opts Options) (Result, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
+	input := newStdinPump(ctx, opts.Stdin, opts.IsTTY)
 
 	var offset atomic.Int64
 	backoff := time.Second
@@ -111,7 +112,7 @@ func Run(ctx context.Context, opts Options) (Result, error) {
 		debuglog.Printf(ctx, "@automattic/vip:wp", "socket: connected")
 		first = false
 
-		res, clean := runOnce(ctx, opts, cli, ss, &offset, offset.Load())
+		res, clean := runOnce(ctx, opts, cli, ss, &offset, offset.Load(), input)
 		eng.Close() // C2: ALWAYS close engine before next attempt or return
 
 		if ctx.Err() != nil {
@@ -149,7 +150,7 @@ func waitBackoff(ctx context.Context, backoff *time.Duration, max time.Duration)
 // Returns (result, true) on clean exit, or (Result{}, false) on disconnect
 // so the caller can reconnect. ctx cancel is treated as clean=true and the
 // caller checks ctx.Err() afterwards.
-func runOnce(ctx context.Context, opts Options, cli *Client, ss *StreamSocket, offset *atomic.Int64, resumeAt int64) (Result, bool) {
+func runOnce(ctx context.Context, opts Options, cli *Client, ss *StreamSocket, offset *atomic.Int64, resumeAt int64, input *stdinPump) (Result, bool) {
 	// exitCh is buffered: handlers run in goroutines and MUST NOT block on send.
 	exitCh := make(chan int, 4)
 	signalExit := func(code int) {
@@ -218,19 +219,8 @@ func runOnce(ctx context.Context, opts Options, cli *Client, ss *StreamSocket, o
 	}
 	_ = ss.Emit(ctx, "cmd", []any{data, stdinStream, stdoutStream}, nil)
 
-	// Pipe stdin → stdinStream.
-	// When stdinStream is aborted (C3) Write returns an error, io.Copy stops,
-	// and the goroutine exits — no leak.
-	go func() {
-		src := opts.Stdin
-		if opts.IsTTY && src != nil {
-			src = crToLF{src}
-		}
-		if src != nil {
-			_, _ = io.Copy(stdinStream, src)
-		}
-		_ = stdinStream.Close()
-	}()
+	input.attach(stdinStream)
+	defer input.detach(stdinStream)
 
 	// Background watcher: inject errRunDone into stdoutStream when runOnce is
 	// about to return, unblocking the stdout goroutine.
@@ -261,9 +251,7 @@ func runOnce(ctx context.Context, opts Options, cli *Client, ss *StreamSocket, o
 
 	defer closeRunDone()
 
-	var exitCode int
-	select {
-	case exitCode = <-exitCh:
+	finish := func(exitCode int) (Result, bool) {
 		// Drain stdout: signal runDone so the watcher goroutine aborts the
 		// stream, unblocking the stdout goroutine.
 		closeRunDone()
@@ -274,6 +262,22 @@ func runOnce(ctx context.Context, opts Options, cli *Client, ss *StreamSocket, o
 			// aborted. Cancellation must not wait for that writer.
 		}
 		return Result{ExitCode: exitCode}, true
+	}
+	disconnect := func() (Result, bool) {
+		// A delivered exit wins even when select also observes a disconnect.
+		select {
+		case exitCode := <-exitCh:
+			return finish(exitCode)
+		default:
+		}
+		ss.abortAll(io.ErrUnexpectedEOF)
+		closeRunDone()
+		return Result{}, false
+	}
+	var exitCode int
+	select {
+	case exitCode = <-exitCh:
+		return finish(exitCode)
 	case <-stdoutDone:
 		// stdout EOF before any exit event — the server always sends an 'exit'
 		// event after streaming completes (vip-wp.js:261). Wait briefly for it
@@ -281,9 +285,7 @@ func runOnce(ctx context.Context, opts Options, cli *Client, ss *StreamSocket, o
 		select {
 		case exitCode = <-exitCh:
 		case <-disconnected:
-			ss.abortAll(io.ErrUnexpectedEOF)
-			closeRunDone()
-			return Result{}, false
+			return disconnect()
 		case <-time.After(2 * time.Second):
 		case <-ctx.Done():
 		}
@@ -294,9 +296,7 @@ func runOnce(ctx context.Context, opts Options, cli *Client, ss *StreamSocket, o
 		// We do this here (not in NewStreamSocket) to ensure the disconnected
 		// channel is selected BEFORE stdoutDone can fire — preventing the race
 		// where stdoutDone fires first and runOnce returns clean=true incorrectly.
-		ss.abortAll(io.ErrUnexpectedEOF)
-		closeRunDone() // also aborts stdoutStream via watcher (redundant but safe)
-		return Result{}, false
+		return disconnect()
 	case <-ctx.Done():
 		return Result{}, true // caller checks ctx.Err()
 	}
@@ -305,7 +305,9 @@ func runOnce(ctx context.Context, opts Options, cli *Client, ss *StreamSocket, o
 // run is the internal single-attempt function used by the unit tests (run_test.go).
 // The public API uses runOnce via Run. Kept for backward compatibility with tests.
 func run(ctx context.Context, opts Options, cli *Client, ss *StreamSocket, offset *atomic.Int64, resumeAt int64) (Result, error) {
-	res, clean := runOnce(ctx, opts, cli, ss, offset, resumeAt)
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	res, clean := runOnce(ctx, opts, cli, ss, offset, resumeAt, newStdinPump(ctx, opts.Stdin, opts.IsTTY))
 	if !clean {
 		// disconnect treated as context cancellation for unit-test callers
 		return Result{}, ctx.Err()

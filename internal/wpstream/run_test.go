@@ -4,12 +4,48 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"io"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
 )
+
+type exitDisconnectTransport struct {
+	transport
+	queue func()
+}
+
+func (t *exitDisconnectTransport) WriteMessage(_ context.Context, p []byte) error {
+	if strings.Contains(string(p), `"cmd"`) {
+		t.queue()
+	}
+	return nil
+}
+
+func TestRunQueuedExitWinsOverDisconnect(t *testing.T) {
+	for _, eof := range []bool{false, true} {
+		for range 100 {
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			tr := &exitDisconnectTransport{}
+			cli := NewClient(tr, "/wp-cli")
+			ss := NewStreamSocket(ctx, cli)
+			tr.queue = func() {
+				if eof {
+					ss.abortAll(io.EOF)
+				}
+				cli.dispatch("exit", []any{map[string]any{"exitCode": float64(3)}})
+				cli.dispatch("disconnect", nil)
+			}
+			res, clean := runOnce(ctx, Options{Stdout: io.Discard}, cli, ss, nil, 0, newStdinPump(ctx, nil, false))
+			cancel()
+			if !clean || res.ExitCode != 3 {
+				t.Fatalf("EOF=%v: queued exit lost: result=%+v clean=%v", eof, res, clean)
+			}
+		}
+	}
+}
 
 type blockingWriter struct {
 	entered  chan struct{}

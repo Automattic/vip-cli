@@ -86,7 +86,11 @@ type shellMock struct {
 	remoteBytes    chan byte
 	finishOnInput  bool
 	reconnect      bool
+	reconnectInput bool
+	exitThenClose  bool
 	reconnectRuns  int
+	streamRuns     int
+	lastStreamID   string
 	streamRows     int
 	streamColumns  int
 }
@@ -137,6 +141,10 @@ func (m *shellMock) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				guid = "ws-stdin-guid"
 			} else if request.Variables.Input.Command == "eval reconnect" {
 				guid = "ws-reconnect-guid"
+			} else if request.Variables.Input.Command == "eval reconnect-read" {
+				guid = "ws-reconnect-stdin-guid"
+			} else if request.Variables.Input.Command == `"option" "get" "close"` {
+				guid = "ws-exit-close-guid"
 			}
 			_, _ = fmt.Fprintf(w, `{"data":{"triggerWPCLICommandOnAppEnvironment":{"inputToken":"tok-ws","command":{"guid":%q},"sshAuthentication":null}}}`, guid)
 		}
@@ -201,11 +209,13 @@ func (m *shellMock) serveSocket(w http.ResponseWriter, r *http.Request) {
 	}
 	m.mu.Lock()
 	streamID := m.stdoutStreamID
+	lastStreamID := m.lastStreamID
+	reconnectInput := m.reconnectInput
 	exitCode := m.streamExitCode
 	stdinID := m.stdinStreamID
 	needsInput := m.needsInput
 	m.mu.Unlock()
-	if streamID != "" {
+	if streamID != "" && (!reconnectInput || streamID != lastStreamID) {
 		if err := m.startShellStream(ctx, ws, streamID, stdinID, needsInput, exitCode); err != nil {
 			return
 		}
@@ -305,6 +315,11 @@ func (m *shellMock) recordStreamID(packet string) string {
 	m.streamExitCode = 0
 	m.needsInput = data.GUID == "ws-stdin-guid"
 	m.reconnect = data.GUID == "ws-reconnect-guid"
+	m.reconnectInput = data.GUID == "ws-reconnect-stdin-guid"
+	m.exitThenClose = data.GUID == "ws-exit-close-guid"
+	if m.reconnectInput {
+		m.needsInput = true
+	}
 	m.streamRows, m.streamColumns = data.Rows, data.Columns
 	if data.GUID == "ws-fail-guid" {
 		m.streamExitCode = 3
@@ -316,11 +331,29 @@ func (m *shellMock) recordStreamID(packet string) string {
 func (m *shellMock) startShellStream(ctx context.Context, ws *websocket.Conn, stdoutID, stdinID string, needsInput bool, exitCode int) error {
 	m.mu.Lock()
 	reconnect := m.reconnect
+	reconnectInput := m.reconnectInput
+	exitThenClose := m.exitThenClose
+	m.streamRuns++
+	m.lastStreamID = stdoutID
 	if reconnect {
 		m.reconnectRuns++
 	}
-	run := m.reconnectRuns
+	run, streamRun := m.reconnectRuns, m.streamRuns
 	m.mu.Unlock()
+	if exitThenClose {
+		// The handler binds its stdout listener just after emitting the command.
+		time.Sleep(100 * time.Millisecond)
+		end := fmt.Sprintf(`42/wp-cli,["$stream-end",%q]`, stdoutID)
+		exit := `42/wp-cli,["exit",{"exitCode":3}]`
+		if err := ws.Write(ctx, websocket.MessageText, []byte(end)); err != nil {
+			return err
+		}
+		if err := ws.Write(ctx, websocket.MessageText, []byte(exit)); err != nil {
+			return err
+		}
+		_ = ws.Close(websocket.StatusGoingAway, "")
+		return errors.New("simulated disconnect immediately after exit")
+	}
 	if reconnect {
 		if run == 1 {
 			if err := finishShellStream(ctx, ws, stdoutID, 0); err != nil {
@@ -350,6 +383,12 @@ func (m *shellMock) startShellStream(ctx context.Context, ws *websocket.Conn, st
 	}
 	if m.inputOpened != nil {
 		m.inputOpened <- struct{}{}
+	}
+	if reconnectInput && streamRun == 1 {
+		// Allow the first read request to reach the client before dropping it.
+		time.Sleep(100 * time.Millisecond)
+		ws.CloseNow()
+		return errors.New("simulated disconnect after stdin read")
 	}
 	return nil
 }
@@ -1018,6 +1057,148 @@ func TestWPWebsocketShellReconnectExit(t *testing.T) {
 				}
 			case <-ctx.Done():
 				t.Fatalf("shell did not exit: %v\noutput: %q", ctx.Err(), output.String())
+			}
+		})
+	}
+}
+
+func TestWPWebsocketShellStdinAcrossReconnect(t *testing.T) {
+	rig, skip := differentialAvailable(t)
+	if skip != "" {
+		t.Skip(LoudSkip("TestWPWebsocketShellStdinAcrossReconnect", skip))
+	}
+	scenario, err := LoadScenario("../../testdata/parity/wp-websocket-shell.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	scenario.Env = rig.scenarioEnv(scenario)
+	appBody, err := os.ReadFile("../../testdata/parity/recordings/wp-websocket-shell/resolve-app.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for side, bin := range map[string]string{"node": rig.nodeBin, "go": rig.goBin} {
+		t.Run(side, func(t *testing.T) {
+			mock := &shellMock{
+				appBody: appBody, poll: make(chan string, 2),
+				inputOpened: make(chan struct{}, 2), remoteBytes: make(chan byte, 32), finishOnInput: true,
+			}
+			rig.serve(t, mock)
+			ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+			defer cancel()
+			cmd := exec.CommandContext(ctx, bin, scenario.Argv...)
+			cmd.Env = FixtureEnv(scenario.Env)
+			stdin, err := cmd.StdinPipe()
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer stdin.Close()
+			output := newShellOutput()
+			cmd.Stdout, cmd.Stderr = output, output
+			if err := cmd.Start(); err != nil {
+				t.Fatal(err)
+			}
+			done := make(chan error, 1)
+			go func() { done <- cmd.Wait() }()
+			prompt := "parityapp.develop:~$ "
+			pos := waitForShellOutput(t, output, done, 0, prompt)
+			if _, err := io.WriteString(stdin, "wp eval reconnect-read\n"); err != nil {
+				t.Fatal(err)
+			}
+			for attempt := 1; attempt <= 2; attempt++ {
+				select {
+				case <-mock.inputOpened:
+				case <-ctx.Done():
+					t.Fatalf("stdin read did not start on attempt %d: %v\noutput: %q", attempt, ctx.Err(), output.String())
+				}
+			}
+			const input = "reconnected input\n"
+			if _, err := io.WriteString(stdin, input); err != nil {
+				t.Fatal(err)
+			}
+			for i := range len(input) {
+				select {
+				case got := <-mock.remoteBytes:
+					if got != input[i] {
+						t.Errorf("remote stdin byte %d = %#x, want %#x", i, got, input[i])
+					}
+				case <-ctx.Done():
+					t.Fatalf("missing remote stdin byte %d: %v\noutput: %q", i, ctx.Err(), output.String())
+				}
+			}
+			pos = waitForShellOutput(t, output, done, pos, prompt)
+			if _, err := io.WriteString(stdin, "exit\n"); err != nil {
+				t.Fatal(err)
+			}
+			select {
+			case err := <-done:
+				if err != nil {
+					t.Fatalf("shell exit: %v\noutput: %q", err, output.String())
+				}
+			case <-ctx.Done():
+				t.Fatalf("shell did not exit: %v\noutput: %q", ctx.Err(), output.String())
+			}
+			mock.mu.Lock()
+			streamRuns := mock.streamRuns
+			mock.mu.Unlock()
+			if streamRuns != 2 {
+				t.Errorf("stream attempts = %d, want 2", streamRuns)
+			}
+			if got := mock.commandsSeen(); !reflect.DeepEqual(got, []string{"eval reconnect-read"}) {
+				t.Errorf("command API calls = %q, want one eval reconnect-read", got)
+			}
+			select {
+			case b := <-mock.remoteBytes:
+				t.Errorf("unexpected extra remote stdin byte %#x", b)
+			default:
+			}
+		})
+	}
+}
+
+func TestWPWebsocketOneShotExitBeforeTransportClose(t *testing.T) {
+	rig, skip := differentialAvailable(t)
+	if skip != "" {
+		t.Skip(LoudSkip("TestWPWebsocketOneShotExitBeforeTransportClose", skip))
+	}
+	scenario, err := LoadScenario("../../testdata/parity/wp-websocket-shell.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	scenario.Env = rig.scenarioEnv(scenario)
+	appBody, err := os.ReadFile("../../testdata/parity/recordings/wp-websocket-shell/resolve-app.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	argv := []string{"@parityapp.develop", "--", "wp", "option", "get", "close"}
+	for side, bin := range map[string]string{"node": rig.nodeBin, "go": rig.goBin} {
+		t.Run(side, func(t *testing.T) {
+			mock := &shellMock{appBody: appBody, poll: make(chan string, 2)}
+			rig.serve(t, mock)
+			ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+			defer cancel()
+			cmd := exec.CommandContext(ctx, bin, argv...)
+			cmd.Env = FixtureEnv(scenario.Env)
+			var stdout, stderr bytes.Buffer
+			cmd.Stdout, cmd.Stderr = &stdout, &stderr
+			err := cmd.Run()
+			if ctx.Err() != nil {
+				mock.mu.Lock()
+				streamRuns := mock.streamRuns
+				mock.mu.Unlock()
+				t.Fatalf("one-shot command timed out: %v; stream attempts: %d; commands: %q\nstdout: %q\nstderr: %q", ctx.Err(), streamRuns, mock.commandsSeen(), stdout.String(), stderr.String())
+			}
+			var exitErr *exec.ExitError
+			if !errors.As(err, &exitErr) || exitErr.ExitCode() != 3 {
+				t.Errorf("exit=%v, want code 3\nstdout: %q\nstderr: %q", err, stdout.String(), stderr.String())
+			}
+			mock.mu.Lock()
+			streamRuns := mock.streamRuns
+			mock.mu.Unlock()
+			if streamRuns != 1 {
+				t.Errorf("stream attempts = %d, want 1", streamRuns)
+			}
+			if got := mock.commandsSeen(); !reflect.DeepEqual(got, []string{`"option" "get" "close"`}) {
+				t.Errorf("command API calls = %q, want one quoted option get close", got)
 			}
 		})
 	}
