@@ -505,6 +505,7 @@ commandWrapper( {
 			}
 
 			safePause( subShellRl );
+			countSIGINT = 0;
 
 			let result;
 			const wpCliCmd = commandState.command.replace( /^wp\s+/, '' );

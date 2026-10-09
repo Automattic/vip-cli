@@ -82,8 +82,7 @@ type shellMock struct {
 	streamExitCode int
 	stdinStreamID  string
 	needsInput     bool
-	inputReady     chan struct{}
-	inputReadyOnce sync.Once
+	inputOpened    chan struct{}
 	remoteBytes    chan byte
 }
 
@@ -306,11 +305,9 @@ func (m *shellMock) startShellStream(ctx context.Context, ws *websocket.Conn, st
 	if err := ws.Write(ctx, websocket.MessageText, []byte(read)); err != nil {
 		return err
 	}
-	m.inputReadyOnce.Do(func() {
-		if m.inputReady != nil {
-			close(m.inputReady)
-		}
-	})
+	if m.inputOpened != nil {
+		m.inputOpened <- struct{}{}
+	}
 	return nil
 }
 
@@ -635,67 +632,77 @@ func TestWPWebsocketShellRestoresTerminalOnSIGTERM(t *testing.T) {
 	}
 }
 
-func TestWPWebsocketShellForwardsActiveCtrlC(t *testing.T) {
+func TestWPWebsocketShellInterruptsAcrossCommands(t *testing.T) {
 	rig, skip := differentialAvailable(t)
 	if skip != "" {
-		t.Skip(LoudSkip("TestWPWebsocketShellForwardsActiveCtrlC", skip))
+		t.Skip(LoudSkip("TestWPWebsocketShellInterruptsAcrossCommands", skip))
 	}
 	scenario, err := LoadScenario("../../testdata/parity/wp-websocket-shell.yaml")
 	if err != nil {
 		t.Fatal(err)
 	}
 	scenario.Env = rig.scenarioEnv(scenario)
+	for side, bin := range map[string]string{"node": rig.nodeBin, "go": rig.goBin} {
+		t.Run(side, func(t *testing.T) {
+			testShellInterruptsAcrossCommands(t, rig, scenario, bin)
+		})
+	}
+}
+
+func testShellInterruptsAcrossCommands(t *testing.T, rig *differentialRig, scenario *Scenario, bin string) {
+	t.Helper()
 	appBody, err := os.ReadFile("../../testdata/parity/recordings/wp-websocket-shell/resolve-app.json")
 	if err != nil {
 		t.Fatal(err)
 	}
 	mock := &shellMock{
 		appBody: appBody, poll: make(chan string, 2),
-		inputReady: make(chan struct{}), remoteBytes: make(chan byte, 16),
+		inputOpened: make(chan struct{}, 2), remoteBytes: make(chan byte, 16),
 	}
 	rig.serve(t, mock)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, rig.goBin, scenario.Argv...)
+	cmd := exec.CommandContext(ctx, bin, scenario.Argv...)
 	cmd.Env = FixtureEnv(scenario.Env)
-	stdin, err := cmd.StdinPipe()
+	stdin, err := pty.StartWithSize(cmd, &pty.Winsize{Rows: 24, Cols: 100})
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer stdin.Close()
-	stdout, stderr := newShellOutput(), newShellOutput()
-	cmd.Stdout, cmd.Stderr = stdout, stderr
-	if err := cmd.Start(); err != nil {
-		t.Fatal(err)
-	}
+	stdout := newShellOutput()
+	go func() { _, _ = io.Copy(stdout, stdin) }()
 	done := make(chan error, 1)
 	go func() { done <- cmd.Wait() }()
 	prompt := "parityapp.develop:~$ "
-	_ = waitForShellOutput(t, stdout, done, 0, prompt)
-	if _, err := io.WriteString(stdin, "wp eval read\n"); err != nil {
-		t.Fatal(err)
-	}
-	select {
-	case <-mock.inputReady:
-	case <-ctx.Done():
-		t.Fatalf("remote stdin was not opened: %v\nstdout: %q\nstderr: %q", ctx.Err(), stdout.String(), stderr.String())
-	}
-	if _, err := stdin.Write([]byte{3}); err != nil {
-		t.Fatal(err)
-	}
-	select {
-	case b := <-mock.remoteBytes:
-		if b != 3 {
-			t.Errorf("remote stdin received %#x, want Ctrl-C (0x03)", b)
+	pos := waitForShellOutput(t, stdout, done, 0, prompt)
+	for command := 0; command < 2; command++ {
+		if _, err := io.WriteString(stdin, "wp eval read\n"); err != nil {
+			t.Fatal(err)
 		}
-	case <-ctx.Done():
-		t.Fatalf("remote stdin did not receive Ctrl-C: %v\nstdout: %q", ctx.Err(), stdout.String())
+		select {
+		case <-mock.inputOpened:
+		case <-ctx.Done():
+			t.Fatalf("remote stdin was not opened: %v\nstdout: %q", ctx.Err(), stdout.String())
+		}
+		if _, err := stdin.Write([]byte{3}); err != nil {
+			t.Fatal(err)
+		}
+		if bin == rig.goBin {
+			select {
+			case b := <-mock.remoteBytes:
+				if b != 3 {
+					t.Errorf("remote stdin received %#x, want Ctrl-C (0x03)", b)
+				}
+			case <-ctx.Done():
+				t.Fatalf("remote stdin did not receive Ctrl-C: %v\nstdout: %q", ctx.Err(), stdout.String())
+			}
+		}
+		pos = waitForShellOutput(t, stdout, done, pos, "Command cancelled by user")
+		pos = waitForShellOutput(t, stdout, done, pos, prompt)
 	}
-	pos := waitForShellOutput(t, stdout, done, 0, "Command cancelled by user")
-	_ = waitForShellOutput(t, stdout, done, pos, prompt)
-	if got := mock.commandsSeen(); len(got) != 1 || got[0] != "eval read" {
-		t.Errorf("trigger commands = %q, want [eval read]", got)
+	if got := mock.commandsSeen(); !reflect.DeepEqual(got, []string{"eval read", "eval read"}) {
+		t.Errorf("trigger commands = %q, want [eval read eval read]", got)
 	}
 	if _, err := io.WriteString(stdin, "exit\n"); err != nil {
 		t.Fatal(err)
@@ -703,7 +710,7 @@ func TestWPWebsocketShellForwardsActiveCtrlC(t *testing.T) {
 	select {
 	case err := <-done:
 		if err != nil {
-			t.Errorf("shell exit after Ctrl-C: %v\nstdout: %q\nstderr: %q", err, stdout.String(), stderr.String())
+			t.Errorf("shell exit after Ctrl-C: %v\nstdout: %q", err, stdout.String())
 		}
 	case <-ctx.Done():
 		t.Fatalf("shell did not exit after Ctrl-C then exit: %v\nstdout: %q", ctx.Err(), stdout.String())

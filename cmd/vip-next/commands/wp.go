@@ -189,6 +189,7 @@ func runWPShell(cmd *cobra.Command, ae *appctx.AppEnv, info *wpEnvInfo) error {
 			commandCtx, commandCancel := context.WithCancel(ctx)
 			interruptMu.Lock()
 			commandActive = true
+			interrupts = 0
 			commandInterrupted = false
 			interruptMu.Unlock()
 			cmd.SetContext(commandCtx)
