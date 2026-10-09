@@ -128,7 +128,7 @@ func TestPhpmyadminPrintParity(t *testing.T) {
 }
 
 // TestPhpmyadminSilentParity exercises --print --silent: URL still lands on
-// stdout, stderr stays empty (no progress lines, no read-only warning).
+// stdout, stderr stays empty (no progress lines or access note).
 func TestPhpmyadminSilentParity(t *testing.T) {
 	mux, _ := phpmyadminMux(t, "phpmyadmin-silent")
 	srv := httptest.NewServer(mux)
@@ -168,6 +168,96 @@ func TestPhpmyadminSilentParity(t *testing.T) {
 	}
 	if strings.TrimSpace(silentStderr) != "" {
 		t.Errorf("--silent must suppress all stderr; got=%q", silentStderr)
+	}
+}
+
+func TestPhpmyadminSessionNoteDifferential(t *testing.T) {
+	rig, skip := differentialAvailable(t)
+	if skip != "" {
+		t.Skip(LoudSkip("TestPhpmyadminSessionNoteDifferential — the phpMyAdmin Node-vs-Go note", skip))
+	}
+
+	const note = "Note: phpMyAdmin sessions are read-only on VIP Kubernetes and read-write on WP Cloud."
+	for _, tc := range []struct {
+		name     string
+		wantNote bool
+	}{
+		{name: "phpmyadmin-print", wantNote: true},
+		{name: "phpmyadmin-silent", wantNote: false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			scenario, err := LoadScenario("../../testdata/parity/" + tc.name + ".yaml")
+			if err != nil {
+				t.Fatalf("LoadScenario: %v", err)
+			}
+			scenario.Env = rig.scenarioEnv(scenario)
+
+			for _, side := range []struct {
+				name string
+				bin  string
+			}{
+				{name: "Node", bin: rig.nodeBin},
+				{name: "Go", bin: rig.goBin},
+			} {
+				res, _ := rig.runSide(t, scenario, side.bin, phpmyadminSurfaceMux)
+				if res.ExitCode != 0 {
+					t.Errorf("%s exit = %d; stdout=%q stderr=%q", side.name, res.ExitCode, res.Stdout, res.Stderr)
+				}
+				output := res.Stdout + res.Stderr
+				count := 0
+				for _, line := range strings.Split(output, "\n") {
+					if strings.TrimSpace(line) == note {
+						count++
+					}
+				}
+				if tc.wantNote && count != 1 {
+					t.Errorf("%s note count = %d, want 1; stdout=%q stderr=%q", side.name, count, res.Stdout, res.Stderr)
+				}
+				if !tc.wantNote && (count != 0 || strings.Contains(output, "Note:")) {
+					t.Errorf("%s --silent printed a note; stdout=%q stderr=%q", side.name, res.Stdout, res.Stderr)
+				}
+				if strings.Contains(output, "Note: PHPMyAdmin sessions are read-only.") {
+					t.Errorf("%s printed the obsolete blanket warning: %q", side.name, output)
+				}
+			}
+		})
+	}
+
+	for _, help := range []struct {
+		name string
+		argv []string
+	}{
+		{name: "db-help", argv: []string{"db", "--help"}},
+		{name: "phpmyadmin-help", argv: []string{"db", "phpmyadmin", "--help"}},
+	} {
+		t.Run(help.name, func(t *testing.T) {
+			for _, side := range []struct {
+				name string
+				bin  string
+			}{
+				{name: "Node", bin: rig.nodeBin},
+				{name: "Go", bin: rig.goBin},
+			} {
+				res, err := Run(RunSpec{
+					Binary: side.bin,
+					Argv:   help.argv,
+					Env:    FixtureEnv(rig.scenarioEnv(&Scenario{})),
+				})
+				if err != nil {
+					t.Fatalf("run %s help: %v", side.name, err)
+				}
+				if res.ExitCode != 0 {
+					t.Errorf("%s help exit = %d; stdout=%q stderr=%q", side.name, res.ExitCode, res.Stdout, res.Stderr)
+				}
+				output := strings.ToLower(res.Stdout + res.Stderr)
+				if !strings.Contains(output, "phpmyadmin") {
+					t.Errorf("%s help missing phpMyAdmin description: stdout=%q stderr=%q", side.name, res.Stdout, res.Stderr)
+				}
+				if strings.Contains(output, "read-only phpmyadmin") {
+					t.Errorf("%s help retains blanket read-only description: stdout=%q stderr=%q", side.name, res.Stdout, res.Stderr)
+				}
+			}
+		})
 	}
 }
 
