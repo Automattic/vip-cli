@@ -267,7 +267,12 @@ func runOnce(ctx context.Context, opts Options, cli *Client, ss *StreamSocket, o
 		// Drain stdout: signal runDone so the watcher goroutine aborts the
 		// stream, unblocking the stdout goroutine.
 		closeRunDone()
-		<-stdoutDone
+		select {
+		case <-stdoutDone:
+		case <-ctx.Done():
+			// An arbitrary Stdout writer may block even after the stream is
+			// aborted. Cancellation must not wait for that writer.
+		}
 		return Result{ExitCode: exitCode}, true
 	case <-stdoutDone:
 		// stdout EOF before any exit event — the server always sends an 'exit'
@@ -289,8 +294,6 @@ func runOnce(ctx context.Context, opts Options, cli *Client, ss *StreamSocket, o
 		closeRunDone() // also aborts stdoutStream via watcher (redundant but safe)
 		return Result{}, false
 	case <-ctx.Done():
-		closeRunDone()
-		<-stdoutDone
 		return Result{}, true // caller checks ctx.Err()
 	}
 }

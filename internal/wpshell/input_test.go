@@ -62,3 +62,37 @@ func TestInputReturnsOwnershipToPrompt(t *testing.T) {
 		t.Fatalf("next shell command lost bytes: %q", buf)
 	}
 }
+
+func TestInputPreservesSelectedByteDuringCancellation(t *testing.T) {
+	commandCtx, cancelCommand := context.WithCancel(context.Background())
+	defer cancelCommand()
+	input := &Input{bytes: make(chan byte), done: make(chan struct{})}
+	command := input.Reader(commandCtx).(*inputReader)
+	// Hold delivery until the read has selected a byte and cancellation wins.
+	command.stateMu.Lock()
+	finished := make(chan error, 1)
+	go func() {
+		var b [1]byte
+		_, err := command.Read(b[:])
+		finished <- err
+	}()
+	input.bytes <- 'w'
+	cancelCommand()
+	command.stateMu.Unlock()
+	if err := <-finished; err != context.Canceled {
+		t.Fatalf("command read error = %v", err)
+	}
+	if err := command.Close(); err != nil {
+		t.Fatal(err)
+	}
+	go func() { input.bytes <- 'p' }()
+	prompt := input.Reader(context.Background())
+	defer prompt.Close()
+	var got [2]byte
+	if _, err := io.ReadFull(prompt, got[:]); err != nil {
+		t.Fatal(err)
+	}
+	if string(got[:]) != "wp" {
+		t.Fatalf("prompt input lost or reordered: %q", got)
+	}
+}

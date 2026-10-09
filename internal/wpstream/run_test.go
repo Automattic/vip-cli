@@ -3,11 +3,26 @@ package wpstream
 import (
 	"bytes"
 	"context"
+	"errors"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
 )
+
+type blockingWriter struct {
+	entered  chan struct{}
+	release  chan struct{}
+	finished chan struct{}
+}
+
+func (w *blockingWriter) Write(p []byte) (int, error) {
+	close(w.entered)
+	<-w.release
+	close(w.finished)
+	return len(p), nil
+}
 
 // loopbackPair holds both sides of an in-memory loopback for run tests.
 type loopbackPair struct {
@@ -180,5 +195,83 @@ func TestRunStdoutStreamed(t *testing.T) {
 	}
 	if !strings.Contains(out, "line1") || !strings.Contains(out, "line2") {
 		t.Errorf("stdout not streamed: %q", out)
+	}
+}
+
+func TestRunCancellationDoesNotWaitForBlockedStdout(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		sendExit bool
+	}{
+		{name: "context cancellation"},
+		{name: "exit then context cancellation", sendExit: true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			pair := newLoopbackPair(t)
+			ctx, cancel := context.WithCancel(context.Background())
+			t.Cleanup(cancel)
+			w := &blockingWriter{
+				entered:  make(chan struct{}),
+				release:  make(chan struct{}),
+				finished: make(chan struct{}),
+			}
+			var releaseOnce sync.Once
+			releaseWriter := func() { releaseOnce.Do(func() { close(w.release) }) }
+			t.Cleanup(releaseWriter)
+
+			streamID := make(chan string, 1)
+			pair.ssB.On("cmd", func(args []any, _ *int) {
+				stdoutStream := args[2].(*IOStream)
+				streamID <- stdoutStream.id
+				_, _ = stdoutStream.Write([]byte("output"))
+			})
+
+			result := make(chan error, 1)
+			go func() {
+				_, err := run(ctx, Options{Stdin: strings.NewReader(""), Stdout: w}, pair.cliA, pair.ssA, nil, 0)
+				result <- err
+			}()
+
+			select {
+			case <-w.entered:
+			case <-time.After(2 * time.Second):
+				t.Fatal("stdout writer was not called")
+			}
+			if tc.sendExit {
+				clientStdout := pair.ssA.get(<-streamID)
+				if clientStdout == nil {
+					t.Fatal("client stdout stream not found")
+				}
+				if err := pair.cliB.Emit(ctx, "exit", []any{map[string]any{"exitCode": float64(0)}}, nil); err != nil {
+					t.Fatalf("emit exit: %v", err)
+				}
+				select {
+				case <-clientStdout.closed: // runOnce has entered its exit drain.
+				case <-time.After(2 * time.Second):
+					t.Fatal("run did not enter exit drain")
+				}
+				select {
+				case <-result:
+					t.Fatal("run returned before blocked stdout was released or context cancelled")
+				default:
+				}
+			}
+			cancel()
+			select {
+			case err := <-result:
+				if !errors.Is(err, context.Canceled) {
+					t.Fatalf("run error = %v, want context.Canceled", err)
+				}
+			case <-time.After(time.Second):
+				t.Fatal("run waited for blocked stdout writer after cancellation")
+			}
+
+			releaseWriter()
+			select {
+			case <-w.finished:
+			case <-time.After(time.Second):
+				t.Fatal("stdout writer did not finish after release")
+			}
+		})
 	}
 }
