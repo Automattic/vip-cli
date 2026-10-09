@@ -70,21 +70,37 @@ describe( 'commands/PhpMyAdminCommand', () => {
 			openUrl.mockReset();
 		} );
 
-		it.each( [ false, true ] )(
-			'prints the platform access note unless silent=%s',
-			async silent => {
-				const noteCmd = new PhpMyAdminCommand( app, env, tracker, silent );
+		it.each(
+			[
+				{
+					platform: { isK8sResident: true },
+					note: 'Note: phpMyAdmin sessions are read-only. If you run a query that writes to DB, it will fail.',
+				},
+				{
+					platform: { isK8sResident: false },
+					note: '',
+				},
+				{
+					platform: { isK8sResident: null },
+					note: 'Note: phpMyAdmin sessions are read-only on VIP Kubernetes and read-write on WP Cloud.',
+				},
+				{
+					platform: {},
+					note: 'Note: phpMyAdmin sessions are read-only on VIP Kubernetes and read-write on WP Cloud.',
+				},
+			].flatMap( testCase => [ false, true ].map( silent => ( { ...testCase, silent } ) ) )
+		)(
+			'prints the appropriate access note for $platform with silent=$silent',
+			async ( { platform, note, silent } ) => {
+				const noteCmd = new PhpMyAdminCommand( app, { ...env, ...platform }, tracker, silent );
 				const consoleSpy = jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 				try {
 					await noteCmd.run( { print: true } );
 					const notes = consoleSpy.mock.calls.filter(
-						( [ message ] ) =>
-							typeof message === 'string' &&
-							message.includes(
-								'Note: phpMyAdmin sessions are read-only on VIP Kubernetes and read-write on WP Cloud.'
-							)
+						( [ message ] ) => typeof message === 'string' && message.includes( 'Note:' )
 					);
-					expect( notes ).toHaveLength( silent ? 0 : 1 );
+					const expectedNote = expect.stringContaining( note );
+					expect( notes ).toEqual( silent || ! note ? [] : [ [ expectedNote ] ] );
 				} finally {
 					consoleSpy.mockRestore();
 				}

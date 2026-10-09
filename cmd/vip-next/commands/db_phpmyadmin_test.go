@@ -2,6 +2,7 @@ package commands
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/Khan/genqlient/graphql"
 
+	"github.com/Automattic/vip/internal/appctx"
 	"github.com/Automattic/vip/internal/phpmyadmin"
 )
 
@@ -104,6 +106,54 @@ func TestDBPhpmyadminPrintWritesURLToStdout(t *testing.T) {
 	}
 	if !strings.Contains(stderr.String(), "Note: phpMyAdmin sessions are read-only on VIP Kubernetes and read-write on WP Cloud.") {
 		t.Errorf("missing platform-specific access note: %q", stderr.String())
+	}
+}
+
+func TestDBPhpmyadminNoteFollowsK8sResidence(t *testing.T) {
+	trueValue, falseValue := true, false
+	for _, tc := range []struct {
+		name string
+		k8s  *bool
+		want string
+	}{
+		{"kubernetes", &trueValue, "Note: phpMyAdmin sessions are read-only. If you run a query that writes to DB, it will fail."},
+		{"wp-cloud", &falseValue, ""},
+		{"unknown", nil, "Note: phpMyAdmin sessions are read-only on VIP Kubernetes and read-write on WP Cloud."},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			stub := successStub()
+			srv := httptest.NewServer(stub.handler(t))
+			defer srv.Close()
+			cleanup := setupPhpmyadminConfig(srv, nil)
+			defer cleanup()
+
+			cmd := DBPhpmyadminCmd()
+			_ = cmd.Flags().Set("print", "true")
+			var stdout, stderr bytes.Buffer
+			cmd.SetOut(&stdout)
+			cmd.SetErr(&stderr)
+			cmd.SetContext(appctx.WithAppEnv(context.Background(), &appctx.AppEnv{
+				App: appctx.App{ID: 1},
+				Env: appctx.Env{ID: 2, IsK8sResident: tc.k8s},
+			}))
+
+			if err := runDBPhpmyadmin(cmd, nil); err != nil {
+				t.Fatalf("runDBPhpmyadmin: %v", err)
+			}
+			if strings.TrimSpace(stdout.String()) != "https://pma.example/abc" {
+				t.Errorf("stdout = %q, want URL", stdout.String())
+			}
+			var got string
+			for _, line := range strings.Split(stderr.String(), "\n") {
+				if strings.HasPrefix(line, "Note:") {
+					got = line
+					break
+				}
+			}
+			if got != tc.want {
+				t.Errorf("note = %q, want %q", got, tc.want)
+			}
+		})
 	}
 }
 

@@ -93,9 +93,12 @@ func runDBPhpmyadmin(cmd *cobra.Command, args []string) error {
 	// Node prints a yellow note describing platform-specific access before
 	// kicking the progress tracker. We match that here, but on stderr to
 	// keep stdout clean for --print consumers.
-	if !silent {
-		fmt.Fprintln(cmd.ErrOrStderr(), color.YellowString(
-			"Note: phpMyAdmin sessions are read-only on VIP Kubernetes and read-write on WP Cloud."))
+	if !silent && (ae.Env.IsK8sResident == nil || *ae.Env.IsK8sResident) {
+		note := "Note: phpMyAdmin sessions are read-only on VIP Kubernetes and read-write on WP Cloud."
+		if ae.Env.IsK8sResident != nil {
+			note = "Note: phpMyAdmin sessions are read-only. If you run a query that writes to DB, it will fail."
+		}
+		fmt.Fprintln(cmd.ErrOrStderr(), color.YellowString(note))
 	}
 
 	res, err := phpmyadmin.Run(cmd.Context(), cfg.GQLClient, ae.App.ID, ae.Env.ID, phpmyadmin.RunOpts{

@@ -32,6 +32,7 @@ const appQuery = `
 		name
 		type
 		uniqueLabel
+		isK8sResident
 	}
 `;
 
