@@ -2,7 +2,8 @@ name: wp-websocket-shell
 description: |
   A no-argument WebSocket wp command opens a shell without triggering WP-CLI.
   Invalid input, a GraphQL error, two completed socket commands, and a delayed
-  nonzero socket exit each return to the prompt. Exit closes the shell.
+  nonzero socket exit each return to the prompt. Leading ASCII and Unicode
+  whitespace is stripped before dispatch. Exit closes the shell.
 argv: ["@parityapp.develop", "wp"]
 env:
   DO_NOT_TRACK: "1"

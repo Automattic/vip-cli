@@ -463,7 +463,7 @@ func runShellSide(t *testing.T, rig *differentialRig, scenario *Scenario, bin st
 	if got := mock.commandsSeen(); len(got) != 1 || got[0] != "option get home" {
 		t.Errorf("trigger commands = %q, want [option get home]", got)
 	}
-	if _, err := io.WriteString(stdin, "wp site list\n"); err != nil {
+	if _, err := io.WriteString(stdin, "  wp \t site list\n"); err != nil {
 		t.Fatal(err)
 	}
 	pos = waitForShellOutput(t, stdout, done, pos, prompt)
@@ -478,7 +478,7 @@ func runShellSide(t *testing.T, rig *differentialRig, scenario *Scenario, bin st
 	if got := mock.commandsSeen(); len(got) != 3 || got[2] != "option get missing" {
 		t.Errorf("trigger commands after failed socket command = %q", got)
 	}
-	if _, err := io.WriteString(stdin, "wp post list\n"); err != nil {
+	if _, err := io.WriteString(stdin, "\u00a0wp \u00a0post list\n"); err != nil {
 		t.Fatal(err)
 	}
 	pos = waitForShellOutput(t, stdout, done, pos, prompt)
@@ -658,14 +658,14 @@ func TestWPWebsocketShellMultilinePTY(t *testing.T) {
 			go func() { done <- cmd.Wait() }()
 			prompt := "parityapp.develop:~$ "
 			pos := waitForShellOutput(t, output, done, 0, prompt)
-			if _, err := io.WriteString(terminal, "wp option set key \"line1\nline2\"\n"); err != nil {
+			if _, err := io.WriteString(terminal, "  wp option set key \"line1\n\n  line2\"\n"); err != nil {
 				t.Fatal(err)
 			}
 			_ = waitForShellOutput(t, output, done, pos, prompt)
 			if got := strings.Count(output.String(), prompt); got != 2 {
 				t.Errorf("multiline command showed %d prompts, want 2: %q", got, output.String())
 			}
-			if got := mock.commandsSeen(); !reflect.DeepEqual(got, []string{"option set key \"line1\nline2\""}) {
+			if got := mock.commandsSeen(); !reflect.DeepEqual(got, []string{"option set key \"line1\n\n  line2\""}) {
 				t.Errorf("multiline commands = %q", got)
 			}
 			if _, err := io.WriteString(terminal, "exit\n"); err != nil {

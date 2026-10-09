@@ -7,6 +7,9 @@ import (
 	"strings"
 )
 
+// Match JavaScript trimStart() and /\s/, including BOM but excluding NEL.
+const commandWhitespace = "\t\n\v\f\r \u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u2028\u2029\u202f\u205f\u3000\ufeff"
+
 // REPL drives the interactive WP-CLI subshell. Run is invoked with each
 // finalized command (leading "wp " stripped, matching vip-wp.js:493).
 // Serve returns when input reaches EOF or the user types `exit`.
@@ -65,7 +68,7 @@ const (
 
 func (r *REPL) handleLine(out io.Writer, state *CmdState, seenWP *bool, line string) lineResult {
 	// Blank line re-prompts (vip-wp.js:451).
-	if line == "" {
+	if line == "" && !*seenWP {
 		r.prompt(out)
 		return continueREPL
 	}
@@ -73,7 +76,7 @@ func (r *REPL) handleLine(out io.Writer, state *CmdState, seenWP *bool, line str
 	if !*seenWP && strings.HasPrefix(line, "exit") {
 		return exitREPL
 	}
-	if !*seenWP && strings.HasPrefix(strings.TrimLeft(line, " \t"), "wp ") {
+	if !*seenWP && strings.HasPrefix(strings.TrimLeft(line, commandWhitespace), "wp ") {
 		*seenWP = true
 		ResetState(state)
 	}
@@ -89,8 +92,8 @@ func (r *REPL) handleLine(out io.Writer, state *CmdState, seenWP *bool, line str
 		return continueREPL // keep accumulating (multiline quote)
 	}
 
-	cmd := strings.TrimLeft(state.Command, " \t")
-	cmd = strings.TrimLeft(strings.TrimPrefix(cmd, "wp"), " \t")
+	cmd := strings.TrimLeft(state.Command, commandWhitespace)
+	cmd = strings.TrimLeft(strings.TrimPrefix(cmd, "wp"), commandWhitespace)
 	*seenWP = false
 	ResetState(state)
 	_ = r.Run(cmd)

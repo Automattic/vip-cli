@@ -23,6 +23,39 @@ func TestREPLRunsValidCommand(t *testing.T) {
 	}
 }
 
+func TestREPLCommandWhitespace(t *testing.T) {
+	for _, prefix := range []string{"  ", "\t ", "\u00a0", "\ufeff", "\u2003"} {
+		t.Run(prefix, func(t *testing.T) {
+			var ran []string
+			loop := &REPL{Run: func(cmd string) error { ran = append(ran, cmd); return nil }}
+			in := strings.NewReader(prefix + "wp \t\u00a0option get home\nexit\n")
+			var out strings.Builder
+			if err := loop.Serve(bufio.NewReader(in), &out); err != nil {
+				t.Fatal(err)
+			}
+			if !reflect.DeepEqual(ran, []string{"option get home"}) {
+				t.Fatalf("commands = %q", ran)
+			}
+		})
+	}
+}
+
+func TestREPLMultilineBlankLine(t *testing.T) {
+	var ran []string
+	loop := &REPL{Prompt: "P$ ", Run: func(cmd string) error { ran = append(ran, cmd); return nil }}
+	in := strings.NewReader("  wp option set key \"first\n\n  second\"\nexit\n")
+	var out strings.Builder
+	if err := loop.Serve(bufio.NewReader(in), &out); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(ran, []string{"option set key \"first\n\n  second\""}) {
+		t.Fatalf("commands = %q", ran)
+	}
+	if strings.Count(out.String(), "P$ ") != 2 {
+		t.Fatalf("unexpected continuation prompt: %q", out.String())
+	}
+}
+
 func TestREPLTerminalContinuation(t *testing.T) {
 	lines := []string{"wp option set k \"line1", "line2\"", "invalid", "exit"}
 	var continuations []bool

@@ -7,6 +7,7 @@ let mockSocket;
 let mockStreamSocket;
 let mockStreams;
 const mockTrackEvent = jest.fn();
+const mockMutate = jest.fn();
 
 jest.mock( '../../src/lib/cli/command', () => ( {
 	__esModule: true,
@@ -27,11 +28,7 @@ jest.mock( '../../src/lib/api', () => ( {
 	API_HOST: 'https://test.invalid',
 	disableGlobalGraphQLErrorHandling: jest.fn(),
 	default: () => ( {
-		mutate: async () => ( {
-			data: {
-				triggerWPCLICommandOnAppEnvironment: { command: { guid: 'test' }, inputToken: 'test' },
-			},
-		} ),
+		mutate: ( ...args ) => mockMutate( ...args ),
 	} ),
 } ) );
 jest.mock( '../../src/commands/wp-ssh', () => ( { WPCliCommandOverSSH: jest.fn() } ) );
@@ -77,6 +74,11 @@ beforeEach( () => {
 	jest.useFakeTimers();
 	mockStreams = [];
 	mockTrackEvent.mockReset().mockResolvedValue( undefined );
+	mockMutate.mockReset().mockResolvedValue( {
+		data: {
+			triggerWPCLICommandOnAppEnvironment: { command: { guid: 'test' }, inputToken: 'test' },
+		},
+	} );
 	mockReadline = new EventEmitter();
 	for ( const method of [ 'pause', 'resume', 'prompt', 'clearLine', 'close', 'write' ] ) {
 		mockReadline[ method ] = jest.fn();
@@ -106,6 +108,28 @@ async function startCommand( isSubShell = true ) {
 	await mockHandler( isSubShell ? [] : [ 'option', 'get', 'home' ], options );
 	await mockReadline.listeners( 'line' )[ 0 ]( 'wp option get home' );
 }
+
+test.each( [ '  ', '\t ', '\u00a0', '\ufeff', '\u2003' ] )(
+	'shell strips leading whitespace before wp (%j)',
+	async prefix => {
+		await mockHandler( [], options );
+		await mockReadline.listeners( 'line' )[ 0 ]( `${ prefix }wp \t\u00a0option get home` );
+		expect( mockMutate.mock.calls[ 0 ][ 0 ].variables.input.command ).toBe( 'option get home' );
+		mockSocket.emit( 'exit', { exitCode: 0 } );
+	}
+);
+
+test( 'shell preserves blank lines and indentation inside multiline quotes', async () => {
+	await mockHandler( [], options );
+	const onLine = mockReadline.listeners( 'line' )[ 0 ];
+	await onLine( '  wp option set key "first' );
+	await onLine( '' );
+	await onLine( '  second"' );
+	expect( mockMutate.mock.calls[ 0 ][ 0 ].variables.input.command ).toBe(
+		'option set key "first\n\n  second"'
+	);
+	mockSocket.emit( 'exit', { exitCode: 0 } );
+} );
 
 test( 'stale stream completion and retry timers cannot finish a reconnected job', async () => {
 	await startCommand();

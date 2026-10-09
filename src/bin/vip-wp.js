@@ -528,7 +528,7 @@ commandWrapper( {
 			}
 
 			// Handle plain return / newline
-			if ( ! line ) {
+			if ( ! line && ! seenWP ) {
 				safePrompt( subShellRl );
 				return;
 			}
@@ -571,7 +571,7 @@ commandWrapper( {
 			countSIGINT = 0;
 
 			let result;
-			const wpCliCmd = commandState.command.replace( /^wp\s+/, '' );
+			const wpCliCmd = commandState.command.trimStart().replace( /^wp\s+/, '' );
 			seenWP = false;
 			resetState( commandState );
 
