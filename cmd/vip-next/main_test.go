@@ -159,7 +159,7 @@ func TestDefensiveModeSubcommandRegistered(t *testing.T) {
 
 func TestRunResumesCommandAfterAutomaticLogin(t *testing.T) {
 	t.Setenv("DO_NOT_TRACK", "1")
-	t.Setenv("VIP_TOKEN_OVERRIDE", "")
+	t.Setenv("VIP_CLI_TOKEN", "")
 	freshRaw := validBootstrapRaw(t, 10000)
 	requestCount := 0
 	authorization := ""

@@ -4,6 +4,7 @@ import (
 	"os"
 	"sync"
 
+	"github.com/Automattic/vip/internal/auth"
 	"github.com/Automattic/vip/internal/keychain"
 	"github.com/Automattic/vip/internal/version"
 )
@@ -27,15 +28,23 @@ func NewDefault() *Tracker {
 	if host == "" {
 		host = "https://api.wpvip.com"
 	}
-	k := keychain.New(host)
-	uuidStore := &UUIDStore{Keychain: k}
+	var uuidStore *UUIDStore
+	if !auth.EnvironmentTokenConfigured() {
+		uuidStore = &UUIDStore{Keychain: keychain.New(host)}
+	}
 
-	// Lazy UUID resolution — do NOT touch keychain at construction.
-	// First event emission will trigger the lookup (at most once).
+	// Environment sessions have no persistent credential or analytics identity.
+	// Give each process a stable UUID without consulting the keychain.
 	var once sync.Once
 	var cachedUUID string
 	getUUID := func() string {
-		once.Do(func() { cachedUUID, _ = uuidStore.Get() })
+		once.Do(func() {
+			if uuidStore == nil {
+				cachedUUID, _ = newRandomUUID()
+			} else {
+				cachedUUID, _ = uuidStore.Get()
+			}
+		})
 		return cachedUUID
 	}
 
