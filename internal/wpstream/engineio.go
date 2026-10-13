@@ -140,6 +140,7 @@ func Dial(ctx context.Context, opts DialOptions) (*Engine, error) {
 // I1: ctx is derived from a cancelable context created in Dial; Close() cancels
 // it, which unblocks e.ws.Read and terminates the goroutine cleanly.
 func (e *Engine) readLoop(ctx context.Context) {
+	defer close(e.recvCh)
 	defer close(e.errCh)
 	for {
 		typ, data, err := e.ws.Read(ctx)
@@ -247,14 +248,13 @@ func (e *Engine) Read(ctx context.Context) (Packet, error) {
 	select {
 	case pkt, ok := <-e.recvCh:
 		if !ok {
+			// All received packets have been drained before reporting the error.
+			if err, ok := <-e.errCh; ok {
+				return Packet{}, err
+			}
 			return Packet{}, errClosed
 		}
 		return pkt, nil
-	case err, ok := <-e.errCh:
-		if !ok {
-			return Packet{}, errClosed
-		}
-		return Packet{}, err
 	case <-ctx.Done():
 		return Packet{}, ctx.Err()
 	case <-e.closed:

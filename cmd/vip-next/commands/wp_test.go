@@ -3,6 +3,7 @@ package commands
 import (
 	"bytes"
 	"context"
+	"encoding/json/v2"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -16,6 +17,74 @@ import (
 
 	"github.com/Automattic/vip/internal/appctx"
 )
+
+func TestWPShellWaitsForCommand(t *testing.T) {
+	stub := &wpStub{body: wpEnvInfoBodyWithStrategy(2, "websocket", "production")}
+	setupWPTest(t, stub)
+	cmd := WPCmd()
+	cmd.SetContext(wpCtx(42, 7, 2, "production"))
+	cmd.SetIn(strings.NewReader("\nls\nexit\n"))
+	var out bytes.Buffer
+	cmd.SetOut(&out)
+	if err := runWP(cmd, nil); err != nil {
+		t.Fatal(err)
+	}
+	if stub.triggerHits.Load() != 0 {
+		t.Fatal("opening, invalid input, and exiting the shell must not trigger a command")
+	}
+	if !strings.Contains(out.String(), "Welcome to the WP-CLI shell for the PRODUCTION environment of parityapp (example.com)!") {
+		t.Fatalf("missing shell greeting: %q", out.String())
+	}
+	if strings.Count(out.String(), "parityapp.production:~$ ") != 3 {
+		t.Fatalf("missing prompts: %q", out.String())
+	}
+}
+
+func TestWPShellContinuesAfterTriggerError(t *testing.T) {
+	var commands []string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var request struct {
+			OperationName string `json:"operationName"`
+			Variables     struct {
+				Input struct {
+					Command       string `json:"command"`
+					ID            int64  `json:"id"`
+					EnvironmentID int64  `json:"environmentId"`
+				} `json:"input"`
+			} `json:"variables"`
+		}
+		if err := json.UnmarshalRead(r.Body, &request); err != nil {
+			t.Error(err)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		if request.OperationName == "WPEnvInfo" {
+			_, _ = io.WriteString(w, wpEnvInfoBodyWithStrategy(2, "websocket", "production"))
+			return
+		}
+		if request.Variables.Input.ID != 42 || request.Variables.Input.EnvironmentID != 7 {
+			t.Errorf("wrong target: %+v", request.Variables.Input)
+		}
+		commands = append(commands, request.Variables.Input.Command)
+		_, _ = io.WriteString(w, `{"errors":[{"message":"command failed","locations":[{"line":3,"column":1}]}]}`)
+	}))
+	defer srv.Close()
+	SetConfig(Config{GQLClient: graphql.NewClient(srv.URL, srv.Client()), APIHost: srv.URL})
+	t.Cleanup(func() { SetConfig(Config{}) })
+	cmd := WPCmd()
+	cmd.SetContext(wpCtx(42, 7, 2, "production"))
+	cmd.SetIn(strings.NewReader("  wp option get home\r\nwp option set key \"line1\nline2\"\nexit\n"))
+	var out bytes.Buffer
+	cmd.SetOut(&out)
+	if err := runWP(cmd, nil); err != nil {
+		t.Fatal(err)
+	}
+	if len(commands) != 2 || commands[0] != "option get home" || commands[1] != "option set key \"line1\nline2\"" {
+		t.Fatalf("commands = %q", commands)
+	}
+	if strings.Count(out.String(), "Error: command failed\n") != 2 || strings.Contains(out.String(), "input:3") {
+		t.Fatalf("errors must appear once without GraphQL locations: %q", out.String())
+	}
+}
 
 // wpEnvInfoBody builds a minimal WPEnvInfo JSON response.
 func wpEnvInfoBody(typeID int64) string {

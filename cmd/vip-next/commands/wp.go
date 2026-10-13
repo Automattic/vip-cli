@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"fmt"
@@ -8,11 +9,13 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"sync"
 	"syscall"
 
 	"github.com/Khan/genqlient/graphql"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 	"golang.org/x/term"
 
 	"github.com/Automattic/vip/internal/appctx"
@@ -32,6 +35,18 @@ var wpYes bool
 
 // SetWPYes records the extracted --yes flag. Called by main.go.
 func SetWPYes(v bool) { wpYes = v }
+
+func printWPError(out io.Writer, err error) error {
+	var list gqlerror.List
+	if errors.As(err, &list) {
+		for _, item := range list {
+			fmt.Fprintln(out, color.RedString("Error: "+item.Message))
+		}
+	} else {
+		fmt.Fprintln(out, color.RedString("Error: "+err.Error()))
+	}
+	return exit.Handled(err)
+}
 
 // nodejsTypeIDs — NODEJS_SITE_TYPE_IDS (src/lib/constants/vipgo.ts:12).
 var nodejsTypeIDs = map[int64]bool{3: true, 5: true, 7: true, 8: true}
@@ -126,7 +141,137 @@ func runWP(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	if isSubShell && info.WpcliStrategy == "websocket" {
+		return runWPShell(cmd, ae, info)
+	}
 	return dispatchWP(cmd, ae, info, args, isSubShell)
+}
+
+func runWPShell(cmd *cobra.Command, ae *appctx.AppEnv, info *wpEnvInfo) error {
+	out := cmd.OutOrStdout()
+	trackEvent("wpcli_command_execute", map[string]any{"method": "subshell"})
+	fmt.Fprintf(out, "Welcome to the WP-CLI shell for the %s environment of %s (%s)!\n",
+		formatEnvironment(ae.Env.Type), ae.App.Name, info.PrimaryDomainName)
+	identifier := ae.Env.Type
+	if ae.Env.Name != "" && ae.Env.Name != ae.Env.Type && ae.Env.AppId != ae.Env.ID {
+		identifier += "." + ae.Env.Name
+	}
+	prompt := fmt.Sprintf("%s.%s:~$ ", ae.App.Name, identifier)
+	originalCtx := cmd.Context()
+	ctx, cancel := context.WithCancel(originalCtx)
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
+	signalDone := make(chan struct{})
+	var receivedSignal os.Signal
+	go func() {
+		defer close(signalDone)
+		select {
+		case receivedSignal = <-signals:
+			cancel()
+		case <-ctx.Done():
+		}
+	}()
+	// Registered before terminal cleanup so restoration finishes before exit.
+	defer func() {
+		cancel()
+		signal.Stop(signals)
+		<-signalDone
+		if receivedSignal != nil {
+			exit.WithCode(128+int(receivedSignal.(syscall.Signal)), nil)
+		}
+	}()
+	cmd.SetContext(ctx)
+	defer cmd.SetContext(originalCtx)
+	var interruptMu sync.Mutex
+	commandActive := false
+	interrupts := 0
+	keyboardExit := false
+	commandInterrupted := false
+	input := wpshell.NewInput(ctx, cmd.InOrStdin(), func() bool {
+		interruptMu.Lock()
+		defer interruptMu.Unlock()
+		interrupts++
+		if !commandActive || interrupts > 1 {
+			keyboardExit = true
+			cancel()
+			return true
+		}
+		// Forward the first Ctrl-C to remote stdin; closing only the local
+		// connection does not establish that the remote command was stopped.
+		commandInterrupted = true
+		return false
+	})
+	reader := input.Reader(ctx)
+	defer reader.Close()
+	loop := &wpshell.REPL{
+		Prompt: prompt,
+		Run: func(command string) error {
+			commandCtx, commandCancel := context.WithCancel(ctx)
+			interruptMu.Lock()
+			commandActive = true
+			interrupts = 0
+			commandInterrupted = false
+			interruptMu.Unlock()
+			cmd.SetContext(commandCtx)
+			commandInput := input.Reader(commandCtx)
+			err := runWPWebsocketCommand(cmd, ae, command, true, commandInput)
+			commandCancel()
+			_ = commandInput.Close()
+			cmd.SetContext(ctx)
+			interruptMu.Lock()
+			commandActive = false
+			interrupted := commandInterrupted
+			interruptMu.Unlock()
+			if interrupted && ctx.Err() == nil {
+				fmt.Fprintln(out, "Command cancelled by user")
+				return nil
+			}
+			if ctx.Err() != nil {
+				return err
+			}
+			if err != nil {
+				var handled interface{ AlreadyPrinted() bool }
+				if !errors.As(err, &handled) || !handled.AlreadyPrinted() {
+					fmt.Fprintln(out, color.RedString("Error: "+err.Error()))
+				}
+			}
+			return err
+		},
+	}
+	if stdin, ok := cmd.InOrStdin().(*os.File); ok && term.IsTerminal(int(stdin.Fd())) {
+		state, err := term.MakeRaw(int(stdin.Fd()))
+		if err != nil {
+			return err
+		}
+		defer func() { _ = term.Restore(int(stdin.Fd()), state) }()
+		terminal := term.NewTerminal(struct {
+			io.Reader
+			io.Writer
+		}{reader, out}, prompt)
+		if width, height, err := term.GetSize(int(stdin.Fd())); err == nil {
+			_ = terminal.SetSize(width, height)
+		}
+		originalOut := out
+		defer cmd.SetOut(originalOut)
+		out = terminal
+		cmd.SetOut(out)
+		loop.ReadLine = func(continuation bool) (string, error) {
+			if continuation {
+				terminal.SetPrompt("")
+			} else {
+				terminal.SetPrompt(prompt)
+			}
+			return terminal.ReadLine()
+		}
+	}
+	err := loop.Serve(bufio.NewReader(reader), out)
+	interruptMu.Lock()
+	defer interruptMu.Unlock()
+	if keyboardExit {
+		fmt.Fprintln(out, "Command cancelled by user")
+		return nil
+	}
+	return err
 }
 
 // dispatchWP routes to the appropriate WP-CLI execution strategy based on
@@ -169,23 +314,20 @@ func dispatchWP(cmd *cobra.Command, ae *appctx.AppEnv, info *wpEnvInfo, args []s
 		// Surface GraphQL error in the same format other commands use for
 		// allowed-error contexts: print "Error: <msg>" in red and return an
 		// error so the caller sees a non-zero exit (sync.go:80 pattern).
-		fmt.Fprintln(out, color.RedString("Error: "+err.Error()))
-		return err
+		return printWPError(out, err)
 	}
 
 	payload := resp.GetTriggerWPCLICommandOnAppEnvironment()
 	if payload == nil {
 		err := errors.New("WP-CLI SSH Authentication failed")
-		fmt.Fprintln(out, color.RedString("Error: "+err.Error()))
-		return err
+		return printWPError(out, err)
 	}
 
 	sshAuth := payload.GetSshAuthentication()
 	if sshAuth == nil {
 		// wp-ssh.ts:114
 		err := errors.New("WP-CLI SSH Authentication failed")
-		fmt.Fprintln(out, color.RedString("Error: "+err.Error()))
-		return err
+		return printWPError(out, err)
 	}
 
 	// Extract GUID and InputToken from the payload.
@@ -292,25 +434,21 @@ func dispatchWP(cmd *cobra.Command, ae *appctx.AppEnv, info *wpEnvInfo, args []s
 
 // dispatchWPWebsocket handles the "websocket" wpcliStrategy by connecting to
 // the environment over socket.io (internal/wpstream, WP2).
-//
-// NOTE: Node's socket.io path supports an interactive REPL for subshell mode,
-// but WP2 ships single-command socket.io first. The isSubShell parameter is
-// accepted for signature symmetry; the websocket branch runs the (possibly
-// empty) joined command string regardless — same as the SSH branch's documented
-// quirk. The interactive REPL over socket.io (internal/wpshell.REPL) is a
-// follow-up task.
 func dispatchWPWebsocket(cmd *cobra.Command, ae *appctx.AppEnv, _ *wpEnvInfo, args []string, isSubShell bool) error {
+	return runWPWebsocketCommand(cmd, ae, strings.Join(wpshell.RequoteArgs(args), " "), isSubShell, cmd.InOrStdin())
+}
+
+func runWPWebsocketCommand(cmd *cobra.Command, ae *appctx.AppEnv, cmdStr string, isSubShell bool, stdin io.Reader) error {
 	cfg := GetConfig()
 	out := cmd.OutOrStdout()
-
-	// Build the WP-CLI command string (single-command mode; REPL is a follow-up).
-	cmdStr := strings.Join(wpshell.RequoteArgs(args), " ")
 
 	method := "shell"
 	if isSubShell {
 		method = "subshell"
 	}
-	trackEvent("wpcli_command_execute", map[string]any{"method": method})
+	if !isSubShell {
+		trackEvent("wpcli_command_execute", map[string]any{"method": method})
+	}
 
 	// Call TriggerWPCLICommand under WithAllowGQLErrors so GraphQL errors come
 	// back to us rather than triggering an os.Exit in the middleware.
@@ -322,15 +460,16 @@ func dispatchWPWebsocket(cmd *cobra.Command, ae *appctx.AppEnv, _ *wpEnvInfo, ar
 	triggerCtx := gql.WithAllowGQLErrors(cmd.Context())
 	resp, err := gql.TriggerWPCLICommand(triggerCtx, cfg.GQLClient, triggerInput)
 	if err != nil {
-		fmt.Fprintln(out, color.RedString("Error: "+err.Error()))
-		return err
+		if cmd.Context().Err() != nil {
+			return cmd.Context().Err()
+		}
+		return printWPError(out, err)
 	}
 
 	payload := resp.GetTriggerWPCLICommandOnAppEnvironment()
 	if payload == nil {
 		err := errors.New("WP-CLI command trigger failed: empty payload")
-		fmt.Fprintln(out, color.RedString("Error: "+err.Error()))
-		return err
+		return printWPError(out, err)
 	}
 
 	// Extract GUID and InputToken from the payload.
@@ -345,10 +484,15 @@ func dispatchWPWebsocket(cmd *cobra.Command, ae *appctx.AppEnv, _ *wpEnvInfo, ar
 		inputToken = *t
 	}
 
+	// Shell command readers wrap stdin without exposing its file descriptor.
+	stdinTTY := false
+	if input, ok := cmd.InOrStdin().(*os.File); ok {
+		stdinTTY = term.IsTerminal(int(input.Fd()))
+	}
 	// Determine terminal dimensions (same defaults as SSH branch: 15 rows / 100 cols).
-	tty := term.IsTerminal(int(os.Stdout.Fd()))
+	stdoutTTY := term.IsTerminal(int(os.Stdout.Fd()))
 	rows, cols := 15, 100
-	if tty {
+	if stdoutTTY {
 		if w, h, err := term.GetSize(int(os.Stdout.Fd())); err == nil {
 			cols = w
 			rows = h
@@ -362,15 +506,21 @@ func dispatchWPWebsocket(cmd *cobra.Command, ae *appctx.AppEnv, _ *wpEnvInfo, ar
 		InputToken: inputToken,
 		Columns:    cols,
 		Rows:       rows,
-		IsTTY:      tty,
-		Stdin:      os.Stdin,
-		Stdout:     os.Stdout,
-		Stderr:     os.Stderr,
+		IsTTY:      stdinTTY,
+		Stdin:      stdin,
+		Stdout:     out,
+		Stderr:     cmd.ErrOrStderr(),
 	})
 	if runErr != nil {
 		return runErr
 	}
 	trackEvent("wpcli_command_end", map[string]any{"method": method})
+	if isSubShell {
+		if res.ExitCode != 0 {
+			return fmt.Errorf("WP-CLI command failed with exit code %d", res.ExitCode)
+		}
+		return nil
+	}
 	exit.WithCode(res.ExitCode, nil)
 	return nil // unreachable — exit.WithCode calls os.Exit
 }
