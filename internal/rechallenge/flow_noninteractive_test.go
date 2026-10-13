@@ -76,6 +76,7 @@ func TestFlowNonInteractiveFailsFastInsteadOfPolling(t *testing.T) {
 		Tracker:    tr,
 		TokenCache: newTestCache(),
 		Stdout:     io.Discard,
+		OpenURL:    func(string) { t.Error("non-interactive flow must not open a browser") },
 		Sleep: func(ctx context.Context, _ time.Duration) error {
 			select {
 			case <-ctx.Done():
@@ -147,6 +148,7 @@ func TestFlowNonInteractiveWaitOptInStillPolls(t *testing.T) {
 		Tracker:    &fakeTracker{},
 		TokenCache: newTestCache(),
 		Stdout:     &out,
+		OpenURL:    func(string) { t.Error("non-interactive wait must not open a browser") },
 		Sleep:      func(context.Context, time.Duration) error { return nil },
 	}
 	tok, err := r.Run(context.Background(), RunInput{
@@ -190,6 +192,7 @@ func TestFlowRejectsUnusableDeadline(t *testing.T) {
 		Tracker:    &fakeTracker{},
 		TokenCache: newTestCache(),
 		Stdout:     io.Discard,
+		OpenURL:    func(string) {},
 		Sleep: func(ctx context.Context, _ time.Duration) error {
 			select {
 			case <-ctx.Done():
@@ -256,6 +259,7 @@ func TestFlowFloorsServerPollInterval(t *testing.T) {
 				Tracker:    &fakeTracker{},
 				TokenCache: newTestCache(),
 				Stdout:     io.Discard,
+				OpenURL:    func(string) {},
 				Sleep: func(_ context.Context, d time.Duration) error {
 					mu.Lock()
 					slept = append(slept, d)

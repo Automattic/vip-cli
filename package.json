@@ -1,6 +1,6 @@
 {
   "name": "@automattic/vip",
-  "version": "4.1.5",
+  "version": "4.1.6-dev.0",
   "description": "The VIP Javascript library & CLI",
   "main": "index.js",
   "bin": {
@@ -129,7 +129,7 @@
   },
   "homepage": "https://github.com/Automattic/vip#readme",
   "devDependencies": {
-    "@automattic/eslint-plugin-wpvip": "^1.0.0",
+    "@automattic/eslint-plugin-wpvip": "^2.0.0",
     "@babel/cli": "7.29.7",
     "@babel/core": "7.29.7",
     "@babel/preset-env": "7.29.7",
@@ -154,7 +154,7 @@
     "typescript": "^6.0.2"
   },
   "dependencies": {
-    "@apollo/client": "4.3.1",
+    "@apollo/client": "4.3.2",
     "@automattic/vip-search-replace": "^2.0.0",
     "@json2csv/plainjs": "^7.0.3",
     "@wwa/single-line-log": "^1.1.4",
@@ -165,7 +165,7 @@
     "commander": "^15.0.0",
     "configstore": "^8.0.0",
     "debug": "4.4.3",
-    "ejs": "^6.0.1",
+    "ejs": "^7.0.1",
     "enquirer": "2.4.1",
     "fetch-retry": "^6.0.0",
     "graphql": "17.0.2",
