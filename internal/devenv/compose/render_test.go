@@ -23,8 +23,11 @@ func TestSetupStepsIncludeChownAndSetup(t *testing.T) {
 	steps := SetupSteps(v)
 	var sawChown, sawSetup bool
 	for _, s := range steps {
-		if s.AsRoot && strings.Contains(s.Command, "chown www-data:www-data") {
+		if s.AsRoot && strings.Contains(s.Command, "chown www-data:www-data") && strings.Contains(s.Command, "/wp/config") {
 			sawChown = true
+			if !strings.Contains(s.Command, "/wp/wp-config.php") {
+				t.Fatal("setup must make the root config writable for WP-CLI")
+			}
 		}
 		if !s.AsRoot && strings.Contains(s.Command, "/dev-tools/setup.sh") {
 			sawSetup = true

@@ -119,6 +119,10 @@ services:
             LANDO_APP_NAME: example
             LANDO_NEEDS_EXEC: "1"
             LANDO_NO_USER_PERMS: enable
+            VIP_DEVENV_DEMO_APP: "1"
+            VIP_DEVENV_ELASTICSEARCH: "0"
+            VIP_DEVENV_MAILPIT: "0"
+            VIP_DEVENV_PHOTON: "0"
             XDEBUG: disable
         depends_on:
             database:
@@ -238,7 +242,7 @@ services:
             - default
     wordpress:
         image: ghcr.io/automattic/vip-container-images/wordpress:trunk
-        entrypoint: /bin/sh -c '/usr/bin/rsync -ac --delete --chown=${LANDO_HOST_USER_ID}:${LANDO_HOST_GROUP_ID} /wp/ /shared/; /usr/bin/rsync -ac --chown=${LANDO_HOST_USER_ID}:${LANDO_HOST_GROUP_ID} --delete /dev-tools-orig/ /dev-tools/'
+        entrypoint: /bin/sh -c 'if [ ! -f /shared/wp-config.php ]; then /usr/bin/rsync -ac --chown=${LANDO_HOST_USER_ID}:${LANDO_HOST_GROUP_ID} /wp/wp-config.php /shared/; fi; /usr/bin/rsync -ac --delete --exclude=/wp-config.php --chown=${LANDO_HOST_USER_ID}:${LANDO_HOST_GROUP_ID} /wp/ /shared/; /usr/bin/rsync -ac --chown=${LANDO_HOST_USER_ID}:${LANDO_HOST_GROUP_ID} --delete /dev-tools-orig/ /dev-tools/'
         volumes:
             - ./wordpress:/shared
             - devtools:/dev-tools
