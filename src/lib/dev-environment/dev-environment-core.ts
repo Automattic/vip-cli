@@ -301,7 +301,7 @@ function preProcessInstanceData( instanceData: InstanceData ): Required< Instanc
 		overrides: instanceData.overrides ?? '',
 	};
 
-	if ( instanceData.mediaRedirectDomain && ! /^http/.exec( instanceData.mediaRedirectDomain ) ) {
+	if ( instanceData.mediaRedirectDomain && ! /^https?:/.test( instanceData.mediaRedirectDomain ) ) {
 		// We need to make sure the redirect is an absolute path
 		newInstanceData.mediaRedirectDomain = `https://${ instanceData.mediaRedirectDomain }`;
 	}

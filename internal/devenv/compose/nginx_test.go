@@ -16,6 +16,7 @@ func TestRenderNginxMediaRouting(t *testing.T) {
 	}{
 		{name: "disabled"},
 		{name: "bare-domain", domain: "example.test", target: "https://example.test/$1"},
+		{name: "http-prefix-domain", domain: "httpbin.org", target: "https://httpbin.org/$1"},
 		{name: "https", domain: "https://example.test", target: "https://example.test/$1"},
 		{name: "http-path", domain: "http://example.test/media", target: "http://example.test/media/$1"},
 		{name: "photon", photon: true},

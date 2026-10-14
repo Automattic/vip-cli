@@ -276,6 +276,9 @@ func TestDevEnvNginxHTTPDifferential(t *testing.T) {
 			{"missing.png", "https://example.test/wp-content/uploads/missing.png", 302, 0},
 			{"2026/09/missing%20image.jpg?x=a%2Fb&w=100", "https://example.test/wp-content/uploads/2026/09/missing%20image.jpg?x=a%2Fb&w=100", 302, 0},
 		}},
+		{"http-prefix-domain", "httpbin.org", false, []check{
+			{"missing.png?x=a%2Fb", "https://httpbin.org/wp-content/uploads/missing.png?x=a%2Fb", 302, 0},
+		}},
 		{"photon", "", true, []check{
 			{"existing.png", "", 200, 16},
 			{"existing.png?w=8", "", 200, 8},

@@ -30,6 +30,7 @@ describe( 'dev-env materialization', () => {
 	it.each( [
 		[ 'disabled', false, '', '' ],
 		[ 'bare-domain', false, 'example.test', 'https://example.test/$1' ],
+		[ 'http-prefix-domain', false, 'httpbin.org', 'https://httpbin.org/$1' ],
 		[ 'https', false, 'https://example.test', 'https://example.test/$1' ],
 		[ 'http-path', false, 'http://example.test/media', 'http://example.test/media/$1' ],
 		[ 'photon', true, '', '' ],

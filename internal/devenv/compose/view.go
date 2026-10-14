@@ -120,7 +120,7 @@ func NewView(d *instancedata.InstanceData, opts Options) View {
 	v.MultisiteEnabled, v.MultisiteSubdomain = multisite(d.Multisite)
 	// Match Node's preProcessInstanceData: retain URLs and paths verbatim,
 	// but make a bare domain absolute. Do not normalize trailing slashes.
-	if v.MediaRedirectDomain != "" && !strings.HasPrefix(v.MediaRedirectDomain, "http") {
+	if v.MediaRedirectDomain != "" && !strings.HasPrefix(v.MediaRedirectDomain, "http:") && !strings.HasPrefix(v.MediaRedirectDomain, "https:") {
 		v.MediaRedirectDomain = "https://" + v.MediaRedirectDomain
 	}
 
