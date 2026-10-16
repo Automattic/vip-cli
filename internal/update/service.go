@@ -14,6 +14,7 @@ import (
 
 type Request struct {
 	CheckOnly       bool
+	Interactive     bool
 	Channel         Channel
 	ExplicitChannel bool
 }
@@ -25,15 +26,16 @@ type Outcome struct {
 	Warnings             []string
 }
 type Service struct {
-	Installed  string
-	Platform   Platform
-	State      State
-	Now        func() time.Time
-	Executable func() (string, error)
-	Fetch      func(context.Context) ([]Release, error)
-	Stage      func(context.Context, Candidate, Platform, string) (Bundle, error)
-	Installer  Installer
-	initErr    error
+	Installed       string
+	Platform        Platform
+	State           State
+	Now             func() time.Time
+	Executable      func() (string, error)
+	Fetch           func(context.Context) ([]Release, error)
+	Stage           func(context.Context, Candidate, Platform, string) (Bundle, error)
+	Installer       Installer
+	NativeInstaller NativeInstaller
+	initErr         error
 }
 
 func NewService() *Service {
@@ -136,6 +138,23 @@ func (s Service) Run(ctx context.Context, r Request, progress func(Step)) (out O
 	}
 	owner, err := inspect(ctx, l)
 	if err != nil {
+		return out, err
+	}
+	if owner.NativeInstaller {
+		asset, checksum, err := nativeInstallerAssets(candidate.Version, s.Platform, releases)
+		if err != nil {
+			return out, err
+		}
+		out.Instructions, err = s.NativeInstaller.handoff(ctx, candidate.Version, asset, checksum, s.State.CacheDir, r.Interactive, progress)
+		if err != nil {
+			return out, err
+		}
+		if err = persist(); err != nil && r.Interactive {
+			// The installer is already open; preserve its recovery instructions
+			// even if saving the preference fails, as for portable updates.
+			out.Warnings = append(out.Warnings, err.Error())
+			return out, nil
+		}
 		return out, err
 	}
 	if owner.Managed {
