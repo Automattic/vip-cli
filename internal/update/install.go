@@ -14,8 +14,9 @@ import (
 
 type Layout struct{ CLI, Helper string }
 type Ownership struct {
-	Managed      bool
-	Instructions string
+	Managed         bool
+	Instructions    string
+	NativeInstaller bool
 }
 type Step struct {
 	Name string

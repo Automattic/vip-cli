@@ -138,7 +138,9 @@ func TestApplyPreflightFailureCleansStagedCopies(t *testing.T) {
 
 func TestManagedBundleNeverChangesFiles(t *testing.T) {
 	l, b := installFixture(t)
-	_, err := (Installer{InspectOwnership: func(context.Context, Layout) (Ownership, error) { return Ownership{true, "use package manager"}, nil }}).Apply(context.Background(), l, b, nil)
+	_, err := (Installer{InspectOwnership: func(context.Context, Layout) (Ownership, error) {
+		return Ownership{Managed: true, Instructions: "use package manager"}, nil
+	}}).Apply(context.Background(), l, b, nil)
 	if err == nil {
 		t.Fatal("managed files accepted")
 	}
