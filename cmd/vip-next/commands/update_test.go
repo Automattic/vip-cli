@@ -3,6 +3,7 @@ package commands
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -54,22 +55,18 @@ func TestUpdateCheckAndInvalidArguments(t *testing.T) {
 }
 
 func TestUpdateManagedInstallationReportsVersions(t *testing.T) {
-	cmd := NewUpdateCmd(updateRunnerFunc(func(context.Context, update.Request, func(update.Step)) (update.Outcome, error) {
-		return update.Outcome{Installed: "5.0.0", Available: "5.0.1", Channel: update.Stable, Instructions: "Download and run: https://github.com/Automattic/vip-cli/releases/download/5.0.1/vip-next-darwin-arm64.pkg"}, nil
-	}))
 	var out bytes.Buffer
-	cmd.SetOut(&out)
-	cmd.SetArgs(nil)
-	if err := cmd.Execute(); err != nil {
+	result := update.Outcome{Installed: "5.0.0", Available: "5.0.1", Channel: update.Stable, Instructions: "Installer opened. Follow its prompts to finish upgrading."}
+	if err := writeUpdateOutcome(&out, result); err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{"Installed: 5.0.0", "Available: 5.0.1", "Channel: stable", "/download/5.0.1/vip-next-darwin-arm64.pkg"} {
+	for _, want := range []string{"Installed: 5.0.0", "Available: 5.0.1", "Channel: stable", result.Instructions} {
 		if !strings.Contains(out.String(), want) {
 			t.Fatalf("missing %q in %s", want, out.String())
 		}
 	}
 	if strings.Contains(out.String(), "Updated to") {
-		t.Fatal("manual handoff reported as completed installation")
+		t.Fatal("handoff reported as completed installation")
 	}
 }
 
@@ -80,42 +77,26 @@ func TestUpdateInstallerInteractivity(t *testing.T) {
 	}
 	defer ptmx.Close()
 	defer tty.Close()
-	input, err := os.CreateTemp(t.TempDir(), "input")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer input.Close()
 	original := os.Stdin
+	os.Stdin = tty
 	defer func() { os.Stdin = original }()
-	for _, tc := range []struct {
-		name  string
-		stdin *os.File
-		args  []string
-		env   string
-		want  bool
-	}{
-		{"terminal", tty, nil, "", true},
-		{"explicit flag", tty, []string{"--non-interactive"}, "", false},
-		{"environment", tty, nil, "1", false},
-		{"piped stdin", input, nil, "", false},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			os.Stdin = tc.stdin
-			t.Setenv("VIP_NON_INTERACTIVE", tc.env)
-			cmd := NewUpdateCmd(updateRunnerFunc(func(_ context.Context, r update.Request, _ func(update.Step)) (update.Outcome, error) {
-				if r.Interactive != tc.want {
-					t.Fatalf("installer interactivity: got %v, want %v", r.Interactive, tc.want)
-				}
-				return update.Outcome{Installed: "5.0.0", Channel: update.Stable}, nil
-			}))
-			root := &cobra.Command{Use: "vip-next"}
-			root.PersistentFlags().Bool("non-interactive", false, "")
-			root.AddCommand(cmd)
-			root.SetOut(io.Discard)
-			root.SetArgs(append([]string{"update"}, tc.args...))
-			if err := root.Execute(); err != nil {
-				t.Fatal(err)
+	t.Setenv("VIP_NON_INTERACTIVE", "")
+	// The shared appctx tests cover the policy matrix; retain the update command's
+	// wiring and its explicit non-interactive override on a real terminal.
+	for _, nonInteractive := range []bool{false, true} {
+		cmd := NewUpdateCmd(updateRunnerFunc(func(_ context.Context, r update.Request, _ func(update.Step)) (update.Outcome, error) {
+			if r.Interactive == nonInteractive {
+				t.Fatalf("incorrect installer interactivity: %+v", r)
 			}
-		})
+			return update.Outcome{}, nil
+		}))
+		root := &cobra.Command{Use: "vip-next"}
+		root.PersistentFlags().Bool("non-interactive", false, "")
+		root.AddCommand(cmd)
+		root.SetOut(io.Discard)
+		root.SetArgs([]string{"update", fmt.Sprintf("--non-interactive=%t", nonInteractive)})
+		if err := root.Execute(); err != nil {
+			t.Fatal(err)
+		}
 	}
 }
