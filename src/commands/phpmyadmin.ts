@@ -230,9 +230,13 @@ export class PhpMyAdminCommand {
 			exit.withError( 'No environment was specified' );
 		}
 
-		if ( ! this.silent ) {
-			const message =
-				'Note: PHPMyAdmin sessions are read-only. If you run a query that writes to DB, it will fail.';
+		if ( ! this.silent && this.env.isK8sResident !== false ) {
+			let message =
+				'Note: phpMyAdmin sessions are read-only on VIP Kubernetes and read-write on WP Cloud.';
+			if ( this.env.isK8sResident === true ) {
+				message =
+					'Note: phpMyAdmin sessions are read-only. If you run a query that writes to DB, it will fail.';
+			}
 			console.log( chalk.yellow( message ) );
 		}
 
