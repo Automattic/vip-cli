@@ -368,7 +368,10 @@ const checks: Checks = {
 		recommendation: "Use search-replace to change environment's domain",
 	},
 	engineInnoDB: {
-		matcher: /\sENGINE\s?=(?!(\s?InnoDB))/i,
+		// Skip lines holding row data (`INSERT ...`/`REPLACE ...` statements and `(...)` /
+		// `,(...)` VALUES rows): user content routinely contains "engine =" strings, which
+		// produced false positives on large dumps. ENGINE clauses only matter in DDL.
+		matcher: /^(?!\s*(?:INSERT|REPLACE)\b|\s*[(,]).*\sENGINE\s?=(?!(\s?InnoDB))/i,
 		matchHandler: lineNumber => ( { lineNumber } ),
 		outputFormatter: lineNumberCheckFormatter,
 		results: [],
