@@ -233,7 +233,7 @@ test-parity-unit: node-vip-bin-status blessed-drift-status
 # NODE_VIP_BIN is passed through deliberately: the Node-vs-Go scenario must
 # stay ambient-independent too.
 test-parity-unit-hostile:
-	VIP_TOKEN_OVERRIDE=hostile.ambient.token \
+	VIP_CLI_TOKEN=hostile.ambient.token \
 	WPVIP_DEPLOY_TOKEN=hostile-ambient-deploy-token \
 	API_HOST=https://hostile.invalid \
 	HTTP_PROXY=http://127.0.0.1:9 HTTPS_PROXY=http://127.0.0.1:9 ALL_PROXY=socks5://127.0.0.1:9 \

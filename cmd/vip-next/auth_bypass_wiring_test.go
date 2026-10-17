@@ -81,7 +81,7 @@ const (
 // the command against the API — and so must vip-next.
 func TestBypassedArgvStillReachesTheAPI(t *testing.T) {
 	t.Setenv("DO_NOT_TRACK", "1")
-	t.Setenv("VIP_TOKEN_OVERRIDE", "")
+	t.Setenv("VIP_CLI_TOKEN", "")
 	t.Setenv("WPVIP_DEPLOY_TOKEN", "")
 
 	rec := &gqlOpRecorder{}
@@ -136,7 +136,7 @@ func TestBypassedArgvStillReachesTheAPI(t *testing.T) {
 // login prompt (vip.js:204-212, isHelpCommand short-circuits the login branch).
 func TestHelpWithoutStoredTokenStillSkipsLogin(t *testing.T) {
 	t.Setenv("DO_NOT_TRACK", "1")
-	t.Setenv("VIP_TOKEN_OVERRIDE", "")
+	t.Setenv("VIP_CLI_TOKEN", "")
 	t.Setenv("WPVIP_DEPLOY_TOKEN", "")
 	t.Setenv("API_HOST", "http://127.0.0.1:1")
 

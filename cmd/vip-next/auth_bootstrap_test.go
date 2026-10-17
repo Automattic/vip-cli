@@ -83,7 +83,7 @@ func parsedBootstrapToken(t *testing.T, raw string) *auth.Token {
 }
 
 func TestWithAuthenticatedSessionUsesValidStoredToken(t *testing.T) {
-	t.Setenv("VIP_TOKEN_OVERRIDE", "")
+	t.Setenv("VIP_CLI_TOKEN", "")
 	backend := &bootstrapBackend{}
 	k := newBootstrapKeychain(backend)
 	store := auth.NewStore(k)
@@ -117,7 +117,7 @@ func TestWithAuthenticatedSessionUsesValidStoredToken(t *testing.T) {
 }
 
 func TestWithAuthenticatedSessionUsesLegacyTokenWhenPrimaryMissing(t *testing.T) {
-	t.Setenv("VIP_TOKEN_OVERRIDE", "")
+	t.Setenv("VIP_CLI_TOKEN", "")
 	backend := &bootstrapBackend{}
 	k := newBootstrapKeychain(backend)
 	raw := validBootstrapRaw(t, 10000)
@@ -148,7 +148,7 @@ func TestWithAuthenticatedSessionUsesLegacyTokenWhenPrimaryMissing(t *testing.T)
 }
 
 func TestWithAuthenticatedSessionLogsInWhenMissingAndResumes(t *testing.T) {
-	t.Setenv("VIP_TOKEN_OVERRIDE", "")
+	t.Setenv("VIP_CLI_TOKEN", "")
 	backend := &bootstrapBackend{}
 	k := newBootstrapKeychain(backend)
 	store := auth.NewStore(k)
@@ -179,7 +179,7 @@ func TestWithAuthenticatedSessionLogsInWhenMissingAndResumes(t *testing.T) {
 }
 
 func TestWithAuthenticatedSessionRefreshesInvalidTokenAndResumes(t *testing.T) {
-	t.Setenv("VIP_TOKEN_OVERRIDE", "")
+	t.Setenv("VIP_CLI_TOKEN", "")
 	backend := &bootstrapBackend{}
 	k := newBootstrapKeychain(backend)
 	store := auth.NewStore(k)
@@ -213,7 +213,7 @@ func TestWithAuthenticatedSessionRefreshesInvalidTokenAndResumes(t *testing.T) {
 }
 
 func TestWithAuthenticatedSessionStopsCleanlyOnCancel(t *testing.T) {
-	t.Setenv("VIP_TOKEN_OVERRIDE", "")
+	t.Setenv("VIP_CLI_TOKEN", "")
 	k := newBootstrapKeychain(&bootstrapBackend{})
 	nextCalls := 0
 	err := withAuthenticatedSession(true, authBootstrapDeps{
@@ -233,7 +233,7 @@ func TestWithAuthenticatedSessionStopsCleanlyOnCancel(t *testing.T) {
 }
 
 func TestWithAuthenticatedSessionStopsCleanlyOnHandledValidationError(t *testing.T) {
-	t.Setenv("VIP_TOKEN_OVERRIDE", "")
+	t.Setenv("VIP_CLI_TOKEN", "")
 	k := newBootstrapKeychain(&bootstrapBackend{})
 	nextCalls := 0
 	err := withAuthenticatedSession(true, authBootstrapDeps{
@@ -253,7 +253,7 @@ func TestWithAuthenticatedSessionStopsCleanlyOnHandledValidationError(t *testing
 }
 
 func TestWithAuthenticatedSessionSurfacesUnexpectedLoginError(t *testing.T) {
-	t.Setenv("VIP_TOKEN_OVERRIDE", "")
+	t.Setenv("VIP_CLI_TOKEN", "")
 	k := newBootstrapKeychain(&bootstrapBackend{})
 	want := errors.New("browser exploded")
 	nextCalls := 0
@@ -274,7 +274,7 @@ func TestWithAuthenticatedSessionSurfacesUnexpectedLoginError(t *testing.T) {
 }
 
 func TestWithAuthenticatedSessionNonInteractiveMissingFailsWithoutLogin(t *testing.T) {
-	t.Setenv("VIP_TOKEN_OVERRIDE", "")
+	t.Setenv("VIP_CLI_TOKEN", "")
 	k := newBootstrapKeychain(&bootstrapBackend{})
 	loginCalls := 0
 	nextCalls := 0
@@ -298,7 +298,7 @@ func TestWithAuthenticatedSessionNonInteractiveMissingFailsWithoutLogin(t *testi
 }
 
 func TestWithAuthenticatedSessionNonInteractiveInvalidFailsWithoutLogin(t *testing.T) {
-	t.Setenv("VIP_TOKEN_OVERRIDE", "")
+	t.Setenv("VIP_CLI_TOKEN", "")
 	backend := &bootstrapBackend{}
 	k := newBootstrapKeychain(backend)
 	store := auth.NewStore(k)
@@ -327,7 +327,7 @@ func TestWithAuthenticatedSessionNonInteractiveInvalidFailsWithoutLogin(t *testi
 }
 
 func TestWithAuthenticatedSessionSurfacesKeychainLoadError(t *testing.T) {
-	t.Setenv("VIP_TOKEN_OVERRIDE", "")
+	t.Setenv("VIP_CLI_TOKEN", "")
 	want := errors.New("keychain unavailable")
 	k := newBootstrapKeychain(&bootstrapBackend{getErr: want})
 	loginCalls := 0
@@ -375,5 +375,49 @@ func TestIsNonInteractiveArgvBoundaries(t *testing.T) {
 				t.Fatalf("isNonInteractiveArgv(%q) = %v, want %v", tt.argv, got, tt.want)
 			}
 		})
+	}
+}
+
+func TestWithAuthenticatedSessionUsesEnvironmentPATWithoutKeychain(t *testing.T) {
+	raw := validBootstrapRaw(t, 42)
+	t.Setenv("VIP_CLI_TOKEN", raw)
+	backend := &bootstrapBackend{getErr: errors.New("keychain must not be read")}
+	k := newBootstrapKeychain(backend)
+	loginCalls := 0
+	err := withAuthenticatedSession(true, authBootstrapDeps{
+		Keychain: k,
+		Store:    auth.NewStore(k),
+		Login: func() (*auth.Token, error) {
+			loginCalls++
+			return nil, errors.New("login must not run")
+		},
+	}, func(session *authSession) error {
+		if session.Raw != raw || session.Source != auth.SourceEnvironment {
+			t.Fatalf("session = %+v, want environment identity", session)
+		}
+		return nil
+	})
+	if err != nil || loginCalls != 0 {
+		t.Fatalf("withAuthenticatedSession = %v, login calls = %d", err, loginCalls)
+	}
+}
+
+func TestWithAuthenticatedSessionRejectsInvalidEnvironmentPATWithoutLogin(t *testing.T) {
+	t.Setenv("VIP_CLI_TOKEN", "not-a-jwt")
+	k := newBootstrapKeychain(&bootstrapBackend{getErr: errors.New("keychain must not be read")})
+	loginCalls := 0
+	err := withAuthenticatedSession(true, authBootstrapDeps{
+		Keychain: k,
+		Store:    auth.NewStore(k),
+		Login: func() (*auth.Token, error) {
+			loginCalls++
+			return nil, nil
+		},
+	}, func(*authSession) error {
+		t.Fatal("invalid environment PAT reached the command")
+		return nil
+	})
+	if err == nil || !strings.Contains(err.Error(), "VIP_CLI_TOKEN") || loginCalls != 0 {
+		t.Fatalf("error = %v, login calls = %d", err, loginCalls)
 	}
 }

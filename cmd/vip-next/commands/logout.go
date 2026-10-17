@@ -16,14 +16,22 @@ import (
 // best-effort and never uses the read-only Node-token fallback; local purge and
 // elevated-cache clear always run.
 func LogoutCmd() *cobra.Command {
+	return logoutCmd(keychain.New)
+}
+
+func logoutCmd(newKeychain func(string) *keychain.Keychain) *cobra.Command {
 	return &cobra.Command{
 		Use:           "logout",
 		Short:         "Log out the current authenticated VIP-CLI user",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			if auth.EnvironmentTokenConfigured() {
+				fmt.Fprintf(cmd.OutOrStdout(), "The %s environment variable is still active. Unset it to stop authenticating with that token; stored credentials were left untouched.\n", auth.EnvironmentTokenName)
+				return nil
+			}
 			cfg := GetConfig()
-			k := keychain.New(cfg.APIHost)
+			k := newKeychain(cfg.APIHost)
 			store := auth.NewStore(k)
 
 			if raw, err := store.LoadPrimary(); err == nil && raw != "" {
