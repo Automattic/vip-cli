@@ -13,6 +13,7 @@ const config = {
 	testSequencer: path.join( __dirname, 'sequencer.js' ),
 	forceExit: true,
 	transformIgnorePatterns: [],
+	resolver: '<rootDir>/jest.resolver.js',
 };
 
 module.exports = config;
