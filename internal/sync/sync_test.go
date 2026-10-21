@@ -251,3 +251,21 @@ func TestPollOnErrorTransient(t *testing.T) {
 		t.Errorf("OnError never called; want at least once")
 	}
 }
+
+func TestIsTerminal(t *testing.T) {
+	for status, want := range map[string]bool{
+		"":                    false,
+		"running":             false,
+		"started":             false,
+		"importing":           false,
+		"cleanup":             false,
+		"success":             true,
+		"complete":            true,
+		"partially_completed": true,
+		"failed":              true,
+	} {
+		if got := IsTerminal(status); got != want {
+			t.Errorf("IsTerminal(%q) = %v, want %v", status, got, want)
+		}
+	}
+}

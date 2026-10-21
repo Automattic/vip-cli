@@ -146,7 +146,17 @@ func runSync(cmd *cobra.Command, args []string) error {
 			"error": "API returned `failed` status",
 		})
 		fmt.Fprintln(out, color.RedString(
-			fmt.Sprintf("✕ Data Sync is finished for %s.", ae.App.Name)))
+			fmt.Sprintf("✕ Data Sync failed for %s.", ae.App.Name)))
+		if p.Error != "" {
+			fmt.Fprintln(out, color.RedString("Error:"), p.Error)
+		}
+	case syncpkg.StatusPartiallyCompleted:
+		trackEvent("sync_command_partially_completed", nil)
+		fmt.Fprintln(out, color.YellowString(
+			fmt.Sprintf("✕ Data Sync is partially completed for %s.", ae.App.Name)))
+		if p.Error != "" {
+			fmt.Fprintln(out, color.YellowString("Error:"), p.Error)
+		}
 	default:
 		// success (or any non-failed terminal) — Node treats the default
 		// case as success, so we do too.
@@ -167,7 +177,7 @@ func formatStepLine(s syncpkg.Step) string {
 		return color.New(color.Faint).Sprintf("  ○ %s", s.Name)
 	case syncpkg.StatusRunning:
 		return fmt.Sprintf("  %s %s", color.HiBlueString("…"), s.Name)
-	case syncpkg.StatusSuccess:
+	case syncpkg.StatusSuccess, syncpkg.StatusFinished:
 		return fmt.Sprintf("  %s %s", color.GreenString("✓"), s.Name)
 	case syncpkg.StatusFailed:
 		return fmt.Sprintf("  %s %s", color.RedString("✕"), s.Name)

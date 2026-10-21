@@ -6381,6 +6381,8 @@ func (v *SyncProgressAppEnvironmentsAppEnvironment) GetSyncProgress() *SyncProgr
 type SyncProgressAppEnvironmentsAppEnvironmentSyncProgress struct {
 	// The overall sync status.
 	Status *string `json:"status"`
+	// Why the sync failed, when the sync recorded a reason.
+	Error *string `json:"error"`
 	// The sync job ID.
 	Sync *int64 `json:"sync"`
 	// The individual sync steps.
@@ -6389,6 +6391,9 @@ type SyncProgressAppEnvironmentsAppEnvironmentSyncProgress struct {
 
 // GetStatus returns SyncProgressAppEnvironmentsAppEnvironmentSyncProgress.Status, and is useful for accessing the field via an interface.
 func (v *SyncProgressAppEnvironmentsAppEnvironmentSyncProgress) GetStatus() *string { return v.Status }
+
+// GetError returns SyncProgressAppEnvironmentsAppEnvironmentSyncProgress.Error, and is useful for accessing the field via an interface.
+func (v *SyncProgressAppEnvironmentsAppEnvironmentSyncProgress) GetError() *string { return v.Error }
 
 // GetSync returns SyncProgressAppEnvironmentsAppEnvironmentSyncProgress.Sync, and is useful for accessing the field via an interface.
 func (v *SyncProgressAppEnvironmentsAppEnvironmentSyncProgress) GetSync() *int64 { return v.Sync }
@@ -9992,6 +9997,7 @@ query SyncProgress ($appId: Int!, $envId: Int!) {
 			id
 			syncProgress {
 				status
+				error
 				sync
 				steps {
 					name

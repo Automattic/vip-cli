@@ -30,7 +30,7 @@ const spinnerInterval = 100 * time.Millisecond
 //
 //	pending → dim ○
 //	running → blue braille spinner frame
-//	success → green ✓
+//	success/finished → green ✓
 //	failed  → red ✕
 //	other   → yellow ✕ (defensive: covers any new server-side status
 //	                    string we haven't enumerated yet)
@@ -40,7 +40,7 @@ func markFor(status, spinnerFrame string) string {
 		return color.New(color.Faint).Sprint("○")
 	case syncpkg.StatusRunning:
 		return color.New(color.FgHiBlue).Sprint(spinnerFrame)
-	case syncpkg.StatusSuccess:
+	case syncpkg.StatusSuccess, syncpkg.StatusFinished:
 		return color.New(color.FgGreen).Sprint("✓")
 	case syncpkg.StatusFailed:
 		return color.New(color.FgRed).Sprint("✕")

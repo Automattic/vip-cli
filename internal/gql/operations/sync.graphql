@@ -39,6 +39,7 @@ query SyncProgress($appId: Int!, $envId: Int!) {
       id
       syncProgress {
         status
+        error
         sync
         steps {
           name
