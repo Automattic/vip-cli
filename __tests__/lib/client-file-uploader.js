@@ -285,6 +285,46 @@ describe( 'client-file-uploader', () => {
 			expect( http ).toHaveBeenCalledTimes( 1 );
 		} );
 
+		it( 'should retry when reading a successful response body fails', async () => {
+			http
+				.mockResolvedValueOnce( {
+					status: 200,
+					json: () => Promise.reject( new TypeError( 'terminated' ) ),
+				} )
+				.mockResolvedValueOnce( ok() );
+
+			await expect( getSignedUploadRequestData( args, 1 ) ).resolves.toEqual( presigned );
+			expect( http ).toHaveBeenCalledTimes( 2 );
+		} );
+
+		it( 'should preserve the body transport error and cause after exhausting retries', async () => {
+			const err = new TypeError( 'terminated', { cause: new Error( 'socket closed' ) } );
+			http.mockResolvedValue( { status: 200, json: () => Promise.reject( err ) } );
+
+			await expect( getSignedUploadRequestData( args, 1 ) ).rejects.toThrow(
+				'terminated: socket closed'
+			);
+			expect( http ).toHaveBeenCalledTimes( 2 );
+		} );
+
+		it( 'should not retry malformed JSON', async () => {
+			const err = new SyntaxError( 'Unexpected end of JSON input' );
+			http.mockResolvedValueOnce( { status: 200, json: () => Promise.reject( err ) } );
+
+			await expect( getSignedUploadRequestData( args, 1 ) ).rejects.toBe( err );
+			expect( http ).toHaveBeenCalledTimes( 1 );
+		} );
+
+		it( 'should retry even when response cancellation rejects', async () => {
+			const unavailable = failing( 503, 'Service Unavailable' );
+			unavailable.body.cancel.mockRejectedValue( new TypeError( 'terminated' ) );
+			http.mockResolvedValueOnce( unavailable ).mockResolvedValueOnce( ok() );
+
+			await expect( getSignedUploadRequestData( args, 1 ) ).resolves.toEqual( presigned );
+			expect( unavailable.body.cancel ).toHaveBeenCalledTimes( 1 );
+			expect( http ).toHaveBeenCalledTimes( 2 );
+		} );
+
 		it( 'should throw the network error with its cause after exhausting retries', async () => {
 			const err = new TypeError( 'fetch failed' );
 			err.cause = new Error( 'getaddrinfo ENOTFOUND api.wpvip.com' );

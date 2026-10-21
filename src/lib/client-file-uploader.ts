@@ -549,14 +549,16 @@ export async function getSignedUploadRequestData(
 		try {
 			// eslint-disable-next-line no-await-in-loop
 			response = await http( '/upload/site-import-presigned-url', reqOptions );
+			if ( response.status === 200 ) {
+				// Body transport failures must stay inside the retry boundary.
+				// eslint-disable-next-line no-await-in-loop
+				return ( await response.json() ) as PresignedRequest;
+			}
 		} catch ( err ) {
-			if ( isLastAttempt ) {
+			if ( err instanceof SyntaxError || isLastAttempt ) {
 				throw withCauseMessage( err );
 			}
-		}
-
-		if ( response?.status === 200 ) {
-			return response.json() as Promise< PresignedRequest >;
+			response = undefined;
 		}
 
 		const isRetryableStatus = response && ( response.status === 429 || response.status >= 500 );
@@ -566,7 +568,7 @@ export async function getSignedUploadRequestData(
 		}
 
 		// eslint-disable-next-line no-await-in-loop
-		await response?.body?.cancel();
+		await response?.body?.cancel().catch( err => debug( 'Response cleanup failed: %s', err ) );
 		// eslint-disable-next-line no-await-in-loop
 		await setTimeout( Math.pow( 2, attempt ) * 1000 ); // 1000, 2000, 4000
 	}
