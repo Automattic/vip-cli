@@ -11,9 +11,12 @@ import command from '../lib/cli/command';
 import { formatEnvironment } from '../lib/cli/format';
 import { trackEvent } from '../lib/tracker';
 
+// The API reports the current step as the overall status while a sync is in progress.
+const SYNC_RUNNING_STATUSES = [ 'running', 'started', 'importing', 'cleanup' ];
+
 const appQuery = `id,name,environments{
 	id,appId,type,name,defaultDomain,branch,datacenter,syncProgress{
-		status,sync,steps{name,status}
+		status,error,sync,steps{name,status}
 	},syncPreview { canSync, errors { message }, backup { createdAt }, replacements { from, to } }
 }`;
 
@@ -97,7 +100,7 @@ command( {
 		let environment = application.environments.find( env => env.id === opts.env.id );
 
 		if ( syncing ) {
-			if ( environment.syncProgress.status === 'running' ) {
+			if ( SYNC_RUNNING_STATUSES.includes( environment.syncProgress.status ) ) {
 				console.log( chalk.yellow( 'Note:' ), 'A data sync is already running.' );
 			} else {
 				console.log( chalk.yellow( 'Note:' ), 'Someone recently ran a data sync on this site.' );
@@ -130,6 +133,7 @@ command( {
 										datacenter
 										syncProgress {
 											status
+											error
 											sync
 											steps {
 												name
@@ -155,6 +159,7 @@ command( {
 				pending: '○',
 				running: chalk.blueBright( sprite.next().value ),
 				success: chalk.green( '✓' ),
+				finished: chalk.green( '✓' ),
 				failed: chalk.red( '✕' ),
 				unknown: chalk.yellow( '✕' ),
 			};
@@ -168,39 +173,45 @@ command( {
 				if ( step.status === 'pending' ) {
 					out.push( chalk.dim( ` ${ marks[ step.status ] } ${ step.name }` ) );
 				} else {
-					out.push( ` ${ marks[ step.status ] } ${ step.name }` );
+					out.push( ` ${ marks[ step.status ] ?? marks.unknown } ${ step.name }` );
 				}
 			} );
 
 			out.push( '' );
 
-			switch ( environment.syncProgress.status ) {
-				case 'running':
-					out.push(
-						`${ marks.running } Press ^C to hide progress. Data sync will continue in the background.`
-					);
-					break;
+			const { status, error: syncError } = environment.syncProgress;
 
-				case 'failed':
-					clearInterval( progress );
+			if ( SYNC_RUNNING_STATUSES.includes( status ) ) {
+				out.push( 'Press ^C to hide progress. Data sync will continue in the background.' );
+			} else if ( status === 'failed' ) {
+				clearInterval( progress );
 
-					await trackEvent( 'sync_command_error', {
-						error: 'API returned `failed` status',
-					} );
+				await trackEvent( 'sync_command_error', {
+					error: 'API returned `failed` status',
+				} );
 
-					out.push( `${ marks.failed } Data Sync is finished for ${ opts.app.name }.` );
-					out.push( '' );
-					break;
+				out.push( `${ marks.failed } Data Sync failed for ${ opts.app.name }.` );
+				if ( syncError ) {
+					out.push( `${ chalk.red( 'Error:' ) } ${ syncError }` );
+				}
+				out.push( '' );
+			} else if ( status === 'partially_completed' ) {
+				clearInterval( progress );
 
-				case 'success':
-				default:
-					clearInterval( progress );
+				await trackEvent( 'sync_command_partially_completed' );
 
-					await trackEvent( 'sync_command_success' );
+				out.push( `${ marks.unknown } Data Sync is partially completed for ${ opts.app.name }.` );
+				if ( syncError ) {
+					out.push( `${ chalk.yellow( 'Error:' ) } ${ syncError }` );
+				}
+				out.push( '' );
+			} else {
+				clearInterval( progress );
 
-					out.push( `${ marks.success } Data Sync is finished for ${ opts.app.name }.` );
-					out.push( '' );
-					break;
+				await trackEvent( 'sync_command_success' );
+
+				out.push( `${ marks.success } Data Sync is finished for ${ opts.app.name }.` );
+				out.push( '' );
 			}
 
 			stdout( out.join( '\n' ) );

@@ -42,14 +42,24 @@ type AlreadySyncingError struct{}
 
 func (AlreadySyncingError) Error() string { return AlreadySyncingErrMsg }
 
-// Status constants — string values that come back from the API. These
-// are the only states currently observed in production; "unknown" is a
-// client-side marker for per-step status values not in this list.
+// Status constants — string values that come back from the API.
+//
+// While a sync runs, the overall status is the name of the current step
+// (started, importing, cleanup). Once it ends, it is complete,
+// partially_completed or failed. Steps report pending, running, finished
+// or failed. running and success are the legacy values and are still
+// handled.
 const (
-	StatusRunning = "running"
-	StatusSuccess = "success"
-	StatusFailed  = "failed"
-	StatusPending = "pending"
+	StatusRunning            = "running"
+	StatusStarted            = "started"
+	StatusImporting          = "importing"
+	StatusCleanup            = "cleanup"
+	StatusSuccess            = "success"
+	StatusComplete           = "complete"
+	StatusPartiallyCompleted = "partially_completed"
+	StatusFinished           = "finished"
+	StatusFailed             = "failed"
+	StatusPending            = "pending"
 )
 
 // Step is the flat per-step view of an in-flight sync.
@@ -60,17 +70,30 @@ type Step struct {
 }
 
 // Progress is the overall sync state. Sync is the job ID (Int in the
-// schema, despite the plan calling it String).
+// schema, despite the plan calling it String). Error is the reason the
+// sync job recorded, when it failed or partially completed.
 type Progress struct {
 	Status string
+	Error  string
 	Sync   int64
 	Steps  []Step
 }
 
-// IsTerminal reports whether the status string is a terminal state
-// (success or failed). Running and pending are not terminal.
+// IsRunning reports whether the overall status means a sync is in
+// progress.
+func IsRunning(status string) bool {
+	switch status {
+	case StatusRunning, StatusStarted, StatusImporting, StatusCleanup:
+		return true
+	}
+	return false
+}
+
+// IsTerminal reports whether the status string is a terminal state. Any
+// non-empty status that isn't running counts, matching Node, which
+// treats everything other than a running status as finished.
 func IsTerminal(status string) bool {
-	return status == StatusSuccess || status == StatusFailed
+	return status != "" && !IsRunning(status)
 }
 
 // Start triggers a sync of the production env into the target env.
@@ -142,6 +165,9 @@ func Status(ctx context.Context, c graphql.Client, appID, envID int64) (*Progres
 		if e.SyncProgress.Status != nil {
 			p.Status = *e.SyncProgress.Status
 		}
+		if e.SyncProgress.Error != nil {
+			p.Error = *e.SyncProgress.Error
+		}
 		if e.SyncProgress.Sync != nil {
 			p.Sync = *e.SyncProgress.Sync
 		}
@@ -185,7 +211,7 @@ type PollOpts struct {
 const DefaultInterval = 5 * time.Second
 
 // Poll calls Status on a tick and returns when the sync reaches a
-// terminal state (success or failed), the context is cancelled, or an
+// terminal state (see IsTerminal), the context is cancelled, or an
 // error is judged fatal by OnError. The first Status call happens
 // immediately (no leading sleep), so callers see step transitions
 // without waiting one full Interval first.

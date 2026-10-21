@@ -1393,6 +1393,7 @@ export type AppEnvironmentSyncPreview = {
 
 export type AppEnvironmentSyncProgress = {
 	__typename?: 'AppEnvironmentSyncProgress';
+	error?: Maybe< Scalars[ 'String' ][ 'output' ] >;
 	finished_at?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 	started_at?: Maybe< Scalars[ 'Int' ][ 'output' ] >;
 	status?: Maybe< Scalars[ 'String' ][ 'output' ] >;
