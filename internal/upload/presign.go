@@ -69,35 +69,77 @@ func (c *Client) GetSignedUploadRequestData(ctx context.Context, args SignedRequ
 	if err != nil {
 		return nil, err
 	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost,
-		c.APIHost+"/upload/site-import-presigned-url", bytes.NewReader(body))
-	if err != nil {
-		return nil, err
-	}
 	token := c.Token
 	if t := os.Getenv("WPVIP_DEPLOY_TOKEN"); t != "" {
 		token = t
 	}
-	req.Header.Set("Authorization", "Bearer "+token)
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := c.httpClient().Do(req)
-	if err != nil {
-		return nil, err
+	delay := c.retryDelay
+	if delay == nil {
+		delay = func(attempt int) time.Duration {
+			return time.Duration(1<<uint(attempt)) * time.Second
+		}
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		// Node: throw new Error((await response.text()) || statusText)
-		// — client-file-uploader.ts:433.
-		text, _ := io.ReadAll(resp.Body)
-		if len(text) > 0 {
-			return nil, fmt.Errorf("%s", text)
+
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+		if attempt > 0 {
+			timer := time.NewTimer(delay(attempt - 1))
+			select {
+			case <-ctx.Done():
+				timer.Stop()
+				return nil, ctx.Err()
+			case <-timer.C:
+			}
+		}
+
+		// Build a new request each time: Go consumes the previous request body.
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost,
+			c.APIHost+"/upload/site-import-presigned-url", bytes.NewReader(body))
+		if err != nil {
+			return nil, err
+		}
+		req.Header.Set("Authorization", "Bearer "+token)
+		req.Header.Set("Content-Type", "application/json")
+
+		resp, err := c.httpClient().Do(req)
+		if err != nil {
+			if ctx.Err() != nil {
+				return nil, ctx.Err()
+			}
+			if attempt == maxRetries {
+				return nil, err
+			}
+			continue
+		}
+		if (resp.StatusCode == http.StatusTooManyRequests || resp.StatusCode >= http.StatusInternalServerError) && attempt < maxRetries {
+			_ = resp.Body.Close()
+			continue
+		}
+		responseBody, readErr := io.ReadAll(resp.Body)
+		_ = resp.Body.Close()
+		if ctx.Err() != nil {
+			return nil, ctx.Err()
+		}
+		if resp.StatusCode == http.StatusOK {
+			if readErr != nil {
+				if attempt == maxRetries {
+					return nil, readErr
+				}
+				continue
+			}
+			var pr PresignedRequest
+			if err := json.Unmarshal(responseBody, &pr); err != nil {
+				return nil, err
+			}
+			return &pr, nil
+		}
+		// Preserve the server's response text, falling back to HTTP status.
+		if readErr == nil && len(responseBody) > 0 {
+			return nil, fmt.Errorf("%s", responseBody)
 		}
 		return nil, fmt.Errorf("%s", resp.Status)
 	}
-	var pr PresignedRequest
-	if err := json.UnmarshalRead(resp.Body, &pr); err != nil {
-		return nil, err
-	}
-	return &pr, nil
+	panic("unreachable")
 }
