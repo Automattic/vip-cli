@@ -2,7 +2,12 @@
 
 import command from '../lib/cli/command';
 import { formatData } from '../lib/cli/format';
-import { appQuery, appQueryFragments, formatSoftwareSettings } from '../lib/config/software';
+import {
+	appQuery,
+	appQueryFragments,
+	formatSoftwareSettings,
+	getRunningPhpVersion,
+} from '../lib/config/software';
 import { trackEvent } from '../lib/tracker';
 import UserError from '../lib/user-error';
 
@@ -91,6 +96,12 @@ command( {
 				);
 			}
 			chosenSettings = [ softwareSettings[ component ] ];
+
+			// Only `get php` asks for the running patch version, since Parker reads it from Kubernetes.
+			if ( component === 'php' ) {
+				const runningVersion = await getRunningPhpVersion( opt.app.id, opt.env.id );
+				chosenSettings = [ { ...softwareSettings.php, runningVersion } ];
+			}
 		} else {
 			chosenSettings = [
 				softwareSettings.wordpress,

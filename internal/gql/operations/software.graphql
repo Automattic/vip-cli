@@ -1,5 +1,5 @@
 # vip config software operations. Node source: src/lib/config/software.ts
-# (appQuery/appQueryFragments, updateSoftwareMutation, updateJobQuery).
+# (appQuery/appQueryFragments, updateSoftwareMutation, updateJobQuery, runningPhpVersionQuery).
 
 fragment SoftwareNode on AppEnvironmentSoftwareSettingsSoftware {
   name
@@ -24,6 +24,18 @@ query SoftwareSettings($appId: Int!, $envId: Int!) {
         php { ...SoftwareNode }
         muplugins { ...SoftwareNode }
         nodejs { ...SoftwareNode }
+      }
+    }
+  }
+}
+
+# Only `config software get php` asks for this: Parker reads it from the
+# environment's Kubernetes pods.
+query SoftwareRunningPhpVersion($appId: Int!, $envId: Int!) {
+  app(id: $appId) {
+    environments(id: $envId) {
+      softwareSettings {
+        php { runningVersion }
       }
     }
   }

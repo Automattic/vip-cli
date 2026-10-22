@@ -3,7 +3,11 @@ import { Select, Confirm } from 'enquirer';
 import gql from 'graphql-tag';
 import { setTimeout } from 'node:timers/promises';
 
-import { UpdateJobQueryVariables } from './software.generated';
+import {
+	SoftwareRunningPhpVersionQuery,
+	SoftwareRunningPhpVersionQueryVariables,
+	UpdateJobQueryVariables,
+} from './software.generated';
 import { JobInterface, Query } from '../../graphqlTypes';
 import API from '../api';
 import { isAppNodejs, isAppWordPress } from '../app';
@@ -121,6 +125,21 @@ const updateJobQuery = gql`
 	}
 `;
 
+// Only `config software get php` asks for this: Parker reads it from the environment's Kubernetes pods.
+const runningPhpVersionQuery = gql`
+	query SoftwareRunningPhpVersion($appId: Int!, $envId: Int!) {
+		app(id: $appId) {
+			environments(id: $envId) {
+				softwareSettings {
+					php {
+						runningVersion
+					}
+				}
+			}
+		}
+	}
+`;
+
 const COMPONENT_NAMES = {
 	wordpress: 'WordPress',
 	php: 'PHP',
@@ -140,6 +159,8 @@ interface SoftwareSetting {
 	pinned: boolean;
 	name: string;
 	slug: string;
+	// The full PHP version running on the environment (e.g. 8.2.35). Only set by `get php`.
+	runningVersion?: string | null;
 }
 
 type SoftwareSettings = Record< ComponentName, SoftwareSetting >;
@@ -349,6 +370,32 @@ export const triggerUpdate = async ( variables: TrigerUpdateOptions ) => {
 	return api.mutate( { mutation: updateSoftwareMutation, variables } );
 };
 
+/**
+ * The full PHP version running on the environment (e.g. 8.2.35), or null when Parker can't
+ * determine it. Errors fall back to the configured version instead of failing the command.
+ */
+export const getRunningPhpVersion = async (
+	appId: number,
+	envId: number
+): Promise< string | null > => {
+	try {
+		const api = API( { exitOnError: false } );
+		const result = await api.query<
+			SoftwareRunningPhpVersionQuery,
+			SoftwareRunningPhpVersionQueryVariables
+		>( {
+			query: runningPhpVersionQuery,
+			variables: { appId, envId },
+			fetchPolicy: 'network-only',
+		} );
+
+		return result.data?.app?.environments?.[ 0 ]?.softwareSettings?.php?.runningVersion ?? null;
+	} catch ( error ) {
+		debug( 'Unable to fetch the running PHP version', error );
+		return null;
+	}
+};
+
 const _getLatestJob = async ( appId: number, envId: number ): Promise< JobInterface | null > => {
 	const api = API();
 	const result = await api.query< Query, UpdateJobQueryVariables >( {
@@ -424,7 +471,7 @@ export const formatSoftwareSettings = (
 	includes: string[],
 	format: string
 ): FormatSoftwareSettingsResult => {
-	let version = softwareSetting.current.version;
+	let version = softwareSetting.runningVersion || softwareSetting.current.version;
 	if ( softwareSetting.slug === 'wordpress' && ! softwareSetting.pinned ) {
 		version += ' (managed updates)';
 	}
