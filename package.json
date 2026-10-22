@@ -151,7 +151,7 @@
     "dockerode": "^5.0.0",
     "jest": "^30.0.0",
     "prettier": "npm:wp-prettier@3.0.3",
-    "typescript": "^6.0.2"
+    "typescript": "^7.0.2"
   },
   "dependencies": {
     "@apollo/client": "4.3.4",
