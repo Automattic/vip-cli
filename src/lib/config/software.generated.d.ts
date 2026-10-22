@@ -196,3 +196,25 @@ export type UpdateJobQuery = {
 		} | null > | null;
 	} | null;
 };
+
+export type SoftwareRunningPhpVersionQueryVariables = Types.Exact< {
+	appId: Types.Scalars[ 'Int' ][ 'input' ];
+	envId: Types.Scalars[ 'Int' ][ 'input' ];
+} >;
+
+export type SoftwareRunningPhpVersionQuery = {
+	__typename?: 'Query';
+	app?: {
+		__typename?: 'App';
+		environments?: Array< {
+			__typename?: 'AppEnvironment';
+			softwareSettings?: {
+				__typename?: 'AppEnvironmentSoftwareSettings';
+				php?: {
+					__typename?: 'AppEnvironmentSoftwareSettingsSoftware';
+					runningVersion?: string | null;
+				} | null;
+			} | null;
+		} | null > | null;
+	} | null;
+};

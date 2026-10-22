@@ -5163,6 +5163,71 @@ func (v *SoftwareNodeOptionsAppEnvironmentSoftwareSettingsVersion) GetPrivate() 
 	return v.Private
 }
 
+// SoftwareRunningPhpVersionApp includes the requested fields of the GraphQL type App.
+// The GraphQL type's documentation follows.
+//
+// An application managed in WordPress VIP. This is the primary entry point for traversing into environment-level operational reads.
+type SoftwareRunningPhpVersionApp struct {
+	// The environments that belong to this application. Use this for environment discovery by ID, name, or type before selecting nested operational fields.
+	Environments []*SoftwareRunningPhpVersionAppEnvironmentsAppEnvironment `json:"environments"`
+}
+
+// GetEnvironments returns SoftwareRunningPhpVersionApp.Environments, and is useful for accessing the field via an interface.
+func (v *SoftwareRunningPhpVersionApp) GetEnvironments() []*SoftwareRunningPhpVersionAppEnvironmentsAppEnvironment {
+	return v.Environments
+}
+
+// SoftwareRunningPhpVersionAppEnvironmentsAppEnvironment includes the requested fields of the GraphQL type AppEnvironment.
+// The GraphQL type's documentation follows.
+//
+// An application environment in WordPress VIP. This type is the main operational read surface and includes commands, logs, events, backups, deployments, metrics, integrations, and security controls.
+type SoftwareRunningPhpVersionAppEnvironmentsAppEnvironment struct {
+	// The software settings for the environment.
+	SoftwareSettings *SoftwareRunningPhpVersionAppEnvironmentsAppEnvironmentSoftwareSettings `json:"softwareSettings"`
+}
+
+// GetSoftwareSettings returns SoftwareRunningPhpVersionAppEnvironmentsAppEnvironment.SoftwareSettings, and is useful for accessing the field via an interface.
+func (v *SoftwareRunningPhpVersionAppEnvironmentsAppEnvironment) GetSoftwareSettings() *SoftwareRunningPhpVersionAppEnvironmentsAppEnvironmentSoftwareSettings {
+	return v.SoftwareSettings
+}
+
+// SoftwareRunningPhpVersionAppEnvironmentsAppEnvironmentSoftwareSettings includes the requested fields of the GraphQL type AppEnvironmentSoftwareSettings.
+// The GraphQL type's documentation follows.
+//
+// Available software settings for an application environment.
+type SoftwareRunningPhpVersionAppEnvironmentsAppEnvironmentSoftwareSettings struct {
+	// The PHP software settings.
+	Php *SoftwareRunningPhpVersionAppEnvironmentsAppEnvironmentSoftwareSettingsPhpAppEnvironmentSoftwareSettingsSoftware `json:"php"`
+}
+
+// GetPhp returns SoftwareRunningPhpVersionAppEnvironmentsAppEnvironmentSoftwareSettings.Php, and is useful for accessing the field via an interface.
+func (v *SoftwareRunningPhpVersionAppEnvironmentsAppEnvironmentSoftwareSettings) GetPhp() *SoftwareRunningPhpVersionAppEnvironmentsAppEnvironmentSoftwareSettingsPhpAppEnvironmentSoftwareSettingsSoftware {
+	return v.Php
+}
+
+// SoftwareRunningPhpVersionAppEnvironmentsAppEnvironmentSoftwareSettingsPhpAppEnvironmentSoftwareSettingsSoftware includes the requested fields of the GraphQL type AppEnvironmentSoftwareSettingsSoftware.
+// The GraphQL type's documentation follows.
+//
+// Software settings and available versions for one software package.
+type SoftwareRunningPhpVersionAppEnvironmentsAppEnvironmentSoftwareSettingsPhpAppEnvironmentSoftwareSettingsSoftware struct {
+	// The full PHP version (e.g. 8.2.35) read from one of the environment's running app pods, so it may show either patch while an update rolls out. Only set for PHP in query responses; null for other software, in mutation responses, or when it can't be determined.
+	RunningVersion *string `json:"runningVersion"`
+}
+
+// GetRunningVersion returns SoftwareRunningPhpVersionAppEnvironmentsAppEnvironmentSoftwareSettingsPhpAppEnvironmentSoftwareSettingsSoftware.RunningVersion, and is useful for accessing the field via an interface.
+func (v *SoftwareRunningPhpVersionAppEnvironmentsAppEnvironmentSoftwareSettingsPhpAppEnvironmentSoftwareSettingsSoftware) GetRunningVersion() *string {
+	return v.RunningVersion
+}
+
+// SoftwareRunningPhpVersionResponse is returned by SoftwareRunningPhpVersion on success.
+type SoftwareRunningPhpVersionResponse struct {
+	// Retrieve a single application.
+	App *SoftwareRunningPhpVersionApp `json:"app"`
+}
+
+// GetApp returns SoftwareRunningPhpVersionResponse.App, and is useful for accessing the field via an interface.
+func (v *SoftwareRunningPhpVersionResponse) GetApp() *SoftwareRunningPhpVersionApp { return v.App }
+
 // SoftwareSettingsApp includes the requested fields of the GraphQL type App.
 // The GraphQL type's documentation follows.
 //
@@ -7732,6 +7797,18 @@ type __SetEdgeWorkerActiveInput struct {
 // GetInput returns __SetEdgeWorkerActiveInput.Input, and is useful for accessing the field via an interface.
 func (v *__SetEdgeWorkerActiveInput) GetInput() *SetEdgeWorkerActiveInput { return v.Input }
 
+// __SoftwareRunningPhpVersionInput is used internally by genqlient
+type __SoftwareRunningPhpVersionInput struct {
+	AppId int64 `json:"appId"`
+	EnvId int64 `json:"envId"`
+}
+
+// GetAppId returns __SoftwareRunningPhpVersionInput.AppId, and is useful for accessing the field via an interface.
+func (v *__SoftwareRunningPhpVersionInput) GetAppId() int64 { return v.AppId }
+
+// GetEnvId returns __SoftwareRunningPhpVersionInput.EnvId, and is useful for accessing the field via an interface.
+func (v *__SoftwareRunningPhpVersionInput) GetEnvId() int64 { return v.EnvId }
+
 // __SoftwareSettingsInput is used internally by genqlient
 type __SoftwareSettingsInput struct {
 	AppId int64 `json:"appId"`
@@ -9586,6 +9663,50 @@ func SetEdgeWorkerActive(
 	}
 
 	data_ = &SetEdgeWorkerActiveResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The query executed by SoftwareRunningPhpVersion.
+const SoftwareRunningPhpVersion_Operation = `
+query SoftwareRunningPhpVersion ($appId: Int!, $envId: Int!) {
+	app(id: $appId) {
+		environments(id: $envId) {
+			softwareSettings {
+				php {
+					runningVersion
+				}
+			}
+		}
+	}
+}
+`
+
+// Only `config software get php` asks for this: Parker reads it from the
+// environment's Kubernetes pods.
+func SoftwareRunningPhpVersion(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	appId int64,
+	envId int64,
+) (data_ *SoftwareRunningPhpVersionResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "SoftwareRunningPhpVersion",
+		Query:  SoftwareRunningPhpVersion_Operation,
+		Variables: &__SoftwareRunningPhpVersionInput{
+			AppId: appId,
+			EnvId: envId,
+		},
+	}
+
+	data_ = &SoftwareRunningPhpVersionResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(

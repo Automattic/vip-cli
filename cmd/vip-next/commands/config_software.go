@@ -1,9 +1,11 @@
 package commands
 
 import (
+	"context"
 	"errors"
 	"strings"
 
+	"github.com/Khan/genqlient/graphql"
 	"github.com/spf13/cobra"
 
 	"github.com/Automattic/vip/internal/appctx"
@@ -125,6 +127,13 @@ func runConfigSoftwareGet(cmd *cobra.Command, args []string) (any, error) {
 		}
 	}
 
+	// Only `get php` asks for the running patch version, since Parker reads it
+	// from Kubernetes (vip-config-software-get.js).
+	var runningPhpVersion string
+	if len(args) > 0 && args[0] == "php" {
+		runningPhpVersion = fetchRunningPhpVersion(cmd.Context(), cfg.GQLClient, ae.App.ID, ae.Env.ID)
+	}
+
 	// Determine output format from the --format flag (set by WithFormat).
 	format, _ := cmd.Flags().GetString("format")
 
@@ -132,6 +141,9 @@ func runConfigSoftwareGet(cmd *cobra.Command, args []string) (any, error) {
 	var rows output.OrderedRows
 	for _, e := range chosen {
 		sw := gqlNodeToSoftware(e.node)
+		if e.slug == "php" {
+			sw.RunningVersion = runningPhpVersion
+		}
 		var row softwaresettings.FormattedRow
 		if format == "json" {
 			row = softwaresettings.FormatSettingJSON(sw, includes)
@@ -151,6 +163,23 @@ func runConfigSoftwareGet(cmd *cobra.Command, args []string) (any, error) {
 
 	trackEvent("config_software_get_success", map[string]any{"args": args})
 	return rows, nil
+}
+
+// fetchRunningPhpVersion returns the full PHP version running on the
+// environment (e.g. 8.2.35), or "" when Parker can't determine it. Any error
+// falls back to the configured version instead of failing the command, like
+// Node's getRunningPhpVersion (software.ts).
+func fetchRunningPhpVersion(ctx context.Context, client graphql.Client, appID, envID int64) string {
+	resp, err := gql.SoftwareRunningPhpVersion(gql.WithAllowGQLErrors(ctx), client, appID, envID)
+	if err != nil || resp == nil || resp.App == nil || len(resp.App.Environments) == 0 {
+		return ""
+	}
+	env := resp.App.Environments[0]
+	if env == nil || env.SoftwareSettings == nil || env.SoftwareSettings.Php == nil ||
+		env.SoftwareSettings.Php.RunningVersion == nil {
+		return ""
+	}
+	return *env.SoftwareSettings.Php.RunningVersion
 }
 
 // gqlSoftwareNode is an interface satisfied by all four generated software
