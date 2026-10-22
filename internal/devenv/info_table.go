@@ -2,11 +2,13 @@ package devenv
 
 import (
 	"fmt"
+	"net"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/Automattic/vip/internal/devenv/compose"
-	"github.com/Automattic/vip/internal/devenv/lifecycle"
+	"github.com/Automattic/vip/internal/devenv/dockercli"
 	"github.com/Automattic/vip/internal/devenv/paths"
 	"github.com/Automattic/vip/internal/devenv/proxy"
 )
@@ -25,11 +27,11 @@ var serviceOrder = []string{
 // renderEnvInfo builds the full Node-parity info table for an environment. It is
 // pure given the resolved view + the proxy ports + the container states, so the
 // docker-touching gather lives in Info() and the formatting stays unit-testable.
-func renderEnvInfo(slug string, view compose.View, ports proxy.Ports, states []lifecycle.ServiceState) string {
+func renderEnvInfo(slug string, view compose.View, ports proxy.Ports, states []dockercli.ServiceState) string {
 	return renderInfoTable(buildInfoRows(slug, view, ports, states))
 }
 
-func buildInfoRows(slug string, view compose.View, ports proxy.Ports, states []lifecycle.ServiceState) []infoRow {
+func buildInfoRows(slug string, view compose.View, ports proxy.Ports, states []dockercli.ServiceState) []infoRow {
 	host := view.SiteSlug + "." + view.Domain
 	httpURL := frontURL("http", host, ports.HTTP, proxy.DefaultHTTP)
 	httpsURL := frontURL("https", host, ports.HTTPS, proxy.DefaultHTTPS)
@@ -39,8 +41,9 @@ func buildInfoRows(slug string, view compose.View, ports proxy.Ports, states []l
 		{label: "LOCATION", values: []string{paths.EnvironmentPath(slug)}},
 		{label: "SERVICES", values: []string{strings.Join(servicesList(view), ", ")}},
 		{label: "NGINX URLS", values: []string{httpURL, httpsURL}},
-		{label: "STATUS", values: []string{statusFromStates(states)}},
 	}
+	rows = append(rows, serviceConnectionRows(view, ports, states)...)
+	rows = append(rows, infoRow{label: "STATUS", values: []string{statusFromStates(states)}})
 
 	// Login + credentials. Node prints these whenever the front-end URL is
 	// configured (always), regardless of running state. The autologin query is
@@ -63,6 +66,69 @@ func buildInfoRows(slug string, view compose.View, ports proxy.Ports, states []l
 		rows = append(rows, infoRow{label: "MIGRATED FROM LANDO", values: []string{view.MigratedFromLando}})
 	}
 	return rows
+}
+
+// serviceConnectionRows mirrors Lando's HTTP URLs and extra service bindings.
+// Proxy routes exist even while stopped; direct connections require a live
+// published port. In particular, exposed-only ports must never appear here.
+func serviceConnectionRows(view compose.View, ports proxy.Ports, states []dockercli.ServiceState) []infoRow {
+	byService := make(map[string]dockercli.ServiceState, len(states))
+	for _, state := range states {
+		if state.State == "running" {
+			byService[state.Service] = state
+		}
+	}
+	var rows, connections []infoRow
+	for _, name := range servicesList(view) {
+		var urls, bindings []string
+		firstPort := 0
+		for _, p := range byService[name].Publishers {
+			if p.PublishedPort == 0 {
+				continue
+			}
+			if firstPort == 0 {
+				firstPort = p.TargetPort
+			}
+			if p.TargetPort == firstPort {
+				value := net.JoinHostPort(p.URL, strconv.Itoa(p.PublishedPort))
+				if name == "elasticsearch" {
+					value = "http://" + value
+				}
+				bindings = append(bindings, value)
+			}
+			// Lando scans these HTTP ports and renders local endpoints with
+			// localhost, excluding the duplicate IPv6 wildcard binding.
+			if p.Protocol == "tcp" && (p.URL == "127.0.0.1" || p.URL == "0.0.0.0") && (p.TargetPort == 80 || p.TargetPort == 443) {
+				scheme := "http"
+				if p.TargetPort == 443 {
+					scheme = "https"
+				}
+				urls = append(urls, fmt.Sprintf("%s://localhost:%d", scheme, p.PublishedPort))
+			}
+		}
+		suffix := ""
+		switch name {
+		case "phpmyadmin":
+			suffix = "-pma"
+		case "mailpit":
+			suffix = "-mailpit"
+		}
+		if suffix != "" {
+			host := view.SiteSlug + suffix + "." + view.Domain
+			urls = append(urls, frontURL("http", host, ports.HTTP, proxy.DefaultHTTP), frontURL("https", host, ports.HTTPS, proxy.DefaultHTTPS))
+		}
+		if name != "nginx" && len(urls) > 0 {
+			rows = append(rows, infoRow{label: strings.ToUpper(name) + " URLS", values: urls})
+		}
+		if len(bindings) > 0 && name != "phpmyadmin" && name != "mailpit" && name != "mailhog" {
+			label := strings.ToUpper(name)
+			if name == "elasticsearch" {
+				label = "ENTERPRISE SEARCH"
+			}
+			connections = append(connections, infoRow{label: label, values: []string{strings.Join(bindings, ", ")}})
+		}
+	}
+	return append(rows, connections...)
 }
 
 // frontURL renders "scheme://host[:port]/", omitting the port when it is the
@@ -99,7 +165,7 @@ func servicesList(v compose.View) []string {
 
 // statusFromStates derives the env status from container states: UP when nginx
 // is running, PARTIALLY UP when some other service is running, else DOWN.
-func statusFromStates(states []lifecycle.ServiceState) string {
+func statusFromStates(states []dockercli.ServiceState) string {
 	nginxUp, anyUp := false, false
 	for _, s := range states {
 		if s.State == "running" {

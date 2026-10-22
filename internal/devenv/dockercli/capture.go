@@ -12,9 +12,19 @@ import (
 
 // ServiceState is the subset of `docker compose ps --format json` we consume.
 type ServiceState struct {
-	Service  string `json:"Service"`
-	State    string `json:"State"`
-	ExitCode int    `json:"ExitCode"`
+	Service    string          `json:"Service"`
+	State      string          `json:"State"`
+	ExitCode   int             `json:"ExitCode"`
+	Publishers []PortPublisher `json:"Publishers"`
+}
+
+// PortPublisher is an actual host binding reported by Compose, not an exposed
+// container port. Unpublished ports have PublishedPort == 0.
+type PortPublisher struct {
+	URL           string `json:"URL"`
+	TargetPort    int    `json:"TargetPort"`
+	PublishedPort int    `json:"PublishedPort"`
+	Protocol      string `json:"Protocol"`
 }
 
 // parseComposePS handles both NDJSON (one object per line) and a JSON array,
