@@ -27,8 +27,8 @@ var openURLFn = browser.OpenURL
 func DBPhpmyadminCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "phpmyadmin",
-		Short: "Generate access to a read-only phpMyAdmin web interface",
-		Long: "Generate access to a read-only phpMyAdmin web interface for the environment's database.\n\n" +
+		Short: "Generate access to a phpMyAdmin web interface",
+		Long: "Generate access to a phpMyAdmin web interface for the environment's database.\n\n" +
 			"By default the URL is opened in your browser. Use --print to write it to stdout instead.",
 	}
 	cmd.Flags().BoolP("print", "p", false, "Print the phpMyAdmin URL to stdout instead of opening it in a browser.")
@@ -90,12 +90,15 @@ func runDBPhpmyadmin(cmd *cobra.Command, args []string) error {
 		"env": ae.Env.ID,
 	})
 
-	// Node prints a yellow warning that PMA sessions are read-only before
+	// Node prints a yellow note describing platform-specific access before
 	// kicking the progress tracker. We match that here, but on stderr to
 	// keep stdout clean for --print consumers.
-	if !silent {
-		fmt.Fprintln(cmd.ErrOrStderr(), color.YellowString(
-			"Note: PHPMyAdmin sessions are read-only. If you run a query that writes to DB, it will fail."))
+	if !silent && (ae.Env.IsK8sResident == nil || *ae.Env.IsK8sResident) {
+		note := "Note: phpMyAdmin sessions are read-only on VIP Kubernetes and read-write on WP Cloud."
+		if ae.Env.IsK8sResident != nil {
+			note = "Note: phpMyAdmin sessions are read-only. If you run a query that writes to DB, it will fail."
+		}
+		fmt.Fprintln(cmd.ErrOrStderr(), color.YellowString(note))
 	}
 
 	res, err := phpmyadmin.Run(cmd.Context(), cfg.GQLClient, ae.App.ID, ae.Env.ID, phpmyadmin.RunOpts{
