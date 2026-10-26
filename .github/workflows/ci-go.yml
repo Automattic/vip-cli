@@ -23,7 +23,9 @@ on:
       - 'src/**'
       - 'package.json'
       - 'package-lock.json'
-      - 'babel.config.js'
+      - 'tsconfig.json'
+      - 'tsconfig.build.json'
+      - 'helpers/mark-cli-executable.js'
       - '.nvmrc'
   pull_request:
     paths:
@@ -44,7 +46,9 @@ on:
       - 'src/**'
       - 'package.json'
       - 'package-lock.json'
-      - 'babel.config.js'
+      - 'tsconfig.json'
+      - 'tsconfig.build.json'
+      - 'helpers/mark-cli-executable.js'
       - '.nvmrc'
 
 jobs:
@@ -64,7 +68,7 @@ jobs:
       # exactly how ~90 parity divergences reached a review unnoticed.
       #
       # Version comes from .nvmrc (lts/*), the same source ci.yml pins by hand.
-      # It must satisfy package.json#engines (>=22.19.0 on trunk 4.1.0) or the
+      # It must satisfy package.json#engines or the
       # `postinstall` guard (helpers/check-version.js) aborts the install with
       # exit 1.
       - name: Set up Node.js environment
@@ -74,7 +78,7 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
 
-      # `npm ci` runs the `prepare` lifecycle script (clean + babel build),
+      # `npm ci` runs the `prepare` lifecycle script (clean + TypeScript build),
       # which is what produces dist/bin/vip.js. No separate build step needed.
       - name: Install Node dependencies and build the Node CLI
         run: npm ci
