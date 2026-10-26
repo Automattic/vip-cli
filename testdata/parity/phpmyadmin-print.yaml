@@ -13,7 +13,7 @@ recording: phpmyadmin-print
 expect:
   exit_code: 0
 expected_drift:
-  signature: "d0eec49aee54cb06a0b1759bf3e8308dabeeac97f4bca7978ff9d91cec94481b"
+  signature: "67eb2c4c69049906e4a82422d4ad7d142ac3d16c4eeaf346d9ef70368b9c6f96"
   reason: >-
     parity register 1.26 (KEEP): vip-next keeps --print stdout URL-only and
     sends human progress to stderr; Node interleaves progress and the URL on
