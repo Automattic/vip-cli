@@ -1,12 +1,6 @@
 module.exports = {
-	plugins: [ [ '@babel/plugin-transform-modules-commonjs', { loose: true } ] ],
-	presets: [
-		[
-			'@babel/preset-typescript',
-			{
-				allowDeclareFields: true,
-			},
-		],
-	],
+	assumptions: { constantReexports: true, enumerableModuleMeta: true },
+	plugins: [ '@babel/plugin-transform-modules-commonjs' ],
+	presets: [ [ '@babel/preset-typescript', { onlyRemoveTypeImports: false } ] ],
 	ignore: [ '**/*.d.ts' ],
 };

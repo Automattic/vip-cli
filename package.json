@@ -148,6 +148,7 @@
     "@types/shelljs": "^0.10.0",
     "@types/ssh2": "^1.15.4",
     "@types/xml2js": "^0.4.14",
+    "babel-preset-current-node-syntax": "file:helpers/babel-preset-current-node-syntax",
     "dockerode": "^5.0.0",
     "jest": "^30.0.0",
     "prettier": "npm:wp-prettier@3.0.3",
@@ -233,6 +234,11 @@
     "update-notifier",
     "xml2js"
   ],
+  "overrides": {
+    "babel-preset-current-node-syntax-upstream": {
+      "@babel/core": "7.29.7"
+    }
+  },
   "allowScripts": {
     "ssh2@1.17.0": true,
     "@github/keytar@7.10.6": true,
