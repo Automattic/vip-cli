@@ -8,5 +8,7 @@
     "rootDir": ".",
     "noEmit": false
   },
+  // ts-jest adds test and source files as they are transformed.
+  "include": [ "types/**/*.d.ts" ],
   "exclude": [ "codegen.ts" ]
 }
