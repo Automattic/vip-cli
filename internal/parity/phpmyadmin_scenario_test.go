@@ -264,8 +264,8 @@ func TestPhpmyadminSessionNoteDifferential(t *testing.T) {
 	}{
 		{residency: "true", note: "Note: phpMyAdmin sessions are read-only. If you run a query that writes to DB, it will fail."},
 		{residency: "false", note: ""},
-		{residency: "null", note: "Note: phpMyAdmin sessions are read-only on VIP Kubernetes and read-write on WP Cloud."},
-		{residency: "missing", note: "Note: phpMyAdmin sessions are read-only on VIP Kubernetes and read-write on WP Cloud."},
+		{residency: "null", note: "Note: phpMyAdmin sessions may be read-only. Queries that write to the database may fail."},
+		{residency: "missing", note: "Note: phpMyAdmin sessions may be read-only. Queries that write to the database may fail."},
 	} {
 		t.Run(tc.residency, func(t *testing.T) {
 			for _, silent := range []bool{false, true} {

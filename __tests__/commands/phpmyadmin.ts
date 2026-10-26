@@ -82,11 +82,11 @@ describe( 'commands/PhpMyAdminCommand', () => {
 				},
 				{
 					platform: { isK8sResident: null },
-					note: 'Note: phpMyAdmin sessions are read-only on VIP Kubernetes and read-write on WP Cloud.',
+					note: 'Note: phpMyAdmin sessions may be read-only. Queries that write to the database may fail.',
 				},
 				{
 					platform: {},
-					note: 'Note: phpMyAdmin sessions are read-only on VIP Kubernetes and read-write on WP Cloud.',
+					note: 'Note: phpMyAdmin sessions may be read-only. Queries that write to the database may fail.',
 				},
 			].flatMap( testCase => [ false, true ].map( silent => ( { ...testCase, silent } ) ) )
 		)(

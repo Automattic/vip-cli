@@ -104,8 +104,8 @@ func TestDBPhpmyadminPrintWritesURLToStdout(t *testing.T) {
 	if opened != "" {
 		t.Errorf("--print must not open browser; got %q", opened)
 	}
-	if !strings.Contains(stderr.String(), "Note: phpMyAdmin sessions are read-only on VIP Kubernetes and read-write on WP Cloud.") {
-		t.Errorf("missing platform-specific access note: %q", stderr.String())
+	if !strings.Contains(stderr.String(), "Note: phpMyAdmin sessions may be read-only. Queries that write to the database may fail.") {
+		t.Errorf("missing access note: %q", stderr.String())
 	}
 }
 
@@ -118,7 +118,7 @@ func TestDBPhpmyadminNoteFollowsK8sResidence(t *testing.T) {
 	}{
 		{"kubernetes", &trueValue, "Note: phpMyAdmin sessions are read-only. If you run a query that writes to DB, it will fail."},
 		{"wp-cloud", &falseValue, ""},
-		{"unknown", nil, "Note: phpMyAdmin sessions are read-only on VIP Kubernetes and read-write on WP Cloud."},
+		{"unknown", nil, "Note: phpMyAdmin sessions may be read-only. Queries that write to the database may fail."},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			stub := successStub()
