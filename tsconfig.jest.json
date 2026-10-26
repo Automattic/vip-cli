@@ -3,6 +3,8 @@
   "compilerOptions": {
     "allowJs": true,
     "checkJs": false,
+    "module": "commonjs",
+    "moduleResolution": "bundler",
     "rootDir": ".",
     "noEmit": false
   },
