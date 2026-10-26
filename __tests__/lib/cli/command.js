@@ -2,7 +2,13 @@ import { describe, expect, it, jest, beforeEach, afterEach } from '@jest/globals
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 
-import command, { containsAppEnvArgument } from '../../../src/lib/cli/command';
+import command, {
+	containsAppEnvArgument,
+	formatFatalError,
+	uncaughtError,
+} from '../../../src/lib/cli/command';
+import * as exit from '../../../src/lib/cli/exit';
+import UserError from '../../../src/lib/user-error';
 
 jest.mock( 'node:child_process', () => ( {
 	spawnSync: jest.fn( () => ( { status: 0 } ) ),
@@ -279,6 +285,110 @@ describe( 'utils/cli/command', () => {
 
 			expect( options.type ).toBe( 'app' );
 			expect( options.limit ).toBe( 5 );
+		} );
+	} );
+
+	describe( 'formatFatalError', () => {
+		it( 'includes the message and stack of a plain Error', () => {
+			const err = new Error( 'boom' );
+
+			const result = formatFatalError( err );
+
+			expect( result ).toContain( 'boom' );
+			// A normal Error has real stack frames.
+			expect( result ).toMatch( /\n\s+at\s/ );
+			// No inspect dump needed when the stack has frames and there are no extra props.
+			expect( result ).not.toContain( '[Error: boom]' );
+		} );
+
+		it( 'appends an inspect dump for a stack-less bare native-style error', () => {
+			// keytar-style rejection: an Error whose stack is only the message line.
+			const err = new Error( 'An unknown error occurred.' );
+			err.stack = 'Error: An unknown error occurred.';
+
+			const result = formatFatalError( err );
+
+			expect( result ).toContain( 'An unknown error occurred.' );
+			// The inspect dump renders the Error representation.
+			expect( result ).toContain( '[Error: An unknown error occurred.]' );
+		} );
+
+		it( 'returns String() for a non-Error thrown value', () => {
+			expect( formatFatalError( 'just a string' ) ).toBe( 'just a string' );
+			expect( formatFatalError( 42 ) ).toBe( '42' );
+		} );
+
+		it( 'inspects object-shaped non-Error rejections instead of printing [object Object]', () => {
+			const result = formatFatalError( { code: 'ECONNRESET', detail: 'socket hang up' } );
+
+			expect( result ).not.toContain( '[object Object]' );
+			expect( result ).toContain( 'ECONNRESET' );
+			expect( result ).toContain( 'socket hang up' );
+		} );
+
+		it( 'includes the code property when present', () => {
+			const err = new Error( 'connection failed' );
+			err.code = 'ECONNREFUSED';
+
+			const result = formatFatalError( err );
+
+			expect( result ).toContain( 'connection failed' );
+			expect( result ).toContain( 'ECONNREFUSED' );
+			// An extra own property triggers the inspect dump so it is not lost.
+			expect( result ).toContain( "code: 'ECONNREFUSED'" );
+		} );
+
+		it( 'includes the cause when present', () => {
+			const err = new Error( 'outer', { cause: new Error( 'inner cause' ) } );
+
+			const result = formatFatalError( err );
+
+			expect( result ).toContain( 'inner cause' );
+		} );
+	} );
+
+	describe( 'uncaughtError', () => {
+		let withErrorSpy;
+
+		beforeEach( () => {
+			withErrorSpy = jest.spyOn( exit, 'withError' ).mockImplementation( () => {
+				throw new Error( 'exit.withError called' );
+			} );
+		} );
+
+		it( 'ignores EPIPE errors from closed streams', () => {
+			const err = Object.assign( new Error( 'write EPIPE' ), { code: 'EPIPE' } );
+
+			expect( () => uncaughtError( err ) ).not.toThrow();
+			expect( withErrorSpy ).not.toHaveBeenCalled();
+		} );
+
+		it( 'exits with a UserError without asking the user to contact support', () => {
+			const err = new UserError( 'Update canceled' );
+
+			expect( () => uncaughtError( err ) ).toThrow( 'exit.withError called' );
+			expect( withErrorSpy ).toHaveBeenCalledWith( err );
+			expect( console.log ).not.toHaveBeenCalled();
+		} );
+
+		it( 'ends with the message of an Error', () => {
+			expect( () => uncaughtError( new Error( 'boom' ) ) ).toThrow( 'exit.withError called' );
+			expect( withErrorSpy ).toHaveBeenCalledWith( 'Unexpected error: boom' );
+		} );
+
+		it.each( [
+			[ 'undefined', undefined, 'Unexpected error: undefined' ],
+			[ 'a string', 'just a string', 'Unexpected error: just a string' ],
+			[ 'a plain object', { code: 'ECONNRESET' }, "Unexpected error: { code: 'ECONNRESET' }" ],
+			[
+				'an object without a prototype',
+				Object.assign( Object.create( null ), { code: 'ECONNRESET' } ),
+				"Unexpected error: [Object: null prototype] { code: 'ECONNRESET' }",
+			],
+		] )( 'handles a rejection with %s', ( _label, value, expected ) => {
+			expect( () => uncaughtError( value ) ).toThrow( 'exit.withError called' );
+			expect( withErrorSpy ).toHaveBeenCalledTimes( 1 );
+			expect( withErrorSpy ).toHaveBeenCalledWith( expected );
 		} );
 	} );
 } );
