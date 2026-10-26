@@ -232,7 +232,7 @@ export class PhpMyAdminCommand {
 
 		if ( ! this.silent && this.env.isK8sResident !== false ) {
 			let message =
-				'Note: phpMyAdmin sessions are read-only on VIP Kubernetes and read-write on WP Cloud.';
+				'Note: phpMyAdmin sessions may be read-only. Queries that write to the database may fail.';
 			if ( this.env.isK8sResident === true ) {
 				message =
 					'Note: phpMyAdmin sessions are read-only. If you run a query that writes to DB, it will fail.';

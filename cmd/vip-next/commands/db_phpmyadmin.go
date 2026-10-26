@@ -94,7 +94,7 @@ func runDBPhpmyadmin(cmd *cobra.Command, args []string) error {
 	// kicking the progress tracker. We match that here, but on stderr to
 	// keep stdout clean for --print consumers.
 	if !silent && (ae.Env.IsK8sResident == nil || *ae.Env.IsK8sResident) {
-		note := "Note: phpMyAdmin sessions are read-only on VIP Kubernetes and read-write on WP Cloud."
+		note := "Note: phpMyAdmin sessions may be read-only. Queries that write to the database may fail."
 		if ae.Env.IsK8sResident != nil {
 			note = "Note: phpMyAdmin sessions are read-only. If you run a query that writes to DB, it will fail."
 		}
