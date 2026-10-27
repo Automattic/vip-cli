@@ -22,18 +22,36 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language:
-          - javascript-typescript
-          - actions
+        include:
+          - language: javascript-typescript
+            build-mode: none
+          - language: actions
+            build-mode: none
+          - language: go
+            build-mode: manual
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
+
+      - name: Set up Go
+        if: matrix.language == 'go'
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4.39.1
         with:
           languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
           queries: security-and-quality
+
+      # Go analysis follows the build scope; paths/paths-ignore do not apply.
+      - name: Build Go source for analysis
+        if: matrix.language == 'go'
+        env:
+          CGO_ENABLED: '0'
+        run: go build -v ./cmd/... ./internal/...
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4.39.1
