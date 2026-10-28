@@ -12,7 +12,7 @@ export class CliTest {
 	 * @param {Object}   options            Spawn options
 	 * @param {boolean}  printStderrOnError Whether to print stderr on error
 	 * @param {Object} control Cancellation options
-	 * @param {number} [control.timeoutMs] Maximum running time
+	 * @param {number} [control.timeoutMs] Time before cancellation is requested
 	 * @param {AbortSignal} [control.signal] Cancellation signal
 	 * @return {Promise<CliResult>} Return value of the command
 	 */
@@ -30,9 +30,11 @@ export class CliTest {
 				reject( new Error( 'CLI subprocess aborted' ) );
 				return;
 			}
+			const ownGroup =
+				process.platform !== 'win32' && ( control.signal || control.timeoutMs !== undefined );
 			const child = spawn( command, commandArgs, {
 				...options,
-				...( process.platform === 'win32' ? {} : { detached: true } ),
+				...( ownGroup ? { detached: true } : {} ),
 			} );
 			let error;
 			const terminate = signal => {
@@ -47,6 +49,8 @@ export class CliTest {
 				if ( error ) return;
 				error = new Error( message );
 				terminate( 'SIGKILL' );
+				child.stdout?.destroy();
+				child.stderr?.destroy();
 			};
 			const abort = () => cancel( 'CLI subprocess aborted' );
 			control.signal?.addEventListener( 'abort', abort, { once: true } );
