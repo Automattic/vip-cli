@@ -122,11 +122,11 @@ command( {
 				api
 					.query( {
 						query: gql`
-							query App($id: Int) {
+							query App($id: Int, $envId: Int) {
 								app(id: $id) {
 									id
 									name
-									environments {
+									environments(id: $envId) {
 										id
 										name
 										defaultDomain
@@ -149,6 +149,7 @@ command( {
 						fetchPolicy: 'network-only',
 						variables: {
 							id: opts.app.id,
+							envId: opts.env.id,
 						},
 					} )
 					.then( res => res.data.app )

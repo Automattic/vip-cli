@@ -14,6 +14,7 @@ export type SyncEnvironmentMutationMutation = {
 
 export type AppQueryVariables = Types.Exact< {
 	id?: Types.InputMaybe< Types.Scalars[ 'Int' ][ 'input' ] >;
+	envId?: Types.InputMaybe< Types.Scalars[ 'Int' ][ 'input' ] >;
 } >;
 
 export type AppQuery = {
