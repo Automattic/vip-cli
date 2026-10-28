@@ -1,6 +1,10 @@
+/* eslint-disable id-length */
 import { dockerComposify } from 'lando/lib/utils';
 
-import { killProjectContainers } from '../../devenv-e2e/helpers/docker-utils';
+import {
+	getContainersForProject,
+	killProjectContainers,
+} from '../../devenv-e2e/helpers/docker-utils';
 import { getProjectSlug } from '../../devenv-e2e/helpers/identity';
 
 describe( 'E2E project ownership', () => {
@@ -65,5 +69,45 @@ describe( 'E2E project ownership', () => {
 			/unexpected project ownership/
 		);
 		expect( docker.getContainer ).not.toHaveBeenCalled();
+	} );
+
+	it( 'finds and removes running and stopped owned containers while preserving unrelated resources', async () => {
+		process.env.VIP_DEVENV_E2E_INVOCATION_ID = '4444444444444444';
+		const project = getProjectSlug();
+		const label = dockerComposify( project );
+		const resources = [
+			{ Id: 'running', State: 'running', Labels: { 'com.docker.compose.project': label } },
+			{ Id: 'stopped', State: 'exited', Labels: { 'com.docker.compose.project': label } },
+			{ Id: 'other', State: 'exited', Labels: { 'com.docker.compose.project': 'unrelated' } },
+		];
+		const removed = [];
+		const docker = {
+			listContainers: jest.fn( async options =>
+				resources.filter(
+					item =>
+						item.Labels[ 'com.docker.compose.project' ] === label &&
+						( options.all || item.State === 'running' )
+				)
+			),
+			getContainer: id => ( {
+				remove: async options => {
+					removed.push( { id, options } );
+				},
+			} ),
+		};
+		expect( ( await getContainersForProject( docker, project ) ).map( item => item.Id ) ).toEqual( [
+			'running',
+		] );
+		expect(
+			( await getContainersForProject( docker, project, true ) ).map( item => item.Id )
+		).toEqual( [ 'running', 'stopped' ] );
+		await killProjectContainers( docker, project );
+		expect( removed ).toEqual( [
+			{ id: 'running', options: { force: true, v: true } },
+			{ id: 'stopped', options: { force: true, v: true } },
+		] );
+		expect( docker.listContainers ).toHaveBeenLastCalledWith(
+			expect.objectContaining( { all: true } )
+		);
 	} );
 } );

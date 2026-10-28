@@ -75,7 +75,7 @@ describe( 'vip dev-env start', () => {
 
 		await destroyEnvironment( cliTest, slug, env );
 
-		const containersAfterDestroyPromise = getContainersForProject( docker, slug );
+		const containersAfterDestroyPromise = getContainersForProject( docker, slug, true );
 		return expect( containersAfterDestroyPromise ).resolves.toHaveLength( 0 );
 	} );
 } );
