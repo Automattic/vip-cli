@@ -6,6 +6,11 @@ import tokenCache from '../../../src/lib/rechallenge/token-cache';
 import type { Keychain } from '../../../src/lib/keychain/keychain';
 import type { ElevatedToken } from '../../../src/lib/rechallenge/types';
 
+jest.mock( '../../../src/lib/api/constants', () => ( {
+	API_HOST: 'https://api.test.example:8443',
+	PRODUCTION_API_HOST: 'https://api.wpvip.com',
+} ) );
+
 jest.mock( '../../../src/lib/keychain', () => {
 	const store = new Map< string, string >();
 	const mockedKeychain = {
@@ -42,6 +47,10 @@ describe( 'rechallenge token cache', () => {
 		tokenCache._resetInMemoryForTests();
 		jest.clearAllMocks();
 	} );
+	afterEach( async () => {
+		const kc = ( await keychain.getKeychain() ) as Keychain & { __store: Map< string, string > };
+		kc.__store.delete( 'vip-go-cli' );
+	} );
 
 	it( 'returns null when no token has been stored for a scope', async () => {
 		expect( await tokenCache.get( 'updateDefensiveModeStatus' ) ).toBeNull();
@@ -64,6 +73,8 @@ describe( 'rechallenge token cache', () => {
 
 	it( 'reloads persisted scopes and preserves deletion and expiry across memory resets', async () => {
 		const kc = ( await keychain.getKeychain() ) as Keychain & { __store: Map< string, string > };
+		const service = 'vip-go-cli:elevated:https---api-test-example-8443';
+		kc.__store.set( 'vip-go-cli', 'primary-token' );
 		const tokenA = makeToken( { token: 'A' } );
 		const tokenB = makeToken( { token: 'B' } );
 		const expired = makeToken( {
@@ -73,28 +84,27 @@ describe( 'rechallenge token cache', () => {
 		await tokenCache.set( 'alpha', tokenA );
 		await tokenCache.set( 'beta', tokenB );
 		await tokenCache.set( 'expired', expired );
-		expect( [ ...kc.__store.values() ] ).toEqual( [
-			JSON.stringify( { alpha: tokenA, beta: tokenB, expired } ),
-		] );
+		expect( kc.__store.get( service ) ).toBe(
+			JSON.stringify( { alpha: tokenA, beta: tokenB, expired } )
+		);
+		expect( kc.__store.get( 'vip-go-cli' ) ).toBe( 'primary-token' );
 
 		tokenCache._resetInMemoryForTests();
 		expect( await tokenCache.get( 'alpha' ) ).toEqual( tokenA );
 		expect( await tokenCache.get( 'beta' ) ).toEqual( tokenB );
 		expect( await tokenCache.get( 'expired' ) ).toBeNull();
-		expect( [ ...kc.__store.values() ] ).toEqual( [
-			JSON.stringify( { alpha: tokenA, beta: tokenB } ),
-		] );
+		expect( kc.__store.get( service ) ).toBe( JSON.stringify( { alpha: tokenA, beta: tokenB } ) );
 
 		tokenCache._resetInMemoryForTests();
 		expect( await tokenCache.get( 'expired' ) ).toBeNull();
 		await tokenCache.clearScope( 'alpha' );
-		expect( [ ...kc.__store.values() ] ).toEqual( [ JSON.stringify( { beta: tokenB } ) ] );
+		expect( kc.__store.get( service ) ).toBe( JSON.stringify( { beta: tokenB } ) );
 		tokenCache._resetInMemoryForTests();
 		expect( await tokenCache.get( 'alpha' ) ).toBeNull();
 		expect( await tokenCache.get( 'beta' ) ).toEqual( tokenB );
 
 		await tokenCache.clearAll();
-		expect( kc.__store.size ).toBe( 0 );
+		expect( [ ...kc.__store.entries() ] ).toEqual( [ [ 'vip-go-cli', 'primary-token' ] ] );
 		tokenCache._resetInMemoryForTests();
 		expect( await tokenCache.get( 'beta' ) ).toBeNull();
 	} );
