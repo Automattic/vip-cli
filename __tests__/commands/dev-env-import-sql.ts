@@ -2,6 +2,10 @@
  * @format
  */
 
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
 import { DevEnvImportSQLCommand } from '../../src/commands/dev-env-import-sql';
 import * as uploader from '../../src/lib/client-file-uploader';
 import { SqlDumpType } from '../../src/lib/database';
@@ -12,7 +16,16 @@ import * as lando from '../../src/lib/dev-environment/dev-environment-lando';
 import * as sql from '../../src/lib/validations/sql';
 
 describe( 'commands/DevEnvImportSQLCommand', () => {
+	let tempDir: string | undefined;
+	afterEach( () => {
+		jest.restoreAllMocks();
+		if ( tempDir ) rmSync( tempDir, { recursive: true, force: true } );
+		tempDir = undefined;
+	} );
 	it( 'does not execute an import when validation rejects the dump', async () => {
+		tempDir = mkdtempSync( path.join( os.tmpdir(), 'vip-import-rejection-' ) );
+		const dump = path.join( tempDir, 'dump.sql' );
+		writeFileSync( dump, 'invalid dump' );
 		jest
 			.spyOn( lando, 'bootstrapLando' )
 			.mockResolvedValue( { config: { domain: 'test' } } as never );
@@ -22,10 +35,10 @@ describe( 'commands/DevEnvImportSQLCommand', () => {
 			.spyOn( database, 'getSqlDumpDetails' )
 			.mockResolvedValue( { type: SqlDumpType.MYSQLDUMP, sourceDb: undefined } );
 		jest.spyOn( uploader, 'getFileMeta' ).mockResolvedValue( { isCompressed: false } as never );
-		jest.spyOn( core, 'resolveImportPath' ).mockResolvedValue( 'dump.sql' );
+		jest.spyOn( core, 'resolveImportPath' ).mockResolvedValue( dump );
 		jest.spyOn( lando, 'isContainerRunning' ).mockResolvedValue( true );
 		jest.spyOn( sql, 'validate' ).mockRejectedValue( new Error( 'invalid dump' ) );
-		const execute = jest.spyOn( core, 'exec' );
+		const execute = jest.spyOn( core, 'exec' ).mockResolvedValue( undefined );
 		const command = new DevEnvImportSQLCommand(
 			'dump.sql',
 			{ inPlace: false, skipValidate: false, quiet: true },
@@ -33,7 +46,6 @@ describe( 'commands/DevEnvImportSQLCommand', () => {
 		);
 		await expect( command.run() ).rejects.toThrow( 'invalid dump' );
 		expect( execute ).not.toHaveBeenCalled();
-		jest.restoreAllMocks();
 	} );
 	describe( '.getImportArgs', () => {
 		const command = new DevEnvImportSQLCommand(
