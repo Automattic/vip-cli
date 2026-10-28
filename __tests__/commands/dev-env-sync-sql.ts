@@ -51,13 +51,24 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 	};
 
 	const lando = new Lando( { domain: 'vipdev.lndo.site' } );
+	const tempDirs: string[] = [];
+	const makeCommand = ( selectedEnv: typeof env ) => {
+		const command = new DevEnvSyncSQLCommand( app, selectedEnv, 'test-slug', lando );
+		tempDirs.push( command.tmpDir );
+		return command;
+	};
+	afterAll( async () => {
+		await Promise.all(
+			tempDirs.map( dir => fs.promises.rm( dir, { recursive: true, force: true } ) )
+		);
+	} );
 
 	describe( '.generateExport', () => {
 		it( 'should create an instance of ExportSQLCommand and run', async () => {
 			const mockExport = jest.spyOn( ExportSQLCommand.prototype, 'run' );
 			mockExport.mockResolvedValue();
 
-			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando );
+			const cmd = makeCommand( env );
 			await cmd.generateExport();
 
 			expect( mockExport ).toHaveBeenCalled();
@@ -66,7 +77,7 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 
 	describe( 'generateSearchReplaceMap', () => {
 		it( 'should return a map of search-replace values', () => {
-			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando );
+			const cmd = makeCommand( env );
 			cmd.slug = 'test-slug';
 			cmd.siteUrls = [ 'http://test.go-vip.com' ];
 			cmd.generateSearchReplaceMap();
@@ -75,7 +86,7 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 		} );
 
 		it( 'should return a map of search-replace values for multisite', () => {
-			const cmd = new DevEnvSyncSQLCommand( app, msEnv, 'test-slug', lando );
+			const cmd = makeCommand( msEnv );
 			cmd.slug = 'test-slug';
 			cmd.sdsSiteUrls = msEnv.wpSitesSDS.nodes;
 			cmd.siteUrls = msEnv.wpSitesSDS.nodes.map( node => node.homeUrl );
@@ -92,7 +103,7 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 
 	describe( '.runSearchReplace', () => {
 		it( 'should run search-replace operation on the mysqldump file', async () => {
-			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando );
+			const cmd = makeCommand( env );
 			fs.copyFileSync(
 				path.join( __dirname, '../../__fixtures__/dev-env-e2e/mysqldump-detection.sql.gz' ),
 				cmd.gzFile
@@ -113,7 +124,7 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 		} );
 
 		it( 'should run search-replace operation on the mydumper file', async () => {
-			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando );
+			const cmd = makeCommand( env );
 			fs.copyFileSync(
 				path.join( __dirname, '../../__fixtures__/dev-env-e2e/mydumper-detection.sql.gz' ),
 				cmd.gzFile
@@ -147,7 +158,7 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 			const mockImport = jest.spyOn( DevEnvImportSQLCommand.prototype, 'run' );
 			mockImport.mockResolvedValue();
 
-			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando );
+			const cmd = makeCommand( env );
 			await cmd.runImport();
 
 			expect( mockImport ).toHaveBeenCalled();
@@ -155,7 +166,7 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 	} );
 
 	describe( '.run', () => {
-		const syncCommand = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando );
+		const syncCommand = makeCommand( env );
 		const exportSpy = jest.spyOn( syncCommand, 'generateExport' );
 		const getSiteUrlsFromSDSSpy = jest.spyOn( syncCommand, 'getSiteUrlsFromSDS' );
 		const generateSearchReplaceMapSpy = jest.spyOn( syncCommand, 'generateSearchReplaceMap' );

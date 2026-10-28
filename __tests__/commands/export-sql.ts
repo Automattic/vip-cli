@@ -321,6 +321,9 @@ describe( 'commands/ExportSQLCommand', () => {
 
 	describe( 'liveBackupCopy', () => {
 		const tmpDir = makeTempDir();
+		afterAll( async () => {
+			await fs.promises.rm( tmpDir, { recursive: true, force: true } );
+		} );
 
 		const configFile = `${ tmpDir }/test-live-backup-config.json`;
 		const outputFile = `${ tmpDir }/sql-export.sql.gz`;

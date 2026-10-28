@@ -25,21 +25,23 @@ describe( 'vip dev-env configuration file', () => {
 	let tmpPath;
 	/** @type {string} */
 	let tmpWorkingDirectoryPath;
+	const ownedDirectories = [];
 
 	beforeAll( async () => {
 		cliTest = new CliTest();
 
 		tmpPath = await mkdtemp( path.join( os.tmpdir(), 'vip-dev-env-' ) );
+		ownedDirectories.push( tmpPath );
 		process.env.XDG_DATA_HOME = tmpPath;
 		env = prepareEnvironment( tmpPath );
 
 		tmpWorkingDirectoryPath = await mkdtemp( path.join( os.tmpdir(), 'vip-dev-env-working-' ) );
+		ownedDirectories.push( tmpWorkingDirectoryPath );
 	} );
 
-	afterAll( () => {
-		rm( tmpPath, { recursive: true, force: true } );
-		rm( tmpWorkingDirectoryPath, { recursive: true, force: true } );
-	} );
+	afterAll( () =>
+		Promise.all( ownedDirectories.map( dir => rm( dir, { recursive: true, force: true } ) ) )
+	);
 
 	it( 'should fail if configuration-version is missing', async () => {
 		const slug = getProjectSlug();
@@ -117,6 +119,7 @@ describe( 'vip dev-env configuration file', () => {
 
 	it( 'should create a new environment using grandparent directory configuration', async () => {
 		const workingDirectoryPath = await mkdtemp( path.join( os.tmpdir(), 'vip-dev-env-working-' ) );
+		ownedDirectories.push( workingDirectoryPath );
 		const workingDirectoryGrandchild = path.join( workingDirectoryPath, 'child', 'grand-child' );
 		await mkdir( workingDirectoryGrandchild, { recursive: true } );
 
@@ -150,6 +153,7 @@ describe( 'vip dev-env configuration file', () => {
 	it( 'should create a new environment using parent directory configuration with relative paths', async () => {
 		// Verify that relative paths are resolved correctly when used in a configuration file in a parent directory
 		const workingDirectoryPath = await mkdtemp( path.join( os.tmpdir(), 'vip-dev-env-working-' ) );
+		ownedDirectories.push( workingDirectoryPath );
 		const workingDirectoryGrandchild = path.join( workingDirectoryPath, 'child', 'grand-child' );
 		await mkdir( workingDirectoryGrandchild, { recursive: true } );
 
