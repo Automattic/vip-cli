@@ -8,6 +8,8 @@ import path from 'path';
 
 import * as prompt from '../../src/lib/cli/prompt';
 import { searchAndReplace } from '../../src/lib/search-and-replace';
+import * as utils from '../../src/lib/utils';
+jest.mock( '../../src/lib/tracker', () => ( { trackEvent: jest.fn() } ) );
 // Import prompt as a module since that's how we implement it in lib/search-and-replace.js,
 // as opposed to importing prompt.confirm on its own
 
@@ -27,6 +29,22 @@ const binary = path.resolve( fixtureDir, 'search-replace-binaries', searchReplac
 jest.spyOn( global.console, 'log' );
 
 describe( 'lib/search-and-replace', () => {
+	let ownedDirs;
+	beforeEach( () => {
+		ownedDirs = [];
+		const makeTempDir = utils.makeTempDir;
+		jest.spyOn( utils, 'makeTempDir' ).mockImplementation( ( ...args ) => {
+			const dir = makeTempDir( ...args );
+			ownedDirs.push( dir );
+			return dir;
+		} );
+	} );
+	afterEach( async () => {
+		jest.restoreAllMocks();
+		await Promise.all(
+			ownedDirs.map( dir => fs.promises.rm( dir, { recursive: true, force: true } ) )
+		);
+	} );
 	it( 'should throw for empty pair array', async () => {
 		const promise = searchAndReplace( testFilePath, [], {}, binary );
 		await expect( promise ).rejects.toEqual(
@@ -52,14 +70,13 @@ describe( 'lib/search-and-replace', () => {
 
 		expect( usingStdOut ).toBe( false );
 		expect( outputFileName ).not.toBe( testFilePath );
+		expect( ownedDirs ).toContain( path.dirname( outputFileName ) );
 
 		const fileContents = fs.readFileSync( outputFileName, { encoding: 'utf-8' } );
 
 		expect( fileContents ).toContain( 'ohHey' );
 		expect( fileContents ).not.toContain( 'ohai' );
 
-		// Clean up
-		fs.unlinkSync( outputFileName );
 		promptMock.mockClear(); // Clear the mock
 	} );
 
@@ -73,13 +90,13 @@ describe( 'lib/search-and-replace', () => {
 
 		expect( usingStdOut ).toBe( false );
 		expect( outputFileName ).not.toBe( testFilePath );
+		expect( ownedDirs ).toContain( path.dirname( outputFileName ) );
 
 		const fileContents = fs.readFileSync( outputFileName, { encoding: 'utf-8' } );
 		expect( fileContents ).toContain( 'ohHey' );
 		expect( fileContents ).not.toContain( 'ohai' );
 		expect( fileContents ).toContain( 'pretty' );
 		expect( fileContents ).not.toContain( 'purty' );
-		fs.unlinkSync( outputFileName );
 	} );
 
 	it( 'will remove whitespace from the beginning and end of pairs', async () => {
