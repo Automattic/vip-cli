@@ -50,11 +50,11 @@ func markFor(status, spinnerFrame string) string {
 }
 
 // buildSyncFrame composes the per-tick frame: blank top line, one
-// "  <mark> <name>" row per step (dim when pending), blank bottom line.
-// The footer is rendered separately (or once the loop exits) so we keep
-// the renderer's line count stable across frames.
-func buildSyncFrame(steps []syncpkg.Step, spinnerFrame string) []string {
-	lines := make([]string, 0, len(steps)+2)
+// "  <mark> <name>" row per step (dim when pending), the live progress
+// text when there is one, blank bottom line. The footer is rendered
+// separately (or once the loop exits).
+func buildSyncFrame(steps []syncpkg.Step, progressText, spinnerFrame string) []string {
+	lines := make([]string, 0, len(steps)+4)
 	lines = append(lines, "")
 	for _, s := range steps {
 		mark := markFor(s.Status, spinnerFrame)
@@ -63,6 +63,9 @@ func buildSyncFrame(steps []syncpkg.Step, spinnerFrame string) []string {
 			row = color.New(color.Faint).Sprint(row)
 		}
 		lines = append(lines, row)
+	}
+	if progressText != "" {
+		lines = append(lines, "", "  "+progressText)
 	}
 	lines = append(lines, "")
 	return lines
@@ -76,6 +79,10 @@ type syncRenderer interface {
 	// changes. Implementations either re-render the live frame (TTY)
 	// or emit one stdout line (non-TTY).
 	OnTransition(s syncpkg.Step)
+	// OnProgressText is invoked from Poll whenever the live progress
+	// text changes. Implementations either re-render the live frame
+	// (TTY) or emit one stdout line (non-TTY).
+	OnProgressText(text string)
 	// Stop cleans up background animation goroutines (TTY) and resets
 	// renderer state. Safe to call multiple times.
 	Stop()
@@ -96,6 +103,12 @@ func (r *nonTTYRenderer) OnTransition(s syncpkg.Step) {
 	fmt.Fprintln(r.w, formatStepLine(s))
 }
 
+func (r *nonTTYRenderer) OnProgressText(text string) {
+	if text != "" {
+		fmt.Fprintf(r.w, "  %s\n", text)
+	}
+}
+
 func (r *nonTTYRenderer) Stop() {}
 
 // ttyRenderer drives the in-place frame renderer + a background ticker
@@ -105,6 +118,7 @@ func (r *nonTTYRenderer) Stop() {}
 type ttyRenderer struct {
 	mu         stdsync.Mutex
 	steps      []syncpkg.Step
+	text       string
 	stepIndex  map[string]int
 	renderer   *tui.MultiLineRenderer
 	spinnerIdx int
@@ -148,6 +162,13 @@ func (r *ttyRenderer) OnTransition(s syncpkg.Step) {
 	r.renderLocked()
 }
 
+func (r *ttyRenderer) OnProgressText(text string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.text = text
+	r.renderLocked()
+}
+
 // loop animates the spinner. Runs until Stop closes r.done.
 func (r *ttyRenderer) loop() {
 	defer r.loopDone.Done()
@@ -181,7 +202,7 @@ func (r *ttyRenderer) hasRunningLocked() bool {
 }
 
 func (r *ttyRenderer) renderLocked() {
-	frame := buildSyncFrame(r.steps, brailleSpinner[r.spinnerIdx])
+	frame := buildSyncFrame(r.steps, r.text, brailleSpinner[r.spinnerIdx])
 	r.renderer.Render(frame)
 }
 

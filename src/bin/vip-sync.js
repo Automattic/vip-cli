@@ -13,10 +13,11 @@ import { trackEvent } from '../lib/tracker';
 
 // The API reports the current step as the overall status while a sync is in progress.
 const SYNC_RUNNING_STATUSES = [ 'running', 'started', 'importing', 'cleanup' ];
+const SYNC_SUCCESS_STATUSES = [ 'success', 'complete' ];
 
 const appQuery = `id,name,environments{
 	id,appId,type,name,defaultDomain,branch,datacenter,syncProgress{
-		status,error,sync,steps{name,status}
+		status,error,progress_update_text,sync,steps{name,status}
 	},syncPreview { canSync, errors { message }, backup { createdAt }, replacements { from, to } }
 }`;
 
@@ -134,6 +135,7 @@ command( {
 										syncProgress {
 											status
 											error
+											progress_update_text
 											sync
 											steps {
 												name
@@ -179,11 +181,18 @@ command( {
 
 			out.push( '' );
 
-			const { status, error: syncError } = environment.syncProgress;
+			const {
+				status,
+				error: syncError,
+				progress_update_text: progressText,
+			} = environment.syncProgress;
 
-			if ( SYNC_RUNNING_STATUSES.includes( status ) ) {
-				out.push( 'Press ^C to hide progress. Data sync will continue in the background.' );
-			} else if ( status === 'failed' ) {
+			if ( progressText ) {
+				out.push( ` ${ progressText }` );
+				out.push( '' );
+			}
+
+			if ( status === 'failed' ) {
 				clearInterval( progress );
 
 				await trackEvent( 'sync_command_error', {
@@ -205,13 +214,16 @@ command( {
 					out.push( `${ chalk.yellow( 'Error:' ) } ${ syncError }` );
 				}
 				out.push( '' );
-			} else {
+			} else if ( SYNC_SUCCESS_STATUSES.includes( status ) ) {
 				clearInterval( progress );
 
 				await trackEvent( 'sync_command_success' );
 
 				out.push( `${ marks.success } Data Sync is finished for ${ opts.app.name }.` );
 				out.push( '' );
+			} else {
+				// Running, or not_syncing until the job shows up: keep polling.
+				out.push( 'Press ^C to hide progress. Data sync will continue in the background.' );
 			}
 
 			stdout( out.join( '\n' ) );

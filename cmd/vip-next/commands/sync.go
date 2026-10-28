@@ -109,8 +109,9 @@ func runSync(cmd *cobra.Command, args []string) error {
 	defer renderer.Stop()
 
 	p, err := syncpkg.Poll(pollCtx, cfg.GQLClient, ae.App.ID, ae.Env.ID, syncpkg.PollOpts{
-		Interval:     pollInterval(),
-		OnTransition: renderer.OnTransition,
+		Interval:       pollInterval(),
+		OnTransition:   renderer.OnTransition,
+		OnProgressText: renderer.OnProgressText,
 		OnError: func(_ error) bool {
 			// Treat all Status errors as transient — Node's setInterval
 			// just keeps ticking and ignores per-poll errors.
@@ -158,8 +159,7 @@ func runSync(cmd *cobra.Command, args []string) error {
 			fmt.Fprintln(out, color.YellowString("Error:"), p.Error)
 		}
 	default:
-		// success (or any non-failed terminal) — Node treats the default
-		// case as success, so we do too.
+		// success or complete — Poll only returns on terminal statuses.
 		trackEvent("sync_command_success", nil)
 		fmt.Fprintln(out, color.GreenString(
 			fmt.Sprintf("✓ Data Sync is finished for %s.", ae.App.Name)))

@@ -7140,6 +7140,9 @@ type AppEnvironmentSyncProgress {
   """When the sync finished, as a Unix timestamp."""
   finished_at: Int
 
+  """Live details about the current step, such as bytes transferred."""
+  progress_update_text: String
+
   """When the sync started, as a Unix timestamp."""
   started_at: Int
 

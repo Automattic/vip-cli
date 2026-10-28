@@ -33,6 +33,7 @@ export type AppQuery = {
 				__typename?: 'AppEnvironmentSyncProgress';
 				status?: string | null;
 				error?: string | null;
+				progress_update_text?: string | null;
 				sync?: number | null;
 				steps?: Array< {
 					__typename?: 'AppEnvironmentSyncStep';

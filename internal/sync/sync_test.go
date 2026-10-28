@@ -200,6 +200,40 @@ func TestPollTerminatesOnSuccess(t *testing.T) {
 	}
 }
 
+func TestPollReportsProgressTextChanges(t *testing.T) {
+	stub := newStub()
+	body := func(status, text string) string {
+		return `{"data":{"app":{"id":42,"environments":[
+			{"id":7,"syncProgress":{"status":"` + status + `","progress_update_text":` + text + `,"sync":1,"steps":[]}}
+		]}}}`
+	}
+	stub.setSeq("SyncProgress",
+		body("importing", "null"),
+		body("importing", `"Transferred 10 MB of 100 MB"`),
+		body("importing", `"Transferred 10 MB of 100 MB"`),
+		body("importing", `"Transferred 50 MB of 100 MB"`),
+		body("complete", "null"),
+	)
+	srv, c := stub.start(t)
+	defer srv.Close()
+
+	var texts []string
+	p, err := Poll(context.Background(), c, 42, 7, PollOpts{
+		Interval:       1 * time.Millisecond,
+		OnProgressText: func(text string) { texts = append(texts, text) },
+	})
+	if err != nil {
+		t.Fatalf("Poll: %v", err)
+	}
+	if p == nil || p.Status != StatusComplete {
+		t.Fatalf("Poll final = %+v, want status=complete", p)
+	}
+	want := []string{"Transferred 10 MB of 100 MB", "Transferred 50 MB of 100 MB", ""}
+	if strings.Join(texts, "|") != strings.Join(want, "|") {
+		t.Errorf("progress texts = %q, want %q", texts, want)
+	}
+}
+
 func TestPollRespectsCancel(t *testing.T) {
 	stub := newStub()
 	// Always running — Poll will never terminate on its own.
@@ -259,6 +293,8 @@ func TestIsTerminal(t *testing.T) {
 		"started":             false,
 		"importing":           false,
 		"cleanup":             false,
+		"not_syncing":         false,
+		"unknown":             false,
 		"success":             true,
 		"complete":            true,
 		"partially_completed": true,

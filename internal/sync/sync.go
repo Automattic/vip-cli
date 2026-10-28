@@ -71,12 +71,15 @@ type Step struct {
 
 // Progress is the overall sync state. Sync is the job ID (Int in the
 // schema, despite the plan calling it String). Error is the reason the
-// sync job recorded, when it failed or partially completed.
+// sync job recorded, when it failed or partially completed. ProgressText
+// is a live, human-readable detail of the current step (e.g. bytes
+// transferred).
 type Progress struct {
-	Status string
-	Error  string
-	Sync   int64
-	Steps  []Step
+	Status       string
+	Error        string
+	ProgressText string
+	Sync         int64
+	Steps        []Step
 }
 
 // IsRunning reports whether the overall status means a sync is in
@@ -89,11 +92,15 @@ func IsRunning(status string) bool {
 	return false
 }
 
-// IsTerminal reports whether the status string is a terminal state. Any
-// non-empty status that isn't running counts, matching Node, which
-// treats everything other than a running status as finished.
+// IsTerminal reports whether the status string is a terminal state.
+// Anything else (running statuses, not_syncing before the job shows up,
+// unknown values) keeps the poll going.
 func IsTerminal(status string) bool {
-	return status != "" && !IsRunning(status)
+	switch status {
+	case StatusSuccess, StatusComplete, StatusPartiallyCompleted, StatusFailed:
+		return true
+	}
+	return false
 }
 
 // Start triggers a sync of the production env into the target env.
@@ -168,6 +175,9 @@ func Status(ctx context.Context, c graphql.Client, appID, envID int64) (*Progres
 		if e.SyncProgress.Error != nil {
 			p.Error = *e.SyncProgress.Error
 		}
+		if e.SyncProgress.Progress_update_text != nil {
+			p.ProgressText = *e.SyncProgress.Progress_update_text
+		}
 		if e.SyncProgress.Sync != nil {
 			p.Sync = *e.SyncProgress.Sync
 		}
@@ -200,6 +210,9 @@ type PollOpts struct {
 	// observed status change (including the first time the step is seen).
 	// The argument is the step's NEW state.
 	OnTransition func(Step)
+	// OnProgressText, if non-nil, is invoked whenever the overall
+	// progress text changes (including when it is first seen or cleared).
+	OnProgressText func(string)
 	// OnError, if non-nil, is consulted on transient Status errors. Return
 	// true to keep polling (treat as transient), false to abort the loop
 	// with the error.
@@ -232,6 +245,7 @@ func Poll(ctx context.Context, c graphql.Client, appID, envID int64, opts PollOp
 	// available, else falling back to Name). Allows the loop to fire
 	// OnTransition only on actual change rather than once per tick.
 	seen := map[string]string{}
+	lastText := ""
 
 	keyOf := func(s Step) string {
 		if s.Step != "" {
@@ -257,6 +271,10 @@ func Poll(ctx context.Context, c graphql.Client, appID, envID int64, opts PollOp
 						opts.OnTransition(s)
 					}
 				}
+			}
+			if opts.OnProgressText != nil && p.ProgressText != lastText {
+				lastText = p.ProgressText
+				opts.OnProgressText(p.ProgressText)
 			}
 			if IsTerminal(p.Status) {
 				return p, nil
