@@ -1,5 +1,5 @@
 import { describe, expect, it, jest } from '@jest/globals';
-import { mkdtemp, rm, stat } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 
@@ -52,17 +52,19 @@ describe( 'vip dev-env import media', () => {
 		);
 		expect( result.rc ).toBe( 0 );
 		expect( await checkEnvExists( slug ) ).toBe( true );
+		const source = await mkdtemp( path.join( tmpPath, 'media-' ) );
+		const contents = Buffer.from( [ 0, 1, 127, 255 ] );
+		await writeFile( path.join( source, 'media.bin' ), contents );
 
 		result = await cliTest.spawn(
-			[ process.argv[ 0 ], vipDevEnvImportMedia, '--slug', slug, __dirname ],
+			[ process.argv[ 0 ], vipDevEnvImportMedia, '--slug', slug, source ],
 			{ env },
 			true
 		);
 		expect( result.rc ).toBe( 0 );
 
 		const uploadsPath = path.join( getEnvironmentPath( slug ), 'uploads' );
-		const file = path.join( uploadsPath, path.basename( __filename ) );
-
-		return expect( stat( file ) ).resolves.toBeTruthy();
+		expect( await readFile( path.join( uploadsPath, 'media.bin' ) ) ).toEqual( contents );
+		expect( await readFile( path.join( source, 'media.bin' ) ) ).toEqual( contents );
 	} );
 } );
