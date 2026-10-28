@@ -159,7 +159,7 @@
     "@json2csv/plainjs": "^7.0.3",
     "@wwa/single-line-log": "^1.1.4",
     "chalk": "^6.0.0",
-    "check-disk-space": "3.4.0",
+    "check-disk-space": "4.0.0",
     "cli-columns": "^4.0.0",
     "cli-table3": "^0.6.3",
     "commander": "^15.0.0",
