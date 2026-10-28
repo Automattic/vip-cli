@@ -19,7 +19,7 @@ const ERROR_CODE = 1;
 
 function resetObservations() {
 	output = '';
-	mockExit.mockClear();
+	mockExit.mockReset().mockImplementation( () => {} );
 	console.log.mockClear();
 	console.error.mockClear();
 }
@@ -214,6 +214,7 @@ describe( 'lib/validations/sql', () => {
 			await expect( freshValidate()( compressedFilePath ) ).rejects.toThrow( 'exit' );
 			expect( mockExit ).toHaveBeenCalledWith( ERROR_CODE );
 			expect( output ).toContain( 'Compressed files cannot be validated.' );
+			expect( output ).not.toContain( 'SQL Error' );
 		} );
 	} );
 
