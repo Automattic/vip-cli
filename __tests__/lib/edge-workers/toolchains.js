@@ -63,6 +63,7 @@ describe( 'edge-workers toolchains', () => {
 					const expectedEnv = { ...process.env };
 					delete expectedEnv.NODE_OPTIONS;
 					const output = tc.compile( project, worker );
+					expect( process.env.NODE_OPTIONS ).toBe( '--trace-warnings' );
 					expect( output ).toBe( expectedOutput );
 					const args = [
 						fs.realpathSync.native( path.join( worker.dir, worker.manifest.entry ) ),
