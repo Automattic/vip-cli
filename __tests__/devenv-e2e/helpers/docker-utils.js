@@ -2,6 +2,8 @@
 
 import { dockerComposify } from 'lando/lib/utils';
 
+import { ownsProject } from './identity';
+
 /**
  * @typedef {import('dockerode')} Docker
  * @typedef {import('dockerode').ContainerInfo} ContainerInfo
@@ -25,7 +27,7 @@ export function getContainersForProject( docker, project ) {
  * @param {Docker}   docker Docker instance
  * @param {string[]} ids    List of container IDs to kill
  */
-export async function killContainers( docker, ids ) {
+async function killContainers( docker, ids ) {
 	const containers = ids.map( id => docker.getContainer( id ) );
 	await Promise.all( containers.map( container => container.remove( { force: true, v: true } ) ) );
 }
@@ -36,7 +38,18 @@ export async function killContainers( docker, ids ) {
  */
 export async function killProjectContainers( docker, project ) {
 	if ( project ) {
+		if ( ! ownsProject( project ) ) {
+			throw new Error( 'Refusing to remove containers outside this E2E invocation' );
+		}
 		const containers = await getContainersForProject( docker, project );
+		const expectedProject = dockerComposify( project );
+		if (
+			containers.some(
+				container => container.Labels?.[ 'com.docker.compose.project' ] !== expectedProject
+			)
+		) {
+			throw new Error( 'Refusing to remove containers with unexpected project ownership' );
+		}
 		const ids = containers.map( containerInfo => containerInfo.Id );
 		await killContainers( docker, ids );
 	}

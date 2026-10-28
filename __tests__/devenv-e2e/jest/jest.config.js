@@ -12,6 +12,7 @@ const config = {
 	maxWorkers: process.env.CI ? 1 : 2,
 	testSequencer: path.join( __dirname, 'sequencer.js' ),
 	forceExit: true,
+	globalSetup: path.join( __dirname, 'global-setup.js' ),
 	transform: { '^.+\\.m?[tj]sx?$': [ 'ts-jest', { tsconfig: '<rootDir>/tsconfig.jest.json' } ] },
 	transformIgnorePatterns: [],
 	resolver: '<rootDir>/jest.resolver.js',
