@@ -62,6 +62,43 @@ describe( 'rechallenge token cache', () => {
 		expect( ( await tokenCache.get( 'updateDefensiveModeConfig' ) )?.token ).toBe( 'B' );
 	} );
 
+	it( 'reloads persisted scopes and preserves deletion and expiry across memory resets', async () => {
+		const kc = ( await keychain.getKeychain() ) as Keychain & { __store: Map< string, string > };
+		const tokenA = makeToken( { token: 'A' } );
+		const tokenB = makeToken( { token: 'B' } );
+		const expired = makeToken( {
+			token: 'expired',
+			expiresAt: new Date( Date.now() - 1_000 ).toISOString(),
+		} );
+		await tokenCache.set( 'alpha', tokenA );
+		await tokenCache.set( 'beta', tokenB );
+		await tokenCache.set( 'expired', expired );
+		expect( [ ...kc.__store.values() ] ).toEqual( [
+			JSON.stringify( { alpha: tokenA, beta: tokenB, expired } ),
+		] );
+
+		tokenCache._resetInMemoryForTests();
+		expect( await tokenCache.get( 'alpha' ) ).toEqual( tokenA );
+		expect( await tokenCache.get( 'beta' ) ).toEqual( tokenB );
+		expect( await tokenCache.get( 'expired' ) ).toBeNull();
+		expect( [ ...kc.__store.values() ] ).toEqual( [
+			JSON.stringify( { alpha: tokenA, beta: tokenB } ),
+		] );
+
+		tokenCache._resetInMemoryForTests();
+		expect( await tokenCache.get( 'expired' ) ).toBeNull();
+		await tokenCache.clearScope( 'alpha' );
+		expect( [ ...kc.__store.values() ] ).toEqual( [ JSON.stringify( { beta: tokenB } ) ] );
+		tokenCache._resetInMemoryForTests();
+		expect( await tokenCache.get( 'alpha' ) ).toBeNull();
+		expect( await tokenCache.get( 'beta' ) ).toEqual( tokenB );
+
+		await tokenCache.clearAll();
+		expect( kc.__store.size ).toBe( 0 );
+		tokenCache._resetInMemoryForTests();
+		expect( await tokenCache.get( 'beta' ) ).toBeNull();
+	} );
+
 	it( 'returns null and self-evicts when token is expired', async () => {
 		const expired = makeToken( {
 			expiresAt: new Date( Date.now() - 1_000 ).toISOString(),
