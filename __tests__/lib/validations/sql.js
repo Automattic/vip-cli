@@ -3,8 +3,6 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 
-import { validate } from '../../../src/lib/validations/sql';
-
 const debug = debugLib( '@automattic/vip:__tests__:validations:sql' );
 
 // Mock console.log()
@@ -14,13 +12,31 @@ global.console = {
 	error: message => ( output += message + '\n' ),
 };
 jest.spyOn( global.console, 'log' );
+jest.spyOn( global.console, 'error' );
 
 const mockExit = jest.spyOn( process, 'exit' ).mockImplementation( () => {} );
 const ERROR_CODE = 1;
 
+function resetObservations() {
+	output = '';
+	mockExit.mockClear();
+	console.log.mockClear();
+	console.error.mockClear();
+}
+
 jest.mock( '../../../src/lib/tracker', () => ( {
 	trackEvent: jest.fn().mockResolvedValue( [] ),
 } ) );
+jest.mock( '@wwa/single-line-log', () => ( { stdout: jest.fn() } ) );
+
+function freshValidate() {
+	let validate;
+	jest.isolateModules( () => {
+		( { validate } = require( '../../../src/lib/validations/sql' ) );
+	} );
+	return validate;
+}
+
 describe( 'lib/validations/sql', () => {
 	describe( 'it validates SQL for dev-env without false-positive USE statements', () => {
 		let tempDir;
@@ -50,15 +66,9 @@ describe( 'lib/validations/sql', () => {
 
 			await writeFile( sqlFilePath, sqlBytes );
 
-			output = '';
-			mockExit.mockClear();
+			resetObservations();
 
-			let isolatedValidate;
-			jest.isolateModules( () => {
-				( { validate: isolatedValidate } = require( '../../../src/lib/validations/sql' ) );
-			} );
-
-			await isolatedValidate( sqlFilePath, {
+			await freshValidate()( sqlFilePath, {
 				isImport: false,
 				skipChecks: [],
 				extraCheckParams: { siteHomeUrlLando: 'test.domain' },
@@ -80,8 +90,8 @@ describe( 'lib/validations/sql', () => {
 
 	describe( 'it fails when the SQL has (using bad-sql-dump.sql)', () => {
 		beforeAll( async () => {
+			resetObservations();
 			try {
-				output = '';
 				const badSqlDumpPath = path.join(
 					process.cwd(),
 					'__fixtures__',
@@ -89,7 +99,7 @@ describe( 'lib/validations/sql', () => {
 					'bad-sql-dump.sql'
 				);
 				// const duplicateCreateTableSqlDumpPath = path.join( process.cwd(), '__fixtures__', 'validations', 'bad-sql-duplicate-tables.sql' );
-				await validate( badSqlDumpPath );
+				await freshValidate()( badSqlDumpPath );
 			} catch ( err ) {
 				debug( 'Error:', err.toString() );
 			}
@@ -133,15 +143,15 @@ describe( 'lib/validations/sql', () => {
 	} );
 	describe( 'it fails when the SQL has (using bad-sql-duplicate-tables.sql)', () => {
 		beforeAll( async () => {
+			resetObservations();
 			try {
-				output = '';
 				const duplicateCreateTableSqlDumpPath = path.join(
 					process.cwd(),
 					'__fixtures__',
 					'validations',
 					'bad-sql-duplicate-tables.sql'
 				);
-				await validate( duplicateCreateTableSqlDumpPath );
+				await freshValidate()( duplicateCreateTableSqlDumpPath );
 			} catch ( err ) {
 				debug( 'Error:', err.toString() );
 			}
@@ -153,15 +163,15 @@ describe( 'lib/validations/sql', () => {
 	} );
 	describe( 'it fails when the SQL for dev-env has (using bad-sql-dev-env.sql)', () => {
 		beforeAll( async () => {
+			resetObservations();
 			try {
-				output = '';
 				const sqlFileDumpPath = path.join(
 					process.cwd(),
 					'__fixtures__',
 					'validations',
 					'bad-sql-dev-env.sql'
 				);
-				await validate( sqlFileDumpPath, {
+				await freshValidate()( sqlFileDumpPath, {
 					isImport: false,
 					skipChecks: [],
 					extraCheckParams: { siteHomeUrlLando: 'test.domain' },
@@ -190,6 +200,10 @@ describe( 'lib/validations/sql', () => {
 
 	describe( 'it fails when the import file is compressed', () => {
 		it( '.zip', async () => {
+			resetObservations();
+			mockExit.mockImplementationOnce( () => {
+				throw new Error( 'exit' );
+			} );
 			const compressedFilePath = path.join(
 				process.cwd(),
 				'__fixtures__',
@@ -197,8 +211,31 @@ describe( 'lib/validations/sql', () => {
 				'empty.zip'
 			);
 
-			await validate( compressedFilePath );
+			await expect( freshValidate()( compressedFilePath ) ).rejects.toThrow( 'exit' );
 			expect( mockExit ).toHaveBeenCalledWith( ERROR_CODE );
+			expect( output ).toContain( 'Compressed files cannot be validated.' );
 		} );
+	} );
+
+	it( 'validates a clean fixture after an invalid one with fresh state', async () => {
+		const dir = await mkdtemp( path.join( os.tmpdir(), 'vip-sql-fresh-' ) );
+		try {
+			const valid = path.join( dir, 'valid.sql' );
+			await writeFile(
+				valid,
+				'DROP TABLE IF EXISTS `wp_posts`;\nCREATE TABLE `wp_posts` (\n  `id` bigint NOT NULL AUTO_INCREMENT,\n  PRIMARY KEY (`id`)\n) ENGINE=InnoDB;\n'
+			);
+			resetObservations();
+			await freshValidate()(
+				path.join( process.cwd(), '__fixtures__', 'validations', 'bad-sql-dump.sql' )
+			);
+			expect( mockExit ).toHaveBeenCalledWith( ERROR_CODE );
+			resetObservations();
+			await freshValidate()( valid );
+			expect( mockExit ).not.toHaveBeenCalled();
+			expect( output ).not.toContain( 'TRIGGER statement on line(s) 16' );
+		} finally {
+			await rm( dir, { recursive: true, force: true } );
+		}
 	} );
 } );
