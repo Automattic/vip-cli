@@ -85,6 +85,10 @@ By default, we record information about the usage of this tool using an in-house
 
 Install the software locally, run and follow the instructions to configure the access token.
 
+For headless shells and CI, set `VIP_CLI_TOKEN` to a [Personal Access Token](https://dashboard.wpvip.com/me/cli/token). Both `vip` and `vip-next` use a nonempty value for API requests before checking their stored credentials. An invalid or expired value fails with an error; it does not fall back to a stored token or start an interactive login. Unset `VIP_CLI_TOKEN` to use the stored session again.
+
+While `VIP_CLI_TOKEN` is set, `login` asks you to unset it first. `logout` explains how to stop using the environment token and leaves the stored session untouched. Elevated tokens obtained during an environment-token session remain in process memory and are bound to that token; they are not saved to the OS credential store.
+
 ### Environmental variables
 
 #### Configuring environmental variables

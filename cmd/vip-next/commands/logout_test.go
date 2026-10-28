@@ -10,6 +10,7 @@ import (
 
 	"github.com/Automattic/vip/internal/auth"
 	"github.com/Automattic/vip/internal/keychain"
+	"github.com/Automattic/vip/internal/rechallenge"
 )
 
 // memBackendLogout is an in-memory keychain Backend for logout tests.
@@ -38,28 +39,13 @@ func (m *memBackendLogout) Delete(s, u string) error {
 	return nil
 }
 
-// runLogoutCmd drives LogoutCmd end-to-end with an injected keychain and an
-// httptest server acting as the API. It returns the captured stdout and any
-// error returned by RunE.
-//
-// Since LogoutCmd calls keychain.New(cfg.APIHost) internally — which picks the
-// OS keyring, or the 0600 file fallback on a headless box — we cannot intercept
-// that call without modifying the command's signature. Instead, we:
-//  1. Set cfg.APIHost to the test server URL. The command calls keychain.New
-//     with that URL, which creates a Keychain with a real backend. On
-//     Delete that returns ErrNotFound (no token stored under the test
-//     service name), which the command swallows (Node parity: logout is
-//     idempotent).
-//  2. We verify token-purge behaviour by directly exercising auth.Store with
-//     a memBackend — that path is already covered in internal/auth/store_test.go.
-//  3. We assert: command exits 0, stdout contains the success message, and
-//     PostLogout is called with the correct bearer token.
-func runLogoutCmd(t *testing.T, srv *httptest.Server) (string, error) {
+// runLogoutCmd exercises the command with an isolated credential backend.
+func runLogoutCmd(t *testing.T, srv *httptest.Server, k *keychain.Keychain) (string, error) {
 	t.Helper()
 	SetConfig(Config{APIHost: srv.URL})
 	defer SetConfig(Config{})
 
-	cmd := LogoutCmd()
+	cmd := logoutCmd(func(string) *keychain.Keychain { return k })
 	var out bytes.Buffer
 	cmd.SetOut(&out)
 	err := cmd.RunE(cmd, nil)
@@ -69,13 +55,15 @@ func runLogoutCmd(t *testing.T, srv *httptest.Server) (string, error) {
 // TestLogoutCmdNoToken verifies that running logout when there is no stored
 // token exits 0 (idempotent, Node parity).
 func TestLogoutCmdNoToken(t *testing.T) {
+	t.Setenv("VIP_CLI_TOKEN", "")
+	k := logoutTestKeychain()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Should NOT be called when no token is present (store.Load returns error).
 		w.WriteHeader(http.StatusOK)
 	}))
 	defer srv.Close()
 
-	out, err := runLogoutCmd(t, srv)
+	out, err := runLogoutCmd(t, srv, k)
 	if err != nil {
 		t.Fatalf("LogoutCmd with no token: expected nil error, got %v", err)
 	}
@@ -84,14 +72,7 @@ func TestLogoutCmdNoToken(t *testing.T) {
 	}
 }
 
-// TestLogoutCmdWithToken verifies that when a token is present (via
-// VIP_TOKEN_OVERRIDE), PostLogout is called with the Bearer token and the
-// command still exits 0. The actual keychain deletion is tested in
-// internal/auth/store_test.go with a memBackend — here we focus on the
-// command plumbing: correct HTTP call + success output.
-//
-// GO_ENV=test is required since cutover item 2.15: the override is a test-only
-// hatch (Node gates the same variable on NODE_ENV=test, src/lib/token.ts:105).
+// TestLogoutCmdWithToken checks revocation and deletion of the same stored PAT.
 func TestLogoutCmdWithToken(t *testing.T) {
 	const testToken = "test-bearer-token"
 
@@ -104,10 +85,20 @@ func TestLogoutCmdWithToken(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	t.Setenv("GO_ENV", "test")
-	t.Setenv("VIP_TOKEN_OVERRIDE", testToken)
+	t.Setenv("VIP_CLI_TOKEN", "")
+	k := logoutTestKeychain()
+	if err := auth.NewStore(k).Save(testToken); err != nil {
+		t.Fatal(err)
+	}
+	if err := k.Backend.Set(k.LegacyService, k.LegacyService, "legacy-token"); err != nil {
+		t.Fatal(err)
+	}
+	elevated := rechallenge.ServiceNameForHost(srv.URL)
+	if err := k.Backend.Set(elevated, elevated, "cached-elevation"); err != nil {
+		t.Fatal(err)
+	}
 
-	out, err := runLogoutCmd(t, srv)
+	out, err := runLogoutCmd(t, srv, k)
 	if err != nil {
 		t.Fatalf("LogoutCmd with token: expected nil error, got %v", err)
 	}
@@ -117,13 +108,22 @@ func TestLogoutCmdWithToken(t *testing.T) {
 	if !strings.Contains(out, "You are now logged out.") {
 		t.Errorf("expected logout message in output, got: %q", out)
 	}
+	if _, err := k.Get(k.Account()); !errors.Is(err, keychain.ErrNotFound) {
+		t.Fatalf("primary token survived logout: %v", err)
+	}
+	if _, err := k.Backend.Get(elevated, elevated); !errors.Is(err, keychain.ErrNotFound) {
+		t.Fatalf("elevated cache survived logout: %v", err)
+	}
+	if got, err := k.Backend.Get(k.LegacyService, k.LegacyService); err != nil || got != "legacy-token" {
+		t.Fatalf("legacy token changed: %v", err)
+	}
 }
 
 // TestLogoutCmdTokenPurge verifies that after logout, the token is gone from
 // the store. This is a unit-level test over auth.Store + memBackend — the
 // actual end-to-end token path is covered here without touching the OS keychain.
 func TestLogoutCmdTokenPurge(t *testing.T) {
-	t.Setenv("VIP_TOKEN_OVERRIDE", "")
+	t.Setenv("VIP_CLI_TOKEN", "")
 	backend := &memBackendLogout{}
 	k := &keychain.Keychain{
 		Backend:       backend,
@@ -155,4 +155,35 @@ func TestLogoutCmdTokenPurge(t *testing.T) {
 	if _, err := store.Load(); !errors.Is(err, auth.ErrNoToken) {
 		t.Fatalf("Load after logout = %v, want ErrNoToken", err)
 	}
+}
+
+func TestLogoutCmdEnvironmentPATDoesNotRevokeStoredToken(t *testing.T) {
+	k := logoutTestKeychain()
+	if err := auth.NewStore(k).Save("stored-token"); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("VIP_CLI_TOKEN", "environment-token")
+	var logoutHits int
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/logout" {
+			logoutHits++
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer srv.Close()
+
+	out, err := runLogoutCmd(t, srv, k)
+	if err != nil {
+		t.Fatalf("LogoutCmd: %v", err)
+	}
+	if logoutHits != 0 || !strings.Contains(out, "VIP_CLI_TOKEN") {
+		t.Fatalf("logout hits = %d, output = %q; want no revocation and environment guidance", logoutHits, out)
+	}
+	if got, err := k.Get(k.Account()); err != nil || got != "stored-token" {
+		t.Fatalf("stored token changed: %v", err)
+	}
+}
+
+func logoutTestKeychain() *keychain.Keychain {
+	return &keychain.Keychain{Backend: &memBackendLogout{}, Service: "vip-next-cli", LegacyService: "vip-go-cli"}
 }

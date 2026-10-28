@@ -7,9 +7,11 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 
 	json "encoding/json/v2"
 
+	"github.com/Automattic/vip/internal/auth"
 	"github.com/Automattic/vip/internal/debuglog"
 )
 
@@ -79,7 +81,9 @@ func (e *errorDoer) Do(req *http.Request) (*http.Response, error) {
 	if resp.StatusCode == 401 && !e.cfg.Silence {
 		body, _ := io.ReadAll(resp.Body)
 		resp.Body.Close()
-		msg := decode401Message(body)
+		environmentToken := strings.TrimSpace(os.Getenv(auth.EnvironmentTokenName))
+		usesEnvironmentToken := environmentToken != "" && req.Header.Get("Authorization") == "Bearer "+environmentToken
+		msg := decode401Message(body, usesEnvironmentToken)
 		fmt.Fprintf(e.cfg.Stderr, "Unauthorized: %s\n", msg)
 		e.cfg.Exit(1)
 		resp.Body = io.NopCloser(bytes.NewReader(body))
@@ -121,10 +125,13 @@ func (e *errorDoer) Do(req *http.Request) (*http.Response, error) {
 	return resp, nil
 }
 
-func decode401Message(body []byte) string {
+func decode401Message(body []byte, usesEnvironmentToken bool) string {
 	const inactivity = "Your token has expired due to inactivity"
 	const defaultMsg = "You are not authorized to perform this request"
-	const suffix = "; please log out with `vip logout`, then try again."
+	suffix := "; please log out with `vip logout`, then try again."
+	if usesEnvironmentToken {
+		suffix = fmt.Sprintf("; replace the token in %s, or unset %s to use stored credentials.", auth.EnvironmentTokenName, auth.EnvironmentTokenName)
+	}
 	if len(body) > 0 {
 		var doc struct {
 			Code string `json:"code"`

@@ -15,6 +15,7 @@ import (
 
 type authSession struct {
 	Raw      string
+	Source   auth.TokenSource
 	Keychain *keychain.Keychain
 	Store    *auth.Store
 }
@@ -32,11 +33,12 @@ func withAuthenticatedSession(
 	deps authBootstrapDeps,
 	next func(*authSession) error,
 ) error {
-	raw, loadErr := deps.Store.Load()
+	credential, loadErr := deps.Store.Resolve()
+	raw := credential.Raw
 	if loadErr == nil {
 		tok, parseErr := auth.ParseToken(raw)
 		if parseErr == nil && tok.Valid() {
-			return next(&authSession{Raw: tok.Raw, Keychain: deps.Keychain, Store: deps.Store})
+			return next(&authSession{Raw: tok.Raw, Source: credential.Source, Keychain: deps.Keychain, Store: deps.Store})
 		}
 	}
 	if loadErr != nil && !errors.Is(loadErr, auth.ErrNoToken) {
@@ -59,7 +61,7 @@ func withAuthenticatedSession(
 	if tok == nil || !tok.Valid() {
 		return errors.New("login completed without a valid token")
 	}
-	return next(&authSession{Raw: tok.Raw, Keychain: deps.Keychain, Store: deps.Store})
+	return next(&authSession{Raw: tok.Raw, Source: auth.SourceStored, Keychain: deps.Keychain, Store: deps.Store})
 }
 
 // isNonInteractiveArgv detects the root flag without mistaking a raw WP-CLI

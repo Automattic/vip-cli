@@ -1,17 +1,21 @@
 import debugLib from 'debug';
+import { createHash } from 'node:crypto';
 
 import { API_HOST, PRODUCTION_API_HOST } from '../api/constants';
 import { getKeychain } from '../keychain';
+import Token from '../token';
 
 import type { ElevatedToken } from './types';
+import type { TokenSource } from '../token';
 
 const debug = debugLib( '@automattic/vip:rechallenge:cache' );
-// Storage strategy: a single keychain entry holds a JSON map { [scope]: ElevatedToken }.
-// The vip-cli Keychain interface (src/lib/keychain/keychain.ts) is service-only — there
-// is no separate account argument — so per-scope entries under the keytar model would
-// require a different keying scheme. The single-blob approach also keeps clearAll() cheap.
-// This is marked subject-to-change in the spec pending security review.
 const BASE_SERVICE = 'vip-go-cli:elevated';
+
+type CachedToken = ElevatedToken & { primaryTokenFingerprint: string };
+type Blob = Record< string, CachedToken >;
+
+let storedInMemory: Blob | null = null;
+let environmentInMemory: Blob = {};
 
 function serviceName(): string {
 	if ( API_HOST === PRODUCTION_API_HOST ) {
@@ -21,42 +25,49 @@ function serviceName(): string {
 	return `${ BASE_SERVICE }:${ sanitized }`;
 }
 
-type Blob = Record< string, ElevatedToken >;
+function fingerprint( raw: string ): string {
+	return createHash( 'sha256' ).update( raw ).digest( 'hex' );
+}
 
-let inMemory: Blob | null = null;
-
-async function read(): Promise< Blob > {
-	if ( inMemory ) {
-		return inMemory;
+async function read( source: TokenSource ): Promise< Blob > {
+	if ( source === 'environment' ) {
+		return environmentInMemory;
+	}
+	if ( storedInMemory ) {
+		return storedInMemory;
 	}
 
 	const keychain = await getKeychain();
 	const raw = await keychain.getPassword( serviceName() );
 	if ( ! raw ) {
-		inMemory = {};
-		return inMemory;
+		storedInMemory = {};
+		return storedInMemory;
 	}
 
 	try {
 		const parsed = JSON.parse( raw ) as unknown;
 		if ( typeof parsed === 'object' && parsed !== null && ! Array.isArray( parsed ) ) {
-			inMemory = parsed as Blob;
+			storedInMemory = parsed as Blob;
 		} else {
 			debug( 'Elevated token blob had unexpected shape; resetting' );
-			inMemory = {};
+			storedInMemory = {};
 			await keychain.deletePassword( serviceName() );
 		}
-	} catch ( err ) {
-		debug( 'Failed to parse elevated token blob; resetting (%o)', err );
-		inMemory = {};
+	} catch {
+		debug( 'Failed to parse elevated token blob; resetting' );
+		storedInMemory = {};
 		await keychain.deletePassword( serviceName() );
 	}
 
-	return inMemory;
+	return storedInMemory;
 }
 
-async function write( blob: Blob ): Promise< void > {
-	inMemory = blob;
+async function write( blob: Blob, source: TokenSource ): Promise< void > {
+	if ( source === 'environment' ) {
+		environmentInMemory = blob;
+		return;
+	}
+	storedInMemory = blob;
 	const keychain = await getKeychain();
 	if ( Object.keys( blob ).length === 0 ) {
 		await keychain.deletePassword( serviceName() );
@@ -70,53 +81,55 @@ function isExpired( token: ElevatedToken ): boolean {
 	if ( Number.isNaN( exp ) ) {
 		return true;
 	}
-	// Treat tokens within the next 5 seconds as effectively expired.
 	return Date.now() >= exp - 5_000;
 }
 
 async function get( scope: string ): Promise< ElevatedToken | null > {
-	const blob = await read();
-	const token = blob[ scope ];
-	if ( ! token ) {
+	const { token: primary, source } = await Token.resolve();
+	const blob = await read( source );
+	const cached = blob[ scope ];
+	if ( ! cached ) {
 		return null;
 	}
-	if ( isExpired( token ) ) {
-		debug( 'Cached elevated token for %s is expired; evicting', scope );
+	if ( cached.primaryTokenFingerprint !== fingerprint( primary.raw ) || isExpired( cached ) ) {
+		debug( 'Cached elevated token for %s is expired or belongs to another primary token', scope );
 		const { [ scope ]: _evicted, ...rest } = blob;
-		await write( rest );
+		await write( rest, source );
 		return null;
 	}
-	return token;
+	const { primaryTokenFingerprint: _fingerprint, ...elevated } = cached;
+	return elevated;
 }
 
 async function set( scope: string, token: ElevatedToken ): Promise< void > {
-	const blob = await read();
-	blob[ scope ] = token;
-	await write( blob );
+	const { token: primary, source } = await Token.resolve();
+	const blob = await read( source );
+	blob[ scope ] = { ...token, primaryTokenFingerprint: fingerprint( primary.raw ) };
+	await write( blob, source );
 }
 
 async function clearScope( scope: string ): Promise< void > {
-	const blob = await read();
+	const { source } = await Token.resolve();
+	const blob = await read( source );
 	if ( scope in blob ) {
 		const { [ scope ]: _removed, ...rest } = blob;
-		await write( rest );
+		await write( rest, source );
 	}
 }
 
 async function clearAll(): Promise< void > {
-	inMemory = {};
+	if ( Token.isEnvironmentSet() ) {
+		environmentInMemory = {};
+		return;
+	}
+	storedInMemory = {};
 	const keychain = await getKeychain();
 	await keychain.deletePassword( serviceName() );
 }
 
 function _resetInMemoryForTests(): void {
-	inMemory = null;
+	storedInMemory = null;
+	environmentInMemory = {};
 }
 
-export default {
-	get,
-	set,
-	clearScope,
-	clearAll,
-	_resetInMemoryForTests,
-};
+export default { get, set, clearScope, clearAll, _resetInMemoryForTests };
