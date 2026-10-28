@@ -1,5 +1,6 @@
 import { expect, jest } from '@jest/globals';
 import enquirer from 'enquirer';
+import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import path from 'node:path';
@@ -24,11 +25,50 @@ jest.mock( '../../../src/lib/search-and-replace' );
 jest.mock( '../../../src/lib/dev-environment/dev-environment-cli' );
 
 describe( 'lib/dev-environment/dev-environment-core', () => {
-	const cleanup = () =>
-		fs.rmSync( path.join( tmpdir(), 'lando' ), { recursive: true, force: true } );
+	let fixtureRoot;
+	let tempRoot;
+	let sentinel;
+	let previousTemp = {};
 
-	beforeAll( cleanup );
-	afterAll( cleanup );
+	beforeAll( () => {
+		fixtureRoot = fs.mkdtempSync( path.join( tmpdir(), 'vip-dev-env-test-' ) );
+		try {
+			tempRoot = path.join( fixtureRoot, 'temp' );
+			sentinel = path.join( fixtureRoot, 'unrelated' );
+			fs.mkdirSync( tempRoot );
+			fs.writeFileSync( sentinel, 'preserve' );
+			previousTemp = Object.fromEntries(
+				[ 'TMPDIR', 'TMP', 'TEMP' ].map( key => [ key, process.env[ key ] ] )
+			);
+			for ( const key of Object.keys( previousTemp ) ) {
+				process.env[ key ] = tempRoot;
+			}
+		} catch ( error ) {
+			fs.rmSync( fixtureRoot, { recursive: true, force: true } );
+			throw error;
+		}
+	} );
+
+	afterAll( () => {
+		jest.restoreAllMocks();
+		try {
+			if ( tempRoot && sentinel && fs.existsSync( fixtureRoot ) ) {
+				fs.rmSync( tempRoot, { recursive: true, force: true } );
+				assert.equal( fs.readFileSync( sentinel, 'utf8' ), 'preserve' );
+			}
+		} finally {
+			for ( const [ key, value ] of Object.entries( previousTemp ) ) {
+				if ( value === undefined ) {
+					delete process.env[ key ];
+				} else {
+					process.env[ key ] = value;
+				}
+			}
+			if ( fixtureRoot ) {
+				fs.rmSync( fixtureRoot, { recursive: true, force: true } );
+			}
+		}
+	} );
 
 	beforeEach( () => {
 		jest.resetAllMocks();
