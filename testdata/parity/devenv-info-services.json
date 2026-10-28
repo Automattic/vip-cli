@@ -1,0 +1,91 @@
+[
+  {
+    "Service": "nginx",
+    "State": "running",
+    "Publishers": []
+  },
+  {
+    "Service": "database",
+    "State": "running",
+    "Publishers": [
+      {
+        "URL": "127.0.0.1",
+        "TargetPort": 3306,
+        "PublishedPort": 49153,
+        "Protocol": "tcp"
+      },
+      {
+        "URL": "::",
+        "TargetPort": 3306,
+        "PublishedPort": 49153,
+        "Protocol": "tcp"
+      }
+    ]
+  },
+  {
+    "Service": "elasticsearch",
+    "State": "running",
+    "Publishers": [
+      {
+        "URL": "127.0.0.1",
+        "TargetPort": 9200,
+        "PublishedPort": 49154,
+        "Protocol": "tcp"
+      },
+      {
+        "URL": "::",
+        "TargetPort": 9200,
+        "PublishedPort": 49154,
+        "Protocol": "tcp"
+      },
+      {
+        "URL": "",
+        "TargetPort": 9300,
+        "PublishedPort": 0,
+        "Protocol": "tcp"
+      }
+    ]
+  },
+  {
+    "Service": "phpmyadmin",
+    "State": "running",
+    "Publishers": [
+      {
+        "URL": "127.0.0.1",
+        "TargetPort": 80,
+        "PublishedPort": 49155,
+        "Protocol": "tcp"
+      }
+    ]
+  },
+  {
+    "Service": "mailpit",
+    "State": "running",
+    "Publishers": [
+      {
+        "URL": "0.0.0.0",
+        "TargetPort": 1025,
+        "PublishedPort": 49156,
+        "Protocol": "tcp"
+      },
+      {
+        "URL": "0.0.0.0",
+        "TargetPort": 8025,
+        "PublishedPort": 49157,
+        "Protocol": "tcp"
+      }
+    ]
+  },
+  {
+    "Service": "photon",
+    "State": "running",
+    "Publishers": [
+      {
+        "URL": "",
+        "TargetPort": 9000,
+        "PublishedPort": 0,
+        "Protocol": "tcp"
+      }
+    ]
+  }
+]
