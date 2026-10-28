@@ -25,6 +25,9 @@ type Software struct {
 	Pinned     bool
 	Current    Version
 	Options    []Version
+	// RunningVersion is the full PHP version running on the environment
+	// (e.g. 8.2.35). Only set for `config software get php`; empty otherwise.
+	RunningVersion string
 }
 
 // FormattedRow is one row of `config software get` output.
@@ -87,6 +90,9 @@ func optionValues(s Software) []string {
 
 func baseRow(s Software) FormattedRow {
 	version := s.Current.Version
+	if s.RunningVersion != "" {
+		version = s.RunningVersion // software.ts formatSoftwareSettings
+	}
 	if s.Slug == "wordpress" && !s.Pinned {
 		version += " (managed updates)" // software.ts:428-430
 	}

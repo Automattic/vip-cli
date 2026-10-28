@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
+    "module": "commonjs",
+    "moduleResolution": "bundler",
+    "rootDir": ".",
+    "noEmit": false
+  },
+  // ts-jest adds test and source files as they are transformed.
+  "include": [ "types/**/*.d.ts" ],
+  "exclude": [ "codegen.ts" ]
+}

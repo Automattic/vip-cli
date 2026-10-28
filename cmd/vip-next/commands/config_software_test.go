@@ -143,6 +143,56 @@ func TestConfigSoftwareGetNullSettings(t *testing.T) {
 	}
 }
 
+func TestConfigSoftwareGetPhpShowsRunningVersion(t *testing.T) {
+	var runningVersionRequests int
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		w.Header().Set("Content-Type", "application/json")
+		if strings.Contains(string(body), `"operationName":"SoftwareRunningPhpVersion"`) {
+			runningVersionRequests++
+			_, _ = w.Write([]byte(`{"data":{"app":{"environments":[{"softwareSettings":{"php":{"runningVersion":"8.2.35"}}}]}}}`))
+			return
+		}
+		_, _ = w.Write([]byte(softwareSettingsBody))
+	}))
+	t.Cleanup(srv.Close)
+	setupSoftwareConfig(srv)
+	defer SetConfig(Config{})
+
+	versionOf := func(rows output.OrderedRows, name string) any {
+		for _, row := range rows {
+			if row[0].Value == name {
+				return row[2].Value
+			}
+		}
+		return nil
+	}
+
+	cmd := ConfigSoftwareGetCmd()
+	cmd.SetContext(ctxWithAppEnv(1, 2))
+	data, err := runConfigSoftwareGet(cmd, []string{"php"})
+	if err != nil {
+		t.Fatalf("runConfigSoftwareGet(php): %v", err)
+	}
+	if got := versionOf(data.(output.OrderedRows), "PHP"); got != "8.2.35" {
+		t.Errorf("php version = %v, want 8.2.35", got)
+	}
+
+	// Without the php argument, the running version isn't requested.
+	cmd = ConfigSoftwareGetCmd()
+	cmd.SetContext(ctxWithAppEnv(1, 2))
+	data, err = runConfigSoftwareGet(cmd, nil)
+	if err != nil {
+		t.Fatalf("runConfigSoftwareGet: %v", err)
+	}
+	if got := versionOf(data.(output.OrderedRows), "PHP"); got != "8.2" {
+		t.Errorf("php version = %v, want 8.2", got)
+	}
+	if runningVersionRequests != 1 {
+		t.Errorf("SoftwareRunningPhpVersion requests = %d, want 1", runningVersionRequests)
+	}
+}
+
 func TestConfigSoftwareGetUnknownComponent(t *testing.T) {
 	srv := softwareStubServer(t, softwareSettingsBody)
 	setupSoftwareConfig(srv)
