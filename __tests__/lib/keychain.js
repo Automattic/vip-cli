@@ -1,15 +1,49 @@
 import { randomBytes } from 'crypto';
-
-import { Insecure } from '../../src/lib/keychain/insecure';
+import assert from 'node:assert/strict';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 
 const account = 'vip-cli-test';
 const password = randomBytes( 256 ).toString();
 
 describe( 'token tests (insecure)', () => {
-	const keychain = new Insecure( account );
+	let keychain;
+	let root;
+	let previousConfigHome;
+
+	beforeEach( () => {
+		root = mkdtempSync( path.join( tmpdir(), 'vip-keychain-test-' ) );
+		const configHome = path.join( root, 'config' );
+		mkdirSync( configHome );
+		writeFileSync( path.join( root, 'sentinel' ), 'unchanged' );
+		previousConfigHome = process.env.XDG_CONFIG_HOME;
+		process.env.XDG_CONFIG_HOME = configHome;
+		jest.isolateModules( () => {
+			const { Insecure } = require( '../../src/lib/keychain/insecure' );
+			keychain = new Insecure( account );
+		} );
+		assert.equal(
+			keychain.configstore.path,
+			path.join( configHome, 'configstore', `${ account }.json` )
+		);
+	} );
+
+	afterEach( () => {
+		try {
+			assert.equal( readFileSync( path.join( root, 'sentinel' ), 'utf8' ), 'unchanged' );
+		} finally {
+			if ( previousConfigHome === undefined ) delete process.env.XDG_CONFIG_HOME;
+			else process.env.XDG_CONFIG_HOME = previousConfigHome;
+			rmSync( root, { recursive: true, force: true } );
+		}
+	} );
 
 	it( 'should correctly set token', async () => {
 		await keychain.setPassword( account, password );
+		expect(
+			readFileSync( path.join( root, 'config', 'configstore', `${ account }.json` ), 'utf8' )
+		).toContain( account );
 		const passwd = keychain.getPassword( account );
 		return expect( passwd ).resolves.toBe( password );
 	} );
@@ -53,5 +87,13 @@ describe( 'token tests (insecure)', () => {
 		] );
 
 		return expect( promise ).resolves.toEqual( expected );
+	} );
+
+	it( 'does not touch neighboring data when storage fails', async () => {
+		const configHome = path.join( root, 'config' );
+		rmSync( configHome, { recursive: true, force: true } );
+		writeFileSync( configHome, 'not a directory' );
+		await expect( keychain.setPassword( 'test', 'value' ) ).rejects.toThrow();
+		expect( readFileSync( path.join( root, 'sentinel' ), 'utf8' ) ).toBe( 'unchanged' );
 	} );
 } );

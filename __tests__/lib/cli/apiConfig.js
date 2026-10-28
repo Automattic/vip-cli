@@ -6,9 +6,21 @@ import { describe, it, expect, jest } from '@jest/globals';
 
 import * as featureFlags from '../../../src/lib/api/feature-flags';
 import { checkFeatureEnabled, exitWhenFeatureDisabled } from '../../../src/lib/cli/apiConfig';
-import Token from '../../../src/lib/token';
 
 jest.mock( '../../../src/lib/tracker' );
+jest.mock( '../../../src/lib/keychain', () => {
+	const store = new Map();
+	return {
+		getKeychain: jest.fn( async () => ( {
+			getPassword: async key => store.get( key ) ?? null,
+			setPassword: async ( key, value ) => {
+				store.set( key, value );
+				return true;
+			},
+			deletePassword: async key => store.delete( key ),
+		} ) ),
+	};
+} );
 const getFeatureSpy = jest.spyOn( featureFlags, 'get' );
 
 jest.spyOn( console, 'error' ).mockImplementation( () => {} );
@@ -17,10 +29,6 @@ jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 describe( 'apiConfig', () => {
 	beforeEach( () => {
 		getFeatureSpy.mockClear();
-
-		return Token.set(
-			'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiaWQiOjcsImlhdCI6MTUxNjIzOTAyMn0.RTJMXHhhiaCxQberZ5Pre7SBU3Ci8EvCyaOXoqG3pNA'
-		);
 	} );
 
 	describe( 'checkFeatureEnabled', () => {
