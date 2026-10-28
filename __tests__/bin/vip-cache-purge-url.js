@@ -1,3 +1,7 @@
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+
 import { cachePurgeCommand } from '../../src/bin/vip-cache-purge-url';
 import * as purgeCacheLib from '../../src/lib/api/cache-purge';
 import * as exit from '../../src/lib/cli/exit';
@@ -56,6 +60,8 @@ describe( 'cachePurgeCommand()', () => {
 		} );
 
 		await cachePurgeCommand( args, opts );
+		expect( purgeCacheLib.purgeCache ).toHaveBeenCalledTimes( 1 );
+		expect( purgeCacheLib.purgeCache ).toHaveBeenCalledWith( 1, 3, [ 'url' ] );
 
 		expect( console.log ).toHaveBeenCalledTimes( 1 );
 		expect( console.log ).toHaveBeenCalledWith( '- Purged URL: url' );
@@ -79,6 +85,36 @@ describe( 'cachePurgeCommand()', () => {
 			trackingParams
 		);
 		expect( readFromFile ).not.toHaveBeenCalled();
+	} );
+
+	it( 'reads file URLs, trims each line and retains an empty line', async () => {
+		const dir = mkdtempSync( path.join( tmpdir(), 'vip-purge-test-' ) );
+		try {
+			const fileName = path.join( dir, 'urls.txt' );
+			writeFileSync( fileName, '  https://one.example/path  \r\n\n https://two.example/other  \n' );
+			readFromFile.mockImplementationOnce(
+				jest.requireActual( '../../src/lib/read-file' ).readFromFile
+			);
+			purgeCacheLib.purgeCache.mockResolvedValueOnce( { success: true, urls: [] } );
+
+			await cachePurgeCommand( [ 'ignored' ], { ...opts, fromFile: fileName } );
+
+			expect( readFromFile ).toHaveBeenCalledWith( fileName );
+			expect( purgeCacheLib.purgeCache ).toHaveBeenCalledTimes( 1 );
+			expect( purgeCacheLib.purgeCache ).toHaveBeenCalledWith( 1, 3, [
+				'https://one.example/path',
+				'',
+				'https://two.example/other',
+			] );
+			expect( tracker.trackEvent ).toHaveBeenCalledWith( 'cache_purge_url_command_success', {
+				app_id: 1,
+				command: 'vip cache purge-url',
+				env_id: 3,
+				from_file: true,
+			} );
+		} finally {
+			rmSync( dir, { recursive: true, force: true } );
+		}
 	} );
 
 	it( 'should handle error when request fails', async () => {
