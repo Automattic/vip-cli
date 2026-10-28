@@ -2,6 +2,7 @@
  * @format
  */
 
+import { createHash } from 'crypto';
 import { mkdtempSync, rmSync, writeFileSync } from 'fs';
 import os from 'os';
 import path from 'path';
@@ -54,10 +55,20 @@ describe( 'client-file-uploader', () => {
 	} );
 
 	describe( 'getFileHash()', () => {
-		it( 'should get hash from a 67mb sql file', async () => {
-			const fileName = '__fixtures__/client-file-uploader/db-dump-ipsum-67mb.sql';
-			const md5 = await getFileHash( fileName );
-			expect( md5 ).toBe( '6a051288a7848e3fb3571af220fc455a' );
+		it( 'should hash a file spanning multiple stream chunks', async () => {
+			const dir = mkdtempSync( path.join( os.tmpdir(), 'vip-hash-test-' ) );
+			try {
+				const fileName = path.join( dir, 'input.bin' );
+				const bytes = Buffer.alloc( 150_001 );
+				for ( let index = 0; index < bytes.length; index++ ) {
+					bytes[ index ] = index % 251;
+				}
+				writeFileSync( fileName, bytes );
+				const expected = createHash( 'md5' ).update( bytes ).digest( 'hex' );
+				expect( await getFileHash( fileName ) ).toBe( expected );
+			} finally {
+				rmSync( dir, { recursive: true, force: true } );
+			}
 		} );
 
 		it( 'should get hash from a 5+mb text file', async () => {
