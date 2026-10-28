@@ -54,6 +54,42 @@ func TestExtractRejectsUnsafeArchives(t *testing.T) {
 	}
 }
 
+func TestExtractRejectsAlternatePayloadPaths(t *testing.T) {
+	for _, platform := range []Platform{{"linux", "amd64"}, {"darwin", "arm64"}, {"windows", "amd64"}} {
+		cli, helper := platform.names()
+		for _, member := range []string{cli, helper} {
+			for _, name := range []string{
+				"../" + member, "/" + member, "./" + member,
+				"bin/" + member, "bin/../" + member, `..\` + member,
+				`C:\` + member, `\\server\` + member, member + ":payload",
+			} {
+				t.Run(platform.OS+"/"+name, func(t *testing.T) {
+					root := t.TempDir()
+					stage := filepath.Join(root, "stage")
+					if err := os.Mkdir(stage, 0700); err != nil {
+						t.Fatal(err)
+					}
+					archive := filepath.Join(root, "payload.tar.gz")
+					data := tarBytes(t, []*tar.Header{{Name: name, Size: 1, Typeflag: tar.TypeReg}}, [][]byte{[]byte("x")})
+					if err := os.WriteFile(archive, data, 0600); err != nil {
+						t.Fatal(err)
+					}
+					if _, err := Extract(archive, stage, platform); err == nil || !strings.Contains(err.Error(), "unexpected or duplicate archive member") {
+						t.Fatalf("expected exact-name rejection, got: %v", err)
+					}
+					entries, err := os.ReadDir(stage)
+					if err != nil || len(entries) != 0 {
+						t.Fatalf("rejected archive wrote staging files: %v, %v", entries, err)
+					}
+					if _, err := os.Stat(filepath.Join(root, member)); !os.IsNotExist(err) {
+						t.Fatalf("archive wrote outside staging directory: %v", err)
+					}
+				})
+			}
+		}
+	}
+}
+
 type roundTripFunc func(*http.Request) (*http.Response, error)
 
 func (f roundTripFunc) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }
