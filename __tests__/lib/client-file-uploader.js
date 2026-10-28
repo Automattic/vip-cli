@@ -459,6 +459,80 @@ describe( 'client-file-uploader', () => {
 			http.mockReset();
 		} );
 
+		it( 'uploads the correct bytes for each part including a retried non-first part', async () => {
+			const bytes = Buffer.from( Array.from( { length: 174 }, ( _value, index ) => index % 251 ) );
+			const fileName = path.join( tmpDir, 'distinct-parts.bin' );
+			writeFileSync( fileName, bytes );
+			const parts = [
+				{ start: 0, end: 100, index: 0, partSize: 101 },
+				{ start: 101, end: 173, index: 1, partSize: 73 },
+			];
+			const bodies = { 1: [], 2: [] };
+			const lengths = { 1: [], 2: [] };
+			http.mockImplementation( async ( _path, options ) => ( {
+				status: 200,
+				json: async () => ( {
+					url: `https://s3.example.com/part/${ options.body.partNumber }`,
+					options: { method: 'PUT', headers: {} },
+				} ),
+			} ) );
+			fetch.mockImplementation( async ( url, init ) => {
+				const partNumber = Number( url.split( '/' ).pop() );
+				lengths[ partNumber ].push( init.headers.get( 'content-length' ) );
+				const chunks = [];
+				for await ( const chunk of init.body ) {
+					chunks.push( chunk );
+				}
+				bodies[ partNumber ].push( Buffer.concat( chunks ) );
+				if ( partNumber === 2 && bodies[ 2 ].length === 1 ) {
+					throw new Error( 'ECONNRESET' );
+				}
+				return uploadOkResponse( `etag-${ partNumber }` );
+			} );
+
+			const progress = [];
+			const result = await uploadParts( {
+				app: { id: 1 },
+				env: { id: 2 },
+				fileMeta: {
+					basename: 'distinct-parts.bin',
+					fileName,
+					fileSize: bytes.length,
+					isCompressed: false,
+				},
+				uploadId: 'upload-id',
+				parts,
+				progressCallback: percentage => progress.push( percentage ),
+			} );
+
+			expect( bodies[ 1 ] ).toEqual( [ bytes.subarray( 0, 101 ) ] );
+			expect( bodies[ 2 ] ).toEqual( [ bytes.subarray( 101 ), bytes.subarray( 101 ) ] );
+			expect( lengths ).toEqual( { 1: [ '101' ], 2: [ '73', '73' ] } );
+			expect( result ).toEqual( [
+				{ ETag: 'etag-1', PartNumber: 1 },
+				{ ETag: 'etag-2', PartNumber: 2 },
+			] );
+			expect( http ).toHaveBeenCalledTimes( 2 );
+			for ( const partNumber of [ 1, 2 ] ) {
+				expect( http ).toHaveBeenCalledWith(
+					'/upload/site-import-presigned-url',
+					expect.objectContaining( {
+						method: 'POST',
+						body: expect.objectContaining( {
+							action: 'UploadPart',
+							appId: 1,
+							envId: 2,
+							basename: 'distinct-parts.bin',
+							partNumber,
+							uploadId: 'upload-id',
+						} ),
+					} )
+				);
+			}
+			expect( progress.every( pct => parseInt( pct, 10 ) <= 100 ) ).toBe( true );
+			expect( progress[ progress.length - 1 ] ).toBe( '100%' );
+		}, 15000 );
+
 		it( 'should upload every part and aggregate progress without exceeding 100%', async () => {
 			const fileSize = 200;
 			const fileName = writeTempFile( 'two-parts.bin', fileSize );
