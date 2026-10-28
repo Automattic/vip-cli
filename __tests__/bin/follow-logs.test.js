@@ -77,6 +77,7 @@ describe( 'follow log polling', () => {
 		'%s stops immediately when the initial request fails',
 		async ( _name, follow, fetchLogs ) => {
 			fetchLogs.mockRejectedValueOnce( new Error( 'initial failure' ) );
+			delay.mockRejectedValue( new Error( 'unexpected delay' ) );
 			await expect( follow( { ...options } ) ).resolves.toBeUndefined();
 			expect( fetchLogs ).toHaveBeenCalledTimes( 1 );
 			expect( delay ).not.toHaveBeenCalled();
@@ -100,5 +101,8 @@ describe( 'follow log polling', () => {
 		expect( delay.mock.calls[ 0 ] ).toEqual( [ 5000 ] );
 		expect( delay.mock.calls.slice( -2 ) ).toEqual( [ [ 300000 ], [ 300000 ] ] );
 		expect( delay.mock.calls.every( ( [ milliseconds ] ) => milliseconds <= 300000 ) ).toBe( true );
+		expect( fetchLogs.mock.calls.slice( 1 ).map( call => call.at( -1 ) ) ).toEqual(
+			Array( 11 ).fill( 'cursor' )
+		);
 	} );
 } );
