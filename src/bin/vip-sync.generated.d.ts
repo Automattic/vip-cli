@@ -14,6 +14,7 @@ export type SyncEnvironmentMutationMutation = {
 
 export type AppQueryVariables = Types.Exact< {
 	id?: Types.InputMaybe< Types.Scalars[ 'Int' ][ 'input' ] >;
+	envId?: Types.InputMaybe< Types.Scalars[ 'Int' ][ 'input' ] >;
 } >;
 
 export type AppQuery = {
@@ -32,6 +33,8 @@ export type AppQuery = {
 			syncProgress?: {
 				__typename?: 'AppEnvironmentSyncProgress';
 				status?: string | null;
+				error?: string | null;
+				progress_update_text?: string | null;
 				sync?: number | null;
 				steps?: Array< {
 					__typename?: 'AppEnvironmentSyncStep';
