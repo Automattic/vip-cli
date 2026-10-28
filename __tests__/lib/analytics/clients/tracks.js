@@ -46,7 +46,7 @@ describe( 'lib/analytics/tracks', () => {
 	} );
 
 	describe( '.trackEvent()', () => {
-		it( 'should pass event details to request', () => {
+		it( 'should pass event details to request', async () => {
 			const checkIfUserIsVipSpy = jest.spyOn( apiConfig, 'checkIfUserIsVip' );
 			const tracksClient = new Tracks( 123, 'vip', 'prefix_', {} );
 
@@ -57,13 +57,9 @@ describe( 'lib/analytics/tracks', () => {
 
 			checkIfUserIsVipSpy.mockResolvedValue( true );
 
-			const expectedBodyMatch =
-				'events%5B0%5D%5B_en%5D=prefix_clickButton' +
-				'&events%5B0%5D%5BbuttonName%5D=deploy' +
-				'&events%5B0%5D%5Bis_vip%5D=true';
-
+			let requestBody;
 			buildMockRequest().reply( options => {
-				expect( String( options.body ) ).toContain( expectedBodyMatch );
+				requestBody = String( options.body );
 
 				return {
 					statusCode: 200,
@@ -71,18 +67,26 @@ describe( 'lib/analytics/tracks', () => {
 				};
 			} );
 
-			return tracksClient.trackEvent( eventName, eventDetails );
+			const response = await tracksClient.trackEvent( eventName, eventDetails );
+			expect( response.status ).toBe( 200 );
+			const eventParams = [ ...new URLSearchParams( requestBody ) ].filter( ( [ key ] ) =>
+				key.startsWith( 'events[' )
+			);
+			expect( eventParams ).toEqual( [
+				[ 'events[0][_en]', 'prefix_clickButton' ],
+				[ 'events[0][buttonName]', 'deploy' ],
+				[ 'events[0][is_vip]', 'true' ],
+			] );
 		} );
 
-		it( 'should ignore prefix if already set for event name', () => {
+		it( 'should ignore prefix if already set for event name', async () => {
 			const tracksClient = new Tracks( 123, 'vip', 'existingprefix_', {} );
 
 			const eventName = 'existingprefix_clickButton';
 
-			const expectedBodyMatch = 'events%5B0%5D%5B_en%5D=existingprefix_clickButton';
-
+			let requestBody;
 			buildMockRequest().reply( options => {
-				expect( String( options.body ) ).toContain( expectedBodyMatch );
+				requestBody = String( options.body );
 
 				return {
 					statusCode: 200,
@@ -90,7 +94,15 @@ describe( 'lib/analytics/tracks', () => {
 				};
 			} );
 
-			return tracksClient.trackEvent( eventName, {} );
+			const response = await tracksClient.trackEvent( eventName, {} );
+			expect( response.status ).toBe( 200 );
+			const eventParams = [ ...new URLSearchParams( requestBody ) ].filter( ( [ key ] ) =>
+				key.startsWith( 'events[' )
+			);
+			expect( eventParams ).toEqual( [
+				[ 'events[0][_en]', 'existingprefix_clickButton' ],
+				[ 'events[0][is_vip]', 'true' ],
+			] );
 		} );
 
 		it( 'should not reject promise when tracking fails', async () => {
