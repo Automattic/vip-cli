@@ -116,6 +116,39 @@ func TestParseSerializePreservesUnknownKeys(t *testing.T) {
 	}
 }
 
+func TestSerializePreservesExtrasAndKnownFieldPrecedence(t *testing.T) {
+	d := &InstanceData{
+		SiteSlug: "modeled",
+		Extra: map[string]json.RawMessage{
+			"siteSlug": json.RawMessage(`"stale"`),
+			"future":   json.RawMessage(`{"nested":[1,true,"value"]}`),
+		},
+	}
+	out, err := serialize(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal(out, &fields); err != nil {
+		t.Fatal(err)
+	}
+	var slug string
+	if err := json.Unmarshal(fields["siteSlug"], &slug); err != nil || slug != "modeled" {
+		t.Fatalf("modeled field lost precedence: %q, %v", slug, err)
+	}
+	var future any
+	if err := json.Unmarshal(fields["future"], &future); err != nil {
+		t.Fatal(err)
+	}
+	want := map[string]any{"nested": []any{float64(1), true, "value"}}
+	if !reflect.DeepEqual(future, want) {
+		t.Fatalf("unknown value changed: %#v", future)
+	}
+	if string(d.Extra["siteSlug"]) != `"stale"` || string(d.Extra["future"]) != `{"nested":[1,true,"value"]}` || len(d.Extra) != 2 {
+		t.Fatalf("serialization mutated Extra: %v", d.Extra)
+	}
+}
+
 func TestParseAppliesBackcompatMigrations(t *testing.T) {
 	raw, err := os.ReadFile(filepath.Join("testdata", "legacy_keys.json"))
 	if err != nil {
