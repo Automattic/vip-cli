@@ -91,7 +91,7 @@ describe( 'cachePurgeCommand()', () => {
 		const dir = mkdtempSync( path.join( tmpdir(), 'vip-purge-test-' ) );
 		try {
 			const fileName = path.join( dir, 'urls.txt' );
-			writeFileSync( fileName, '  https://one.example/path  \r\n\n https://two.example/other  ' );
+			writeFileSync( fileName, '  https://one.example/path  \r\n\n https://two.example/other  \n' );
 			readFromFile.mockImplementationOnce(
 				jest.requireActual( '../../src/lib/read-file' ).readFromFile
 			);
