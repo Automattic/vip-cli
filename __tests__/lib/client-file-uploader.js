@@ -457,6 +457,7 @@ describe( 'client-file-uploader', () => {
 				{ start: 101, end: 173, index: 1, partSize: 73 },
 			];
 			const bodies = { 1: [], 2: [] };
+			const lengths = { 1: [], 2: [] };
 			http.mockImplementation( async ( _path, options ) => ( {
 				status: 200,
 				json: async () => ( {
@@ -466,6 +467,7 @@ describe( 'client-file-uploader', () => {
 			} ) );
 			fetch.mockImplementation( async ( url, init ) => {
 				const partNumber = Number( url.split( '/' ).pop() );
+				lengths[ partNumber ].push( init.headers.get( 'content-length' ) );
 				const chunks = [];
 				for await ( const chunk of init.body ) {
 					chunks.push( chunk );
@@ -494,6 +496,7 @@ describe( 'client-file-uploader', () => {
 
 			expect( bodies[ 1 ] ).toEqual( [ bytes.subarray( 0, 101 ) ] );
 			expect( bodies[ 2 ] ).toEqual( [ bytes.subarray( 101 ), bytes.subarray( 101 ) ] );
+			expect( lengths ).toEqual( { 1: [ '101' ], 2: [ '73', '73' ] } );
 			expect( result ).toEqual( [
 				{ ETag: 'etag-1', PartNumber: 1 },
 				{ ETag: 'etag-2', PartNumber: 2 },
