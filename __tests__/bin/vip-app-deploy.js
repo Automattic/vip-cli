@@ -141,9 +141,10 @@ describe( 'vip-app-deploy', () => {
 		} );
 
 		it( 'uploads and deploys after matching domain confirmation', async () => {
-			prompt.mockResolvedValueOnce( { confirmedDomain: 'example.com/develop' } );
+			prompt.mockResolvedValueOnce( { confirmedDomain: 'EXAMPLE.COM/DEVELOP' } );
 			await appDeployCmd( args, { ...opts, force: false } );
 			expect( prompt ).toHaveBeenCalledTimes( 1 );
+			expect( exitSpy ).not.toHaveBeenCalled();
 			expect( uploadImportFileToS3 ).toHaveBeenCalledTimes( 1 );
 			expect( mutate ).toHaveBeenCalledTimes( 1 );
 		} );
