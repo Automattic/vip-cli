@@ -17,8 +17,8 @@ function killEscapedChild( pidFile ) {
 
 describe( 'dev-env CLI subprocess helper', () => {
 	const cli = new CliTest();
-	const run = ( script, control ) =>
-		cli.spawn( [ process.execPath, '-e', script ], {}, false, control );
+	const run = ( script, control, args = [] ) =>
+		cli.spawn( [ process.execPath, '-e', script, ...args ], {}, false, control );
 
 	it( 'collects output until the inherited streams close', async () => {
 		const script = `require('child_process').spawn(process.execPath, ['-e', "setTimeout(() => { console.log('late stdout'); console.error('late stderr'); }, 100)"], { stdio: 'inherit' });`;
@@ -67,14 +67,15 @@ describe( 'dev-env CLI subprocess helper', () => {
 	( process.platform === 'win32' ? it.skip : it )(
 		'stops waiting for pipes held by an escaped descendant',
 		async () => {
-			const dir = mkdtempSync( path.join( os.tmpdir(), 'vip-cli-escaped-child-' ) );
+			const dir = mkdtempSync( path.join( os.tmpdir(), 'vip-cli-escaped-\'"$-child-' ) );
 			const pidFile = path.join( dir, 'pid' );
 			try {
-				const script = `const child = require('child_process').spawn(process.execPath, ['-e', 'setTimeout(() => {}, 10000)'], { detached: true, stdio: 'inherit' }); require('fs').writeFileSync(${ JSON.stringify(
-					pidFile
-				) }, String(child.pid)); child.unref();`;
+				const script =
+					"const child = require('child_process').spawn(process.execPath, ['-e', 'setTimeout(() => {}, 10000)'], { detached: true, stdio: 'inherit' }); require('fs').writeFileSync(process.argv[1], String(child.pid)); child.unref();";
 				const started = Date.now();
-				await expect( run( script, { timeoutMs: 1000 } ) ).rejects.toThrow( 'timed out' );
+				await expect( run( script, { timeoutMs: 1000 }, [ pidFile ] ) ).rejects.toThrow(
+					'timed out'
+				);
 				expect( Date.now() - started ).toBeLessThan( 5000 );
 			} finally {
 				killEscapedChild( pidFile );
