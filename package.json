@@ -94,8 +94,9 @@
     "prepare": "npm run clean && npm run build",
     "check-types": "tsc",
     "postinstall": "node ./helpers/check-version.js",
-    "build": "babel src -d dist --extensions=\".js,.ts\"",
-    "build:watch": "babel src -d dist --watch --source-maps --extensions=\".js,.ts\"",
+    "build": "tsc -p tsconfig.build.json",
+    "postbuild": "node helpers/mark-cli-executable.js",
+    "build:watch": "npm run build && tsc -p tsconfig.build.json --watch --sourceMap",
     "format": "npm run cmd:format -- --write",
     "format:check": "npm run cmd:format -- --check",
     "jest": "jest --testPathIgnorePatterns __tests__/devenv-e2e/",
@@ -130,10 +131,6 @@
   "homepage": "https://github.com/Automattic/vip#readme",
   "devDependencies": {
     "@automattic/eslint-plugin-wpvip": "^2.0.0",
-    "@babel/cli": "7.29.7",
-    "@babel/core": "7.29.7",
-    "@babel/plugin-transform-modules-commonjs": "7.29.7",
-    "@babel/preset-typescript": "7.29.7",
     "@jest/globals": "^30.0.0",
     "@jest/test-sequencer": "^30.0.0",
     "@types/configstore": "^6.0.2",
@@ -151,6 +148,7 @@
     "dockerode": "^5.0.0",
     "jest": "^30.0.0",
     "prettier": "npm:wp-prettier@3.0.3",
+    "ts-jest": "29.4.11",
     "typescript": "^6.0.2"
   },
   "dependencies": {
