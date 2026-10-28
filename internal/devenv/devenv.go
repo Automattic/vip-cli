@@ -332,7 +332,7 @@ func Info(ctx context.Context, slug string) (string, error) {
 	}
 	view := compose.NewView(d, compose.Options{Domain: d.Domain})
 	ports, _ := proxy.LoadPorts(proxy.PortsStatePath())
-	states, _ := dockerAdapter{r: r}.ComposePS(ctx, slug)
+	states, _ := r.ComposePS(ctx, slug)
 	return renderEnvInfo(slug, view, ports, states), nil
 }
 

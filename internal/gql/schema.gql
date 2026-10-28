@@ -7139,8 +7139,14 @@ type AppEnvironmentSyncPreview {
 
 """Progress details for an environment sync."""
 type AppEnvironmentSyncProgress {
+  """Why the sync failed, when the sync recorded a reason."""
+  error: String
+
   """When the sync finished, as a Unix timestamp."""
   finished_at: Int
+
+  """Live details about the current step, such as bytes transferred."""
+  progress_update_text: String
 
   """When the sync started, as a Unix timestamp."""
   started_at: Int
