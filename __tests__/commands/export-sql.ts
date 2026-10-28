@@ -273,6 +273,13 @@ describe( 'commands/ExportSQLCommand', () => {
 			const downloadMock = jest.spyOn( downloadFileModule, 'downloadFile' ).mockResolvedValue();
 
 			await exportCommand.run();
+			expect( stepSuccessSpy.mock.calls.map( call => call[ 0 ] ) ).toEqual( [
+				'prepare',
+				'create',
+				'downloadLink',
+				'confirmEnoughStorage',
+				'download',
+			] );
 			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'prepare', expect.any( Array ) );
 			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'create' );
 			expect( stepSuccessSpy ).toHaveBeenCalledWith( 'confirmEnoughStorage' );
