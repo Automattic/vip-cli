@@ -1,7 +1,7 @@
 import { expect, jest } from '@jest/globals';
 import enquirer from 'enquirer';
 import fs from 'node:fs';
-import { homedir, tmpdir } from 'node:os';
+import { homedir } from 'node:os';
 import path from 'node:path';
 
 import app from '../../../src/lib/api/app';
@@ -24,12 +24,6 @@ jest.mock( '../../../src/lib/search-and-replace' );
 jest.mock( '../../../src/lib/dev-environment/dev-environment-cli' );
 
 describe( 'lib/dev-environment/dev-environment-core', () => {
-	const cleanup = () =>
-		fs.rmSync( path.join( tmpdir(), 'lando' ), { recursive: true, force: true } );
-
-	beforeAll( cleanup );
-	afterAll( cleanup );
-
 	beforeEach( () => {
 		jest.resetAllMocks();
 		jest.restoreAllMocks();
