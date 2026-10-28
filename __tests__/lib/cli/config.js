@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import path from 'node:path';
 
 import { loadConfigFile } from '../../../src/lib/cli/config';
 
@@ -10,38 +11,49 @@ describe( 'utils/cli/config', () => {
 	it.each( [
 		{
 			description: 'should return development if config.local.json is present',
-			files: { local: true, publish: true },
+			files: {
+				'config.local.json': '{"environment":"development"}',
+				'config.publish.json': '{"environment":"production"}',
+			},
 			expected: { environment: 'development' },
+			reads: [ 'config.local.json' ],
 		},
 		{
 			description: 'should return production if config.local.json is missing',
-			files: { local: false, publish: true },
+			files: { 'config.publish.json': '{"environment":"production"}' },
 			expected: { environment: 'production' },
+			reads: [ 'config.local.json', 'config.publish.json' ],
+		},
+		{
+			description: 'should fall back to publish config when local JSON is invalid',
+			files: { 'config.local.json': '{', 'config.publish.json': '{"environment":"production"}' },
+			expected: { environment: 'production' },
+			reads: [ 'config.local.json', 'config.publish.json' ],
 		},
 		{
 			description: 'should throw error if config.local.json and config.publish.json are missing',
-			files: { local: false, publish: false },
+			files: {},
 			expected: null,
+			reads: [ 'config.local.json', 'config.publish.json' ],
 		},
-	] )( '$description', ( { files, expected } ) => {
+	] )( '$description', ( { files, expected, reads } ) => {
 		const origReadFileSync = fs.readFileSync;
+		const actualReads = [];
 		jest.spyOn( fs, 'readFileSync' ).mockImplementation( ( filePath, ...params ) => {
-			if ( typeof filePath !== 'string' || ! filePath.includes( 'config.' ) ) {
+			const fileName = typeof filePath === 'string' ? path.basename( filePath ) : '';
+			if ( ! [ 'config.local.json', 'config.publish.json' ].includes( fileName ) ) {
 				return origReadFileSync( filePath, ...params );
 			}
-
-			if (
-				( filePath.includes( 'config.local.json' ) && ! files.local ) ||
-				( filePath.includes( 'config.publish.json' ) && ! files.publish )
-			) {
+			actualReads.push( fileName );
+			if ( ! Object.hasOwn( files, fileName ) ) {
 				throw new Error();
 			}
-
-			return JSON.stringify( expected );
+			return files[ fileName ];
 		} );
 
 		const actual = loadConfigFile();
 		expect( actual ).toStrictEqual( expected );
+		expect( actualReads ).toEqual( reads );
 	} );
 
 	it( 'should return null when both config files are missing with ENOENT', () => {
