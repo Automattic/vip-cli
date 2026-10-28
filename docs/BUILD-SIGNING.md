@@ -276,10 +276,15 @@ select a different `vip-next`; use `command -v vip-next` (macOS) or
 `where.exe vip-next` (Windows) to identify the active installation.
 
 Installer-owned directories contain `.vip-next-installer.json`. The Go updater
-recognizes this file and directs users to download the appropriate installer
-instead of replacing package-managed binaries. Keep this metadata intact.
-`vip-next update --check` still checks for available releases. Portable tarballs
-do not contain this marker and retain their existing self-update behavior.
+recognizes this file and downloads, verifies, and opens the matching native
+installer for interactive `vip-next update` runs. Complete the upgrade and
+administrator approval in the installer window, then verify with
+`vip-next --version`. Non-interactive runs print the exact installer download
+link. Keep this metadata intact: the CLI leaves replacement of these binaries
+to the native installer. `vip-next update --check` still checks for available
+releases. Portable tarballs do not contain this marker and retain their
+existing self-update behavior. See [update handoff and recovery](GO-UPDATES.md#installation-and-recovery)
+for download retention and failure handling.
 
 On Windows, uninstall **VIP CLI** through Installed apps or `msiexec /x` with
 the installed package. On macOS, run:

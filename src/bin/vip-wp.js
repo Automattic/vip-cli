@@ -76,7 +76,46 @@ const unpipeStreamsFromProcess = ( { stdin, stdout: outStream } ) => {
 	outStream.unpipe( process.stdout );
 };
 
+const finishCommand = ( {
+	subShellRl,
+	commonTrackingParams,
+	isSubShell,
+	exitCode = 0,
+	job = currentJob,
+} ) => {
+	if ( job !== currentJob || job.finished ) {
+		return;
+	}
+
+	currentJob.finished = true;
+	clearTimeout( currentJob.exitTimer );
+	clearTimeout( currentJob.retryTimer );
+	subShellRl.clearLine();
+	commandRunning = false;
+
+	const tracking = trackEvent( 'wpcli_command_end', commonTrackingParams ).catch( () => {} );
+
+	currentJob.socket.close();
+	unpipeStreamsFromProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
+	currentOffset = 0;
+	if ( ! isSubShell ) {
+		subShellRl.close();
+		void tracking.catch( () => {} ).finally( () => process.exit( exitCode ) );
+		return;
+	}
+
+	if ( exitCode ) {
+		console.log( chalk.red( `Error: WP-CLI command failed with exit code ${ exitCode }` ) );
+	}
+
+	safeResume( subShellRl );
+	safePrompt( subShellRl );
+};
+
 const bindStreamEvents = ( { subShellRl, commonTrackingParams, isSubShell, stdoutStream } ) => {
+	const job = currentJob;
+	const isCurrentStream = () =>
+		job === currentJob && ! job.finished && stdoutStream === job.stdoutStream;
 	const criticalErrors = [
 		'ECONNRESET',
 		'ETIMEDOUT',
@@ -88,6 +127,9 @@ const bindStreamEvents = ( { subShellRl, commonTrackingParams, isSubShell, stdou
 	];
 
 	stdoutStream.on( 'error', err => {
+		if ( ! isCurrentStream() ) {
+			return;
+		}
 		commandRunning = false;
 
 		if ( criticalErrors.includes( err.code ) ) {
@@ -98,25 +140,16 @@ const bindStreamEvents = ( { subShellRl, commonTrackingParams, isSubShell, stdou
 		}
 	} );
 
-	stdoutStream.on( 'end', async () => {
-		subShellRl.clearLine();
-		commandRunning = false;
-
-		await trackEvent( 'wpcli_command_end', commonTrackingParams );
-
-		// Tell socket.io to stop trying to connect
-		currentJob.socket.close();
-		unpipeStreamsFromProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
-
-		// Reset offset
-		currentOffset = 0;
-
-		if ( ! isSubShell ) {
-			subShellRl.close();
-			process.exit();
+	stdoutStream.on( 'end', () => {
+		// Allow the server's exit event to deliver its status after stdout EOF.
+		if ( isCurrentStream() ) {
+			clearTimeout( job.exitTimer );
+			job.exitTimer = setTimeout( () => {
+				if ( isCurrentStream() ) {
+					finishCommand( { subShellRl, commonTrackingParams, isSubShell, job } );
+				}
+			}, 2000 );
 		}
-		safeResume( subShellRl );
-		safePrompt( subShellRl );
 	} );
 };
 
@@ -152,12 +185,14 @@ const getTokenForCommand = async ( appId, envId, command ) => {
  */
 const onSocketError = err => err;
 
-const launchCommandAndGetStreams = async ( { socket, guid, inputToken, offset = 0 } ) => {
+const launchCommandAndGetStreams = ( { socket, guid, inputToken, offset = 0 } ) => {
 	const stdoutStream = IOStream.createStream();
 	const stdinStream = IOStream.createStream();
 
 	stdoutStream.on( 'data', data => {
-		currentOffset = data.length + currentOffset;
+		if ( currentJob?.stdoutStream === stdoutStream && ! currentJob.finished ) {
+			currentOffset += data.length;
+		}
 	} );
 
 	// TODO handle all arguments
@@ -174,18 +209,27 @@ const launchCommandAndGetStreams = async ( { socket, guid, inputToken, offset = 
 
 	IOStream( socket ).emit( 'cmd', data, stdinStream, stdoutStream );
 
-	socket.on( 'unauthorized', err => {
+	const onUnauthorized = err => {
+		if ( currentJob?.socket !== socket || currentJob.finished ) {
+			return;
+		}
 		console.log( 'There was an error with the authentication:', err.message );
-	} );
+	};
 
-	socket.on( 'cancel', message => {
+	const onCancel = message => {
+		if ( currentJob?.socket !== socket || currentJob.finished ) {
+			return;
+		}
 		socket.close();
 		exit.withError( `Cancel received from server: ${ message }` );
-	} );
+	};
 
 	IOStream( socket ).off( 'error', onSocketError ).on( 'error', onSocketError );
 
-	socket.on( 'error', err => {
+	const onError = err => {
+		if ( currentJob?.socket !== socket || currentJob.finished ) {
+			return;
+		}
 		if ( err === 'Rate limit exceeded' ) {
 			console.log(
 				chalk.red( '\nError:' ),
@@ -195,9 +239,18 @@ const launchCommandAndGetStreams = async ( { socket, guid, inputToken, offset = 
 		}
 
 		console.log( err );
-	} );
+	};
+	if ( currentJob?.socket === socket ) {
+		for ( const [ event, handler ] of Object.entries( currentJob.socketHandlers ) ) {
+			socket.off( event, handler );
+		}
+	}
+	const socketHandlers = { unauthorized: onUnauthorized, cancel: onCancel, error: onError };
+	for ( const [ event, handler ] of Object.entries( socketHandlers ) ) {
+		socket.on( event, handler );
+	}
 
-	return { stdinStream, stdoutStream, socket };
+	return { stdinStream, stdoutStream, socket, socketHandlers };
 };
 
 const bindReconnectEvents = ( {
@@ -207,20 +260,29 @@ const bindReconnectEvents = ( {
 	commonTrackingParams,
 	isSubShell,
 } ) => {
+	const job = currentJob;
+	const isCurrentJob = () => job === currentJob && ! job.finished;
 	currentJob.socket.io.removeAllListeners( 'reconnect' );
 	currentJob.socket.io.removeAllListeners( 'reconnect_attempt' );
 	currentJob.socket.removeAllListeners( 'retry' );
 	currentJob.socket.removeAllListeners( 'connect_error' );
+	currentJob.socket.removeAllListeners( 'exit' );
 
-	currentJob.socket.io.on( 'reconnect', async () => {
+	currentJob.socket.io.on( 'reconnect', () => {
+		if ( ! isCurrentJob() ) {
+			return;
+		}
 		debug( 'socket.io: reconnect' );
+		clearTimeout( job.exitTimer );
+		clearTimeout( job.retryTimer );
 
 		// Close old streams
 		unpipeStreamsFromProcess( { stdin: currentJob.stdinStream, stdout: currentJob.stdoutStream } );
 
 		trackEvent( 'wpcli_command_reconnect', commonTrackingParams ).catch( () => {} );
 
-		currentJob = await launchCommandAndGetStreams( {
+		job.finished = true;
+		currentJob = launchCommandAndGetStreams( {
 			socket: currentJob.socket,
 			guid: cliCommand.guid,
 			inputToken,
@@ -243,15 +305,24 @@ const bindReconnectEvents = ( {
 		safeResume( subShellRl );
 	} );
 
-	currentJob.socket.on( 'retry', async () => {
+	currentJob.socket.on( 'retry', () => {
+		if ( ! isCurrentJob() ) {
+			return;
+		}
 		debug( 'socket: retry' );
 
-		setTimeout( () => {
-			currentJob.socket.io.engine.close();
+		clearTimeout( job.retryTimer );
+		job.retryTimer = setTimeout( () => {
+			if ( isCurrentJob() ) {
+				job.socket.io.engine.close();
+			}
 		}, 5000 );
 	} );
 
 	currentJob.socket.on( 'connect_error', () => {
+		if ( ! isCurrentJob() ) {
+			return;
+		}
 		debug( 'socket: connect_error; forcing the preference for websocket' );
 
 		// Force the preference for WebSocket in case we see an error during connection
@@ -259,7 +330,10 @@ const bindReconnectEvents = ( {
 		currentJob.socket.io.opts.transports = [ 'websocket', 'polling' ];
 	} );
 
-	currentJob.socket.on( 'exit', async ( { exitCode, message } ) => {
+	currentJob.socket.on( 'exit', ( { exitCode, message } ) => {
+		if ( ! isCurrentJob() ) {
+			return;
+		}
 		debug( 'socket: exit. Code: %d. Message: %s', exitCode, message );
 
 		if ( message ) {
@@ -268,16 +342,20 @@ const bindReconnectEvents = ( {
 
 		currentJob.stdinStream.destroy();
 		currentJob.stdoutStream.destroy();
-		currentJob.socket.close();
-		process.exit( exitCode );
+		finishCommand( { subShellRl, commonTrackingParams, isSubShell, exitCode } );
 	} );
 
 	currentJob.socket.io.on( 'reconnect_attempt', attempt => {
+		if ( ! isCurrentJob() ) {
+			return;
+		}
 		debug( 'There was an error connecting to the server. Retrying...' );
 
 		if ( attempt > 1 ) {
 			return;
 		}
+		clearTimeout( job.exitTimer );
+		clearTimeout( job.retryTimer );
 
 		// create a new input stream so that we can still catch things like SIGINT while reconnecting
 		if ( currentJob.stdinStream ) {
@@ -450,7 +528,7 @@ commandWrapper( {
 			}
 
 			// Handle plain return / newline
-			if ( ! line ) {
+			if ( ! line && ! seenWP ) {
 				safePrompt( subShellRl );
 				return;
 			}
@@ -490,9 +568,10 @@ commandWrapper( {
 			}
 
 			safePause( subShellRl );
+			countSIGINT = 0;
 
 			let result;
-			const wpCliCmd = commandState.command.replace( /^wp\s+/, '' );
+			const wpCliCmd = commandState.command.trimStart().replace( /^wp\s+/, '' );
 			seenWP = false;
 			resetState( commandState );
 
@@ -541,7 +620,7 @@ commandWrapper( {
 				agent: createProxyAgent( API_HOST ),
 			} );
 
-			currentJob = await launchCommandAndGetStreams( {
+			currentJob = launchCommandAndGetStreams( {
 				socket,
 				guid: cliCommand.guid,
 				inputToken,

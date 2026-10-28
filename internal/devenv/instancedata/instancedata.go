@@ -138,7 +138,7 @@ func serialize(d *InstanceData) ([]byte, error) {
 		return nil, err
 	}
 
-	merged := make(map[string]json.RawMessage, len(d.Extra)+len(known))
+	merged := make(map[string]json.RawMessage, len(d.Extra))
 	for k, v := range d.Extra {
 		merged[k] = v
 	}

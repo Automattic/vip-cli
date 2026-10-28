@@ -1,54 +1,5 @@
-# Source files
-src
-
-# Tests
-__fixtures__
-__tests__
-jest.config.js
-jest.setup.js
-jest.setupMocks.js
-.travis.yml
-appveyor.yml
-coverage
-
-# Flow
-flow-typed
-.flowconfig
-
-# We don't publish the local config file
-config/config.local.json
-
-# Logs
-/logs
-*.log
-npm-debug.log*
-
-# Dependency directories
-node_modules/
-
-# Optional eslint cache
-.eslintcache
-
-# Other helper files
-.nvmrc
-.ackrc
-.publishrc
-.prettierrc
-
-# Liniting rules
-.eslintrc.json
-.eslintignore
-
-# Configs
-babel.config.js
-renovate.json
-.github
-.gitattributes
-
-.vscode
-.idea
-*.iml
-
-parker.gql
-codegen.ts
-*.d.ts
+*
+!assets/**
+!config/**
+!helpers/**
+!dist/**

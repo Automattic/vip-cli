@@ -2,6 +2,7 @@ package wpstream
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -9,6 +10,27 @@ import (
 
 	"github.com/coder/websocket"
 )
+
+func TestEngineReadDrainsPacketsBeforeTransportError(t *testing.T) {
+	eng := &Engine{recvCh: make(chan Packet, 2), errCh: make(chan error, 1), closed: make(chan struct{})}
+	eng.recvCh <- Packet{Type: eioMessage, Data: []byte("stdout EOF")}
+	eng.recvCh <- Packet{Type: eioMessage, Data: []byte("exit 3")}
+	eng.errCh <- io.EOF
+	close(eng.errCh)
+	close(eng.recvCh)
+	for _, want := range []string{"stdout EOF", "exit 3"} {
+		pkt, err := eng.Read(context.Background())
+		if err != nil || string(pkt.Data) != want {
+			t.Fatalf("Read = %q, %v; want %q before disconnect", pkt.Data, err, want)
+		}
+	}
+	if _, err := eng.Read(context.Background()); err != io.EOF {
+		t.Fatalf("terminal read = %v, want EOF", err)
+	}
+	if _, err := eng.Read(context.Background()); err != errClosed {
+		t.Fatalf("subsequent read = %v, want closed", err)
+	}
+}
 
 // fakeEIOServer serves the EIO4 polling handshake then accepts a websocket
 // upgrade, completes the 2probe/5 dance, and sends one message packet.

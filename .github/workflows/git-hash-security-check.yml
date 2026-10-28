@@ -20,4 +20,4 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Check for short git hashes in package.json
-        uses: Automattic/vip-actions/git-hash-security-check@438cd00aac2463a2dbfb4a747ad7b1ac67a2575a # trunk
+        uses: Automattic/vip-actions/git-hash-security-check@6bf9fde7ac8acce516488384357e3e6fb28669cf # trunk

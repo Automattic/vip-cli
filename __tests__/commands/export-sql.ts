@@ -7,7 +7,9 @@ import {
 	GENERATE_DOWNLOAD_LINK_MUTATION,
 } from '../../src/commands/export-sql';
 import API from '../../src/lib/api';
+import { BackupStorageAvailability } from '../../src/lib/backup-storage-availability/backup-storage-availability';
 import * as exit from '../../src/lib/cli/exit';
+import { ProgressTracker } from '../../src/lib/cli/progress';
 import * as downloadFileModule from '../../src/lib/http/download-file';
 import {
 	GENERATE_LIVE_BACKUP_DOWNLOAD_URL_MUTATION,
@@ -133,8 +135,24 @@ jest.mock( '../../src/lib/cli/exit', () => ( {
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 
 describe( 'commands/ExportSQLCommand', () => {
+	let storageSpy: jest.SpyInstance;
+	let printingSpy: jest.SpyInstance;
+
 	beforeEach( () => {
 		jest.clearAllMocks();
+		storageSpy = jest
+			.spyOn( BackupStorageAvailability.prototype, 'getStorageAvailableInVipPath' )
+			.mockResolvedValue( 10 * 1024 * 1024 * 1024 );
+		printingSpy = jest
+			.spyOn( ProgressTracker.prototype, 'startPrinting' )
+			.mockImplementation( callback => {
+				callback?.();
+			} );
+	} );
+
+	afterEach( () => {
+		storageSpy.mockRestore();
+		printingSpy.mockRestore();
 	} );
 
 	describe( '.getExportJob', () => {

@@ -6916,6 +6916,11 @@ type AppEnvironmentSoftwareSettingsSoftware {
   """Whether the software version is pinned."""
   pinned: Boolean!
 
+  """
+  The full PHP version (e.g. 8.2.35) read from one of the environment's running app pods, so it may show either patch while an update rolls out. Only set for PHP in query responses; null for other software, in mutation responses, or when it can't be determined.
+  """
+  runningVersion: String
+
   """The internal slug of the software."""
   slug: String!
 }

@@ -74,7 +74,7 @@ func TestDownloadVerifyAndReplaceWithOptionalInstallers(t *testing.T) {
 			// A retry also removes an old optional installer from the draft when the
 			// current exact build did not produce it.
 			release := Release{ID: 1, Draft: true, UploadURL: server.URL + "/uploads{?name,label}", Assets: []ReleaseAsset{{ID: 9, Name: "vip-next-darwin-amd64.pkg"}}}
-			if err := testGitHubClient(server.URL).ReplaceAssets(context.Background(), release, downloads); err != nil {
+			if err := testGitHubClient(t, server.URL).ReplaceAssets(context.Background(), release, downloads); err != nil {
 				t.Fatal(err)
 			}
 			sort.Strings(expected)

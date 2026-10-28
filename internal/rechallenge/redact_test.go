@@ -123,6 +123,7 @@ func TestFlowRedactsStatusReason(t *testing.T) {
 		Tracker:    &fakeTracker{},
 		TokenCache: newTestCache(),
 		Stdout:     new(strings.Builder),
+		OpenURL:    func(string) {},
 		Sleep:      func(context.Context, time.Duration) error { return nil },
 	}
 	_, err := r.Run(context.Background(), RunInput{

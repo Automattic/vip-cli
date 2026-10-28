@@ -294,3 +294,37 @@ func TestExtractBinaryArchiveRejectsInvalidPayloadBeforeWriting(t *testing.T) {
 		})
 	}
 }
+
+func TestExtractBinaryArchiveRejectsArchivePaths(t *testing.T) {
+	for _, platform := range []string{"darwin", "windows"} {
+		for _, name := range []string{
+			"../vip-next", "../../vip-next", "/vip-next", "bin/vip-next",
+			"./vip-next", `..\vip-next`, `C:\vip-next`, `\\server\vip-next`,
+			"vip-next/../go-search-replace", "vip-next.exe:payload",
+		} {
+			t.Run(platform+"/"+name, func(t *testing.T) {
+				root := t.TempDir()
+				archiveName := "payload.tar.gz"
+				archive := filepath.Join(root, archiveName)
+				helper := "go-search-replace"
+				if platform == "windows" {
+					helper += ".exe"
+				}
+				writeArchive(t, archive, []archiveEntry{
+					{name: name, typeflag: tar.TypeReg},
+					{name: helper, typeflag: tar.TypeReg},
+				})
+				// A valid checksum ensures the path policy is the rejecting boundary.
+				writeChecksum(t, root, archiveName, false, false)
+				destination := filepath.Join(root, "payload")
+				err := ExtractBinaryArchive(platform, archive, destination)
+				if err == nil || (!strings.Contains(err.Error(), "top-level name") && !strings.Contains(err.Error(), "unexpected archive entry")) {
+					t.Fatalf("expected archive name rejection, got: %v", err)
+				}
+				if _, err := os.Stat(destination); !os.IsNotExist(err) {
+					t.Fatalf("destination created before path validation: %v", err)
+				}
+			})
+		}
+	}
+}

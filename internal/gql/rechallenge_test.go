@@ -95,6 +95,7 @@ func TestRechallengePreflightAttachesCachedToken(t *testing.T) {
 
 func TestRechallengeFullFlowOnElevatedError(t *testing.T) {
 	mutationHits := int32(0)
+	var openedURLs []string
 	var headerAfterRetry string
 
 	parker := http.NewServeMux()
@@ -125,6 +126,7 @@ func TestRechallengeFullFlowOnElevatedError(t *testing.T) {
 	runner := &rechallenge.Runner{
 		Client:     &rechallenge.Client{APIHost: parkerSrv.URL, HTTP: parkerSrv.Client()},
 		TokenCache: cache,
+		OpenURL:    func(url string) { openedURLs = append(openedURLs, url) },
 		Sleep:      func(_ context.Context, _ time.Duration) error { return nil },
 	}
 	c := NewClient(Config{
@@ -154,6 +156,9 @@ func TestRechallengeFullFlowOnElevatedError(t *testing.T) {
 	if headerAfterRetry != "elev" {
 		t.Errorf("retry header = %q, want elev", headerAfterRetry)
 	}
+	if len(openedURLs) != 1 || openedURLs[0] != "https://example/v" {
+		t.Errorf("opened URLs = %q, want one verification URL", openedURLs)
+	}
 }
 
 func TestRechallengeSurfacesOriginalErrorOnFlowFailure(t *testing.T) {
@@ -172,6 +177,7 @@ func TestRechallengeSurfacesOriginalErrorOnFlowFailure(t *testing.T) {
 	runner := &rechallenge.Runner{
 		Client:     &rechallenge.Client{APIHost: parker.URL, HTTP: parker.Client()},
 		TokenCache: cache,
+		OpenURL:    func(string) { t.Error("failed session creation must not open a browser") },
 		Sleep:      func(_ context.Context, _ time.Duration) error { return nil },
 	}
 	c := NewClient(Config{
@@ -228,6 +234,7 @@ func TestRechallengeUsesConfigInteractivityProvider(t *testing.T) {
 	runner := &rechallenge.Runner{
 		Client:     &rechallenge.Client{APIHost: parkerSrv.URL, HTTP: parkerSrv.Client()},
 		TokenCache: cache,
+		OpenURL:    func(string) {},
 		Sleep:      func(_ context.Context, _ time.Duration) error { return nil },
 	}
 
@@ -302,6 +309,7 @@ func TestRechallengeSurfacesStepUpFailureReason(t *testing.T) {
 			Runner: &rechallenge.Runner{
 				Client:     &rechallenge.Client{APIHost: parker.URL, HTTP: parker.Client()},
 				TokenCache: cache,
+				OpenURL:    func(string) { t.Error("failed session creation must not open a browser") },
 				Sleep:      func(context.Context, time.Duration) error { return nil },
 			},
 			Interactive: func() bool { return true },
@@ -356,6 +364,7 @@ func TestRechallengeFailureReasonCannotLeakToken(t *testing.T) {
 					APIHost: parker.URL, HTTP: parker.Client(), BearerToken: bearer,
 				},
 				TokenCache: cache,
+				OpenURL:    func(string) { t.Error("failed session creation must not open a browser") },
 				Sleep:      func(context.Context, time.Duration) error { return nil },
 			},
 			Interactive: func() bool { return true },
@@ -404,6 +413,7 @@ func TestRechallengeNonInteractiveReturnsPromptly(t *testing.T) {
 			Runner: &rechallenge.Runner{
 				Client:     &rechallenge.Client{APIHost: parker.URL, HTTP: parker.Client()},
 				TokenCache: cache,
+				OpenURL:    func(string) { t.Error("non-interactive flow must not open a browser") },
 				Sleep: func(ctx context.Context, _ time.Duration) error {
 					select {
 					case <-ctx.Done():

@@ -25,7 +25,12 @@ async function runCommand( subcommands ) {
 
 const USAGE_REGEXP = /Usage: (.*)/;
 const COMMAND_REGEXP = /(\S+)\s+(.*)/;
-const OPTION_REGEXP = /(-\S, --\S+)\s+(.*)/;
+// Short flag is optional (e.g. `--skip-rebuild`), and a `[value]` / `<value>` placeholder belongs to
+// the option, not the description. Option and description are separated by 2+ spaces, so wrapped
+// description lines that mention a flag (e.g. "use --editor=vscode instead") aren't treated as options.
+// Anchored with no overlapping quantifiers, and only ever run against our own --help output.
+// eslint-disable-next-line security/detect-unsafe-regex
+const OPTION_REGEXP = /^((?:-\S, )?--[^\s,]+(?: [<[]\S+[>\]])?)(?:\s{2,}(.*))?$/;
 
 const SECTION_COMMAND = 'commands';
 const SECTION_OPTIONS = 'options';
@@ -82,14 +87,15 @@ const parseOutput = output => {
 		}
 		if ( currentSection === SECTION_OPTIONS ) {
 			if ( line.match( OPTION_REGEXP ) ) {
-				const [ , option, description ] = line.match( OPTION_REGEXP );
+				const [ , option, description = '' ] = line.match( OPTION_REGEXP );
 				result.options.push( {
 					option,
 					description,
 				} );
 			} else if ( result.options.length ) {
 				// Continuation of a wrapped option description.
-				result.options[ result.options.length - 1 ].description += ' ' + line;
+				const lastOption = result.options[ result.options.length - 1 ];
+				lastOption.description = [ lastOption.description, line ].filter( Boolean ).join( ' ' );
 			} else {
 				console.error( 'Unknown option', line );
 			}

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -30,43 +29,6 @@ func TestServiceCheckAndChannelPersistence(t *testing.T) {
 	}
 }
 
-func TestServiceNativeInstallerNeverDownloadsOrReplaces(t *testing.T) {
-	for _, manager := range []string{"pkg", "msi"} {
-		t.Run(manager, func(t *testing.T) {
-			l, _ := installFixture(t)
-			before, err := os.ReadFile(l.CLI)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if err := os.WriteFile(filepath.Join(filepath.Dir(l.CLI), ".vip-next-installer.json"), []byte(`{"schema":1,"manager":"`+manager+`"}`), 0644); err != nil {
-				t.Fatal(err)
-			}
-			s := Service{Installed: "5.0.0", Platform: Platform{"linux", "amd64"}, State: State{CacheDir: t.TempDir(), ConfigDir: t.TempDir()}, Executable: func() (string, error) { return l.CLI, nil }, Fetch: func(context.Context) ([]Release, error) { return []Release{release("5.0.1")}, nil }}
-			s.Installer.InspectOwnership = func(ctx context.Context, layout Layout) (Ownership, error) {
-				platform := "darwin"
-				if manager == "msi" {
-					platform = "windows"
-				}
-				return inspectOwnership(ctx, layout, platform, func(context.Context, string, ...string) ([]byte, error) { t.Fatal("unexpected query"); return nil, nil })
-			}
-			s.Stage = func(context.Context, Candidate, Platform, string) (Bundle, error) {
-				t.Fatal("installer-managed binaries must not be downloaded")
-				return Bundle{}, nil
-			}
-			out, err := s.Run(context.Background(), Request{}, nil)
-			if err != nil || out.Updated || !strings.Contains(out.Instructions, "."+manager) {
-				t.Fatal(out, err)
-			}
-			after, err := os.ReadFile(l.CLI)
-			if err != nil || string(before) != string(after) {
-				t.Fatal("installed bytes changed", err)
-			}
-			if _, err := os.Stat(markerPath(l)); !os.IsNotExist(err) {
-				t.Fatal("created an update recovery record", err)
-			}
-		})
-	}
-}
 func TestServiceStableAheadAndManagedInstall(t *testing.T) {
 	s := Service{Installed: "5.1.0-beta.1", Platform: Platform{"linux", "amd64"}, State: State{CacheDir: t.TempDir(), ConfigDir: t.TempDir()}, Now: time.Now, Fetch: func(context.Context) ([]Release, error) { return []Release{release("5.0.0")}, nil }}
 	out, err := s.Run(context.Background(), Request{Channel: Stable, ExplicitChannel: true}, nil)
@@ -77,7 +39,9 @@ func TestServiceStableAheadAndManagedInstall(t *testing.T) {
 	s.Installed = "5.0.0"
 	s.Executable = func() (string, error) { return l.CLI, nil }
 	s.Fetch = func(context.Context) ([]Release, error) { return []Release{release("5.0.1")}, nil }
-	s.Installer.InspectOwnership = func(context.Context, Layout) (Ownership, error) { return Ownership{true, "use manager"}, nil }
+	s.Installer.InspectOwnership = func(context.Context, Layout) (Ownership, error) {
+		return Ownership{Managed: true, Instructions: "use manager"}, nil
+	}
 	s.Stage = func(context.Context, Candidate, Platform, string) (Bundle, error) {
 		t.Fatal("managed installation staged")
 		return Bundle{}, nil

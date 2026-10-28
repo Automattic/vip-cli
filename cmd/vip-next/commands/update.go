@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 
+	"github.com/Automattic/vip/internal/appctx"
 	"github.com/Automattic/vip/internal/update"
 )
 
@@ -50,7 +51,7 @@ func NewUpdateCmd(runner UpdateRunner) *cobra.Command {
 				open = s.Name
 			}
 		}
-		out, err := runner.Run(cmd.Context(), update.Request{CheckOnly: check, Channel: update.Channel(channel), ExplicitChannel: explicit}, progress)
+		out, err := runner.Run(cmd.Context(), update.Request{Interactive: appctx.IsInteractive(cmd), CheckOnly: check, Channel: update.Channel(channel), ExplicitChannel: explicit}, progress)
 		if open != "" {
 			fmt.Fprintln(stderr, "failed")
 		}
@@ -67,7 +68,7 @@ func NewUpdateCmd(runner UpdateRunner) *cobra.Command {
 func writeUpdateOutcome(w io.Writer, out update.Outcome) error {
 	switch {
 	case out.Instructions != "":
-		_, err := fmt.Fprintln(w, out.Instructions)
+		_, err := fmt.Fprintf(w, "Installed: %s\nChannel: %s\nAvailable: %s\n%s\n", out.Installed, out.Channel, out.Available, out.Instructions)
 		return err
 	case out.Updated:
 		_, err := fmt.Fprintf(w, "Updated to %s\n", out.Available)

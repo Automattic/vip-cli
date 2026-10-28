@@ -41,7 +41,7 @@ func inspectOwnership(ctx context.Context, l Layout, goos string, query ownershi
 				if marker.Schema != 1 || marker.Manager != manager {
 					return Ownership{}, fmt.Errorf("invalid installer ownership record: %s", markerPath)
 				}
-				return Ownership{true, "This installation is managed by the VIP CLI installer. Download and run the latest ." + manager + " installer for your platform from " + ReleasesURL}, nil
+				return Ownership{Managed: true, Instructions: "This installation is managed by the VIP CLI installer. Download and run the latest ." + manager + " installer for your platform from " + ReleasesURL, NativeInstaller: true}, nil
 			} else if !os.IsNotExist(err) {
 				return Ownership{}, fmt.Errorf("inspect installer ownership: %w", err)
 			}
@@ -55,10 +55,10 @@ func inspectOwnership(ctx context.Context, l Layout, goos string, query ownershi
 					var receipt map[string]any
 					path := filepath.Join(before, "Cellar", parts[0], parts[1], "INSTALL_RECEIPT.json")
 					if readJSON(path, 1<<20, &receipt) == nil {
-						return Ownership{true, "This installation is managed by Homebrew. Run: brew upgrade " + parts[0]}, nil
+						return Ownership{Managed: true, Instructions: "This installation is managed by Homebrew. Run: brew upgrade " + parts[0]}, nil
 					}
 				}
-				return Ownership{true, "This installation is in a Homebrew-managed location; update it with Homebrew."}, nil
+				return Ownership{Managed: true, Instructions: "This installation is in a Homebrew-managed location; update it with Homebrew."}, nil
 			}
 		case "windows":
 			lower := strings.ToLower(normalized)
@@ -69,13 +69,13 @@ func inspectOwnership(ctx context.Context, l Layout, goos string, query ownershi
 					dir := filepath.Dir(target)
 					var install, manifest map[string]any
 					if readJSON(filepath.Join(dir, "install.json"), 1<<20, &install) == nil && readJSON(filepath.Join(dir, "manifest.json"), 1<<20, &manifest) == nil {
-						return Ownership{true, "This installation is managed by Scoop. Run: scoop update " + parts[0]}, nil
+						return Ownership{Managed: true, Instructions: "This installation is managed by Scoop. Run: scoop update " + parts[0]}, nil
 					}
 				}
-				return Ownership{true, "Update this installation with Scoop."}, nil
+				return Ownership{Managed: true, Instructions: "Update this installation with Scoop."}, nil
 			}
 			if strings.Contains(lower, "/windowsapps/") || strings.Contains(lower, "/winget/") {
-				return Ownership{true, "This installation is package-managed; update it with its package manager."}, nil
+				return Ownership{Managed: true, Instructions: "This installation is package-managed; update it with its package manager."}, nil
 			}
 		case "linux":
 			for _, manager := range []string{"dpkg-query", "rpm"} {
@@ -109,7 +109,7 @@ func inspectOwnership(ctx context.Context, l Layout, goos string, query ownershi
 				if manager == "rpm" {
 					command = "your RPM package manager to update "
 				}
-				return Ownership{true, "This installation is package-managed. Use " + command + pkg}, nil
+				return Ownership{Managed: true, Instructions: "This installation is package-managed. Use " + command + pkg}, nil
 			}
 		}
 	}

@@ -22,14 +22,8 @@ func (d Downloader) Stage(ctx context.Context, c Candidate, p Platform, parent s
 	if err != nil {
 		return bundle, err
 	}
-	if !validVersion(c.Version) || c.Archive.Name != name || c.Checksum.Name != name+".sha256" {
-		return bundle, fmt.Errorf("invalid release assets")
-	}
-	for _, a := range []Asset{c.Archive, c.Checksum} {
-		u, e := url.Parse(a.URL)
-		if e != nil || u.Scheme != "https" || u.Host != "github.com" || u.User != nil || u.RawQuery != "" || u.Fragment != "" || u.Path != "/"+Repository+"/releases/download/"+c.Version+"/"+a.Name {
-			return bundle, fmt.Errorf("invalid official release asset URL")
-		}
+	if err := validateReleaseAssets(c.Version, name, c.Archive, c.Checksum); err != nil {
+		return bundle, err
 	}
 	dir, err := os.MkdirTemp(parent, ".vip-update-stage-")
 	if err != nil {
@@ -40,29 +34,9 @@ func (d Downloader) Stage(ctx context.Context, c Candidate, p Platform, parent s
 			os.RemoveAll(dir)
 		}
 	}()
-	checksum, err := d.fetch(ctx, c.Checksum, 4096)
+	archive, err := d.verifiedDownload(ctx, c.Archive, c.Checksum)
 	if err != nil {
 		return bundle, err
-	}
-	line := strings.TrimSpace(string(checksum))
-	if strings.ContainsAny(line, "\r\n") {
-		return bundle, fmt.Errorf("checksum file must contain one non-empty line")
-	}
-	fields := strings.Fields(line)
-	if len(fields) != 2 || strings.TrimPrefix(strings.TrimPrefix(fields[1], "*"), "dist/") != name {
-		return bundle, fmt.Errorf("invalid release checksum file")
-	}
-	want, err := hex.DecodeString(fields[0])
-	if err != nil || len(want) != sha256.Size {
-		return bundle, fmt.Errorf("invalid SHA-256 checksum")
-	}
-	archive, err := d.fetch(ctx, c.Archive, maxArchive)
-	if err != nil {
-		return bundle, err
-	}
-	sum := sha256.Sum256(archive)
-	if !strings.EqualFold(hex.EncodeToString(sum[:]), fields[0]) {
-		return bundle, fmt.Errorf("release checksum mismatch")
 	}
 	archivePath := filepath.Join(dir, "release.tar.gz")
 	if err = os.WriteFile(archivePath, archive, 0600); err != nil {
@@ -135,4 +109,45 @@ func (d Downloader) fetch(ctx context.Context, a Asset, limit int64) ([]byte, er
 		}
 	}
 	return b, nil
+}
+
+func validateReleaseAssets(version, name string, asset, checksum Asset) error {
+	if !validVersion(version) || asset.Name != name || checksum.Name != name+".sha256" {
+		return fmt.Errorf("invalid release assets")
+	}
+	for _, a := range []Asset{asset, checksum} {
+		u, err := url.Parse(a.URL)
+		if err != nil || u.Scheme != "https" || u.Host != "github.com" || u.User != nil || u.RawQuery != "" || u.Fragment != "" || u.Path != "/"+Repository+"/releases/download/"+version+"/"+a.Name {
+			return fmt.Errorf("invalid official release asset URL")
+		}
+	}
+	return nil
+}
+
+func (d Downloader) verifiedDownload(ctx context.Context, asset, checksumAsset Asset) ([]byte, error) {
+	checksum, err := d.fetch(ctx, checksumAsset, 4096)
+	if err != nil {
+		return nil, err
+	}
+	line := strings.TrimSpace(string(checksum))
+	if strings.ContainsAny(line, "\r\n") {
+		return nil, fmt.Errorf("checksum file must contain one non-empty line")
+	}
+	fields := strings.Fields(line)
+	if len(fields) != 2 || strings.TrimPrefix(strings.TrimPrefix(fields[1], "*"), "dist/") != asset.Name {
+		return nil, fmt.Errorf("invalid release checksum file")
+	}
+	want, err := hex.DecodeString(fields[0])
+	if err != nil || len(want) != sha256.Size {
+		return nil, fmt.Errorf("invalid SHA-256 checksum")
+	}
+	archive, err := d.fetch(ctx, asset, maxArchive)
+	if err != nil {
+		return nil, err
+	}
+	sum := sha256.Sum256(archive)
+	if !strings.EqualFold(hex.EncodeToString(sum[:]), fields[0]) {
+		return nil, fmt.Errorf("release checksum mismatch")
+	}
+	return archive, nil
 }

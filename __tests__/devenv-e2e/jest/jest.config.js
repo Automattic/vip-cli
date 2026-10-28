@@ -12,7 +12,9 @@ const config = {
 	maxWorkers: process.env.CI ? 1 : 2,
 	testSequencer: path.join( __dirname, 'sequencer.js' ),
 	forceExit: true,
+	transform: { '^.+\\.m?[tj]sx?$': [ 'ts-jest', { tsconfig: '<rootDir>/tsconfig.jest.json' } ] },
 	transformIgnorePatterns: [],
+	resolver: '<rootDir>/jest.resolver.js',
 };
 
 module.exports = config;
