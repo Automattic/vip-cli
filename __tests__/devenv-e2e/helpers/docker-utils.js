@@ -12,11 +12,13 @@ import { ownsProject } from './identity';
 /**
  * @param {Docker} docker  Docker instance
  * @param {string} project Project slug
+ * @param {boolean} all Include stopped containers
  * @return {Promise<ContainerInfo[]>} List of containers
  */
-export function getContainersForProject( docker, project ) {
+export function getContainersForProject( docker, project, all = false ) {
 	const prefix = dockerComposify( project );
 	return docker.listContainers( {
+		all,
 		filters: {
 			label: [ `com.docker.compose.project=${ prefix }` ],
 		},
@@ -41,7 +43,7 @@ export async function killProjectContainers( docker, project ) {
 		if ( ! ownsProject( project ) ) {
 			throw new Error( 'Refusing to remove containers outside this E2E invocation' );
 		}
-		const containers = await getContainersForProject( docker, project );
+		const containers = await getContainersForProject( docker, project, true );
 		const expectedProject = dockerComposify( project );
 		if (
 			containers.some(
