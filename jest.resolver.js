@@ -1,5 +1,5 @@
 module.exports = ( request, options ) => {
-	// Babel turns Lando's ESM bridge into require(), but string-argv only exports
+	// The Jest transform turns Lando's ESM bridge into require(), but string-argv only exports
 	// an import entry. Keep this condition local to that package.
 	if ( request === 'string-argv' ) {
 		return options.defaultResolver( request, {

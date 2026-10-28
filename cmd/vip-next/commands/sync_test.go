@@ -146,3 +146,144 @@ func TestSyncAlreadySyncing(t *testing.T) {
 		t.Errorf("SyncProgress hits = %d, want >= 1", stub.progressHits.Load())
 	}
 }
+
+// TestSyncCurrentStatuses drives runSync through the statuses the API
+// reports today: the current step name while running (started,
+// importing, cleanup), then complete / partially_completed / failed.
+// Steps report finished instead of success.
+func TestSyncCurrentStatuses(t *testing.T) {
+	running := func(status, started, importing, cleanup string) string {
+		return `{"data":{"app":{"id":42,"environments":[
+			{"id":7,"syncProgress":{"status":"` + status + `","sync":1,"steps":[
+				{"name":"started","status":"` + started + `"},
+				{"name":"importing","status":"` + importing + `"},
+				{"name":"cleanup","status":"` + cleanup + `"}
+			]}}
+		]}}}`
+	}
+	terminal := func(status, errMsg, cleanup string) string {
+		return `{"data":{"app":{"id":42,"environments":[
+			{"id":7,"syncProgress":{"status":"` + status + `","error":` + errMsg + `,"sync":1,"steps":[
+				{"name":"started","status":"finished"},
+				{"name":"importing","status":"finished"},
+				{"name":"cleanup","status":"` + cleanup + `"}
+			]}}
+		]}}}`
+	}
+	inFlight := []string{
+		running("started", "running", "pending", "pending"),
+		running("importing", "finished", "running", "pending"),
+		running("cleanup", "finished", "finished", "running"),
+	}
+
+	cases := []struct {
+		name     string
+		final    string
+		want     []string
+		notWant  []string
+		minPolls int32
+	}{
+		{
+			name:     "complete",
+			final:    terminal("complete", "null", "finished"),
+			want:     []string{"✓ cleanup", "✓ Data Sync is finished"},
+			notWant:  []string{"Error:"},
+			minPolls: 4,
+		},
+		{
+			name:     "partially completed",
+			final:    terminal("partially_completed", `"Search index refresh failed"`, "failed"),
+			want:     []string{"✕ cleanup", "Data Sync is partially completed", "Error: Search index refresh failed"},
+			minPolls: 4,
+		},
+		{
+			name:     "failed",
+			final:    terminal("failed", `"Import failed"`, "failed"),
+			want:     []string{"✕ Data Sync failed", "Error: Import failed"},
+			notWant:  []string{"Data Sync is finished"},
+			minPolls: 4,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			stub := &syncSeqStub{progressBodies: append(append([]string{}, inFlight...), tc.final)}
+			srv := stub.start(t)
+			defer srv.Close()
+			setupEnvvarConfig(srv)
+			defer SetConfig(Config{})
+
+			t.Setenv("VIP_SYNC_INTERVAL_MS", "1")
+			t.Setenv("NO_COLOR", "1")
+
+			cmd := SyncCmd()
+			_ = cmd.Flags().Set("skip-confirmation", "true")
+			var stdout, stderr bytes.Buffer
+			cmd.SetOut(&stdout)
+			cmd.SetErr(&stderr)
+			cmd.SetContext(ctxWithAppEnv(42, 7))
+
+			if err := runSync(cmd, nil); err != nil {
+				t.Fatalf("runSync: %v", err)
+			}
+			out := stdout.String()
+			for _, w := range tc.want {
+				if !strings.Contains(out, w) {
+					t.Errorf("stdout missing %q; got %q", w, out)
+				}
+			}
+			for _, w := range tc.notWant {
+				if strings.Contains(out, w) {
+					t.Errorf("stdout must not contain %q; got %q", w, out)
+				}
+			}
+			// The in-flight statuses must not end the poll early.
+			if got := stub.progressHits.Load(); got < tc.minPolls {
+				t.Errorf("SyncProgress hits = %d, want >= %d", got, tc.minPolls)
+			}
+		})
+	}
+}
+
+// TestSyncProgressText verifies the live progress text is printed as it
+// changes (non-TTY: one line per change).
+func TestSyncProgressText(t *testing.T) {
+	body := func(status, text string) string {
+		return `{"data":{"app":{"id":42,"environments":[
+			{"id":7,"syncProgress":{"status":"` + status + `","progress_update_text":` + text + `,"sync":1,"steps":[
+				{"name":"importing","status":"running"}
+			]}}
+		]}}}`
+	}
+	stub := &syncSeqStub{progressBodies: []string{
+		body("importing", `"Transferred 10 MB of 100 MB"`),
+		body("importing", `"Transferred 10 MB of 100 MB"`),
+		body("importing", `"Transferred 100 MB of 100 MB"`),
+		body("complete", "null"),
+	}}
+	srv := stub.start(t)
+	defer srv.Close()
+	setupEnvvarConfig(srv)
+	defer SetConfig(Config{})
+
+	t.Setenv("VIP_SYNC_INTERVAL_MS", "1")
+	t.Setenv("NO_COLOR", "1")
+
+	cmd := SyncCmd()
+	_ = cmd.Flags().Set("skip-confirmation", "true")
+	var stdout, stderr bytes.Buffer
+	cmd.SetOut(&stdout)
+	cmd.SetErr(&stderr)
+	cmd.SetContext(ctxWithAppEnv(42, 7))
+
+	if err := runSync(cmd, nil); err != nil {
+		t.Fatalf("runSync: %v", err)
+	}
+	out := stdout.String()
+	if n := strings.Count(out, "Transferred 10 MB of 100 MB"); n != 1 {
+		t.Errorf("first progress text printed %d times, want 1; got %q", n, out)
+	}
+	if !strings.Contains(out, "Transferred 100 MB of 100 MB") {
+		t.Errorf("stdout missing final progress text; got %q", out)
+	}
+}

@@ -1,13 +1,68 @@
 package devenv
 
 import (
+	"encoding/json"
+	"os"
+	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/Automattic/vip/internal/devenv/compose"
-	"github.com/Automattic/vip/internal/devenv/lifecycle"
+	"github.com/Automattic/vip/internal/devenv/dockercli"
 	"github.com/Automattic/vip/internal/devenv/proxy"
 )
+
+func TestInfoServiceConnections(t *testing.T) {
+	body, err := os.ReadFile("../../testdata/parity/devenv-info-services.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var states []dockercli.ServiceState
+	if err := json.Unmarshal(body, &states); err != nil {
+		t.Fatal(err)
+	}
+	view := compose.View{SiteSlug: "demo", Domain: "vipdev.site", PHPMyAdmin: true, Mailpit: true, Elasticsearch: true, Photon: true}
+	rows := buildInfoRows("demo", view, proxy.Ports{HTTP: 8000, HTTPS: 444}, states)
+	got := map[string][]string{}
+	for _, row := range rows {
+		got[row.label] = row.values
+	}
+	for label, want := range map[string][]string{
+		"PHPMYADMIN URLS":   {"http://localhost:49155", "http://demo-pma.vipdev.site:8000/", "https://demo-pma.vipdev.site:444/"},
+		"MAILPIT URLS":      {"http://demo-mailpit.vipdev.site:8000/", "https://demo-mailpit.vipdev.site:444/"},
+		"DATABASE":          {"127.0.0.1:49153, [::]:49153"},
+		"ENTERPRISE SEARCH": {"http://127.0.0.1:49154, http://[::]:49154"},
+	} {
+		if !reflect.DeepEqual(got[label], want) {
+			t.Errorf("%s: got %v, want %v", label, got[label], want)
+		}
+	}
+	for _, label := range []string{"PHOTON URLS", "PHOTON", "MAILPIT", "PHPMYADMIN"} {
+		if _, ok := got[label]; ok {
+			t.Errorf("unexpected connection row %s", label)
+		}
+	}
+}
+
+func TestInfoServiceConnectionsStoppedAndDisabled(t *testing.T) {
+	view := compose.View{SiteSlug: "demo", Domain: "vipdev.site", PHPMyAdmin: true, Mailpit: true}
+	// Stopped services keep their configured proxy URLs, but never stale bindings.
+	states := []dockercli.ServiceState{{Service: "database", State: "exited", Publishers: []dockercli.PortPublisher{{URL: "127.0.0.1", TargetPort: 3306, PublishedPort: 49153, Protocol: "tcp"}}}}
+	got := renderEnvInfo("demo", view, proxy.Ports{}, states)
+	for _, url := range []string{"http://demo-pma.vipdev.site/", "https://demo-pma.vipdev.site/", "http://demo-mailpit.vipdev.site/", "https://demo-mailpit.vipdev.site/"} {
+		if !strings.Contains(got, url) {
+			t.Errorf("missing stopped service URL %s", url)
+		}
+	}
+	if strings.Contains(got, "49153") {
+		t.Fatal("stopped service advertised a host binding")
+	}
+	view.PHPMyAdmin, view.Mailpit = false, false
+	got = renderEnvInfo("demo", view, proxy.Ports{}, nil)
+	if strings.Contains(got, "PHPMYADMIN URLS") || strings.Contains(got, "MAILPIT URLS") || strings.Contains(got, "ENTERPRISE SEARCH") {
+		t.Fatal("disabled service advertised a connection")
+	}
+}
 
 func TestBuildInfoRowsShowsLandoMigrationMarker(t *testing.T) {
 	v := compose.View{SiteSlug: "foo", Domain: "vipdev.site", AdminPassword: "password", MigratedFromLando: "2026-07-10T00:00:00Z"}
@@ -52,7 +107,7 @@ func TestRenderEnvInfoRunningEnv(t *testing.T) {
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
 	view := compose.View{SiteSlug: "demo", Domain: "vipdev.lndo.site", AutologinKey: "KEY-123", AdminPassword: "pw_secret12"}
 	ports := proxy.Ports{HTTP: 8000, HTTPS: 444}
-	states := []lifecycle.ServiceState{{Service: "nginx", State: "running"}, {Service: "php", State: "running"}}
+	states := []dockercli.ServiceState{{Service: "nginx", State: "running"}, {Service: "php", State: "running"}}
 
 	got := renderEnvInfo("demo", view, ports, states)
 

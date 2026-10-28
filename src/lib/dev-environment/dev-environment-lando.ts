@@ -761,9 +761,10 @@ async function getExtraServicesConnections(
 
 			mappings[ 0 ]?.forEach( ( { HostIp: host, HostPort: port } ) => {
 				const label = displayConfiguration.label ?? service.service;
+				const hostname = host.includes( ':' ) ? `[${ host }]` : host;
 				const value =
 					( displayConfiguration.protocol ? `${ displayConfiguration.protocol }://` : '' ) +
-					`${ host }:${ port }`;
+					`${ hostname }:${ port }`;
 				if ( extraServices[ label ] ) {
 					extraServices[ label ] += `, ${ value }`;
 				} else {

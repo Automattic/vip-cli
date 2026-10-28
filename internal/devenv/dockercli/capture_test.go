@@ -1,6 +1,23 @@
 package dockercli
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
+
+func TestParseComposePSPreservesPublishedPorts(t *testing.T) {
+	row := `{"Service":"database","State":"running","Publishers":[{"URL":"127.0.0.1","TargetPort":3306,"PublishedPort":49153,"Protocol":"tcp"}]}`
+	for _, input := range []string{row + "\n", "[" + row + "]"} {
+		got, err := parseComposePS([]byte(input))
+		if err != nil {
+			t.Fatal(err)
+		}
+		want := []PortPublisher{{URL: "127.0.0.1", TargetPort: 3306, PublishedPort: 49153, Protocol: "tcp"}}
+		if len(got) != 1 || !reflect.DeepEqual(got[0].Publishers, want) {
+			t.Fatalf("lost host bindings: %+v", got)
+		}
+	}
+}
 
 func TestParseComposePSNDJSON(t *testing.T) {
 	in := []byte(`{"Service":"wordpress","State":"exited","ExitCode":0}
