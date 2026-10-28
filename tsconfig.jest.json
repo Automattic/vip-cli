@@ -3,6 +3,8 @@
   "compilerOptions": {
     "allowJs": true,
     "checkJs": false,
+    // Type checking runs separately; avoid ts-jest's shared compiler state.
+    "isolatedModules": true,
     "module": "commonjs",
     "moduleResolution": "bundler",
     "rootDir": ".",

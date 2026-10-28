@@ -196,29 +196,28 @@ describe( 'commands/ExportSQLCommand', () => {
 	describe( '.isPrepared', () => {
 		const app = { id: 123, name: 'test-app' };
 		const env = { id: 456, name: 'test-env' };
-		const job = {
+		const makeJob = ( status: string ) => ( {
 			id: 123,
 			progress: {
 				status: 'finished',
 				steps: [
 					{
 						id: 'upload_backup',
-						status: 'success',
+						status,
 					},
 				],
 			},
-		};
+		} );
 
 		const exportCommand = new ExportSQLCommand( app, env );
 
 		it( 'should return true if the S3 upload step has completed', () => {
-			const isCreated = exportCommand.isCreated( job );
+			const isCreated = exportCommand.isCreated( makeJob( 'success' ) );
 			expect( isCreated ).toEqual( true );
 		} );
 
 		it( 'should return false if the S3 upload step has not completed', () => {
-			job.progress.steps[ 0 ].status = 'in_progress';
-			const isCreated = exportCommand.isCreated( job );
+			const isCreated = exportCommand.isCreated( makeJob( 'in_progress' ) );
 			expect( isCreated ).toEqual( false );
 		} );
 	} );
@@ -226,29 +225,28 @@ describe( 'commands/ExportSQLCommand', () => {
 	describe( '.isCreated', () => {
 		const app = { id: 123, name: 'test-app' };
 		const env = { id: 456, name: 'test-env' };
-		const job = {
+		const makeJob = ( status: string ) => ( {
 			id: 123,
 			progress: {
 				status: 'finished',
 				steps: [
 					{
 						id: 'preflight',
-						status: 'success',
+						status,
 					},
 				],
 			},
-		};
+		} );
 
 		const exportCommand = new ExportSQLCommand( app, env );
 
 		it( 'should return true if the preflight step has completed', () => {
-			const isPrepared = exportCommand.isPrepared( job );
+			const isPrepared = exportCommand.isPrepared( makeJob( 'success' ) );
 			expect( isPrepared ).toEqual( true );
 		} );
 
 		it( 'should return false if the preflight step has not completed', () => {
-			job.progress.steps[ 0 ].status = 'in_progress';
-			const isPrepared = exportCommand.isPrepared( job );
+			const isPrepared = exportCommand.isPrepared( makeJob( 'in_progress' ) );
 			expect( isPrepared ).toEqual( false );
 		} );
 	} );
