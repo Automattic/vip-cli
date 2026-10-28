@@ -27,11 +27,11 @@ const EventEmitter = jest.requireActual< typeof import('events') >( 'events' );
 class MockClient extends EventEmitter {
 	public connect( config: Parameters< Client[ 'connect' ] >[ 0 ] ) {
 		mockConnect( config );
-		if ( connectionEvent === 'error' ) {
-			this.emit( 'error', new Error( 'connection failed' ) );
-		} else {
-			this.emit( connectionEvent );
-		}
+		const event = connectionEvent;
+		process.nextTick( () => {
+			if ( event === 'error' ) this.emit( 'error', new Error( 'connection failed' ) );
+			else this.emit( event );
+		} );
 
 		return this;
 	}
