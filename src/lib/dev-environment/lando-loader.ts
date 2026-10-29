@@ -1,10 +1,24 @@
 import { createRequire } from 'node:module';
-const baseRequire = createRequire( __filename );
+
+import {
+	getBundledResourceRoot,
+	loadBundledPackage,
+	resolveBundledModule,
+} from '../cli/standalone-resources';
+
+let baseRequire: NodeRequire | null = null;
+const nodeRequire = (): NodeRequire => ( baseRequire ??= createRequire( __filename ) );
 
 export function loadLandoModule< T = unknown >( request: string ): T {
-	return baseRequire( request ) as T;
+	if ( getBundledResourceRoot() ) {
+		return loadBundledPackage< T >( request );
+	}
+	return nodeRequire()( request ) as T;
 }
 
 export function resolveLandoModule( request: string ): string {
-	return baseRequire.resolve( request );
+	if ( getBundledResourceRoot() ) {
+		return resolveBundledModule( request );
+	}
+	return nodeRequire().resolve( request );
 }
