@@ -18,7 +18,24 @@ function run( executable, args, env, cwd = scope ) {
 		timeout: 60000,
 		maxBuffer: 4 * 1024 * 1024,
 	} );
-	assert.ifError( result.error );
+	if ( result.error ) {
+		let cacheState;
+		try {
+			const cache = path.join( env.XDG_CACHE_HOME, 'vip-cli', 'standalone-resources' );
+			cacheState = fs.readdirSync( cache ).map( entry => ( {
+				entry,
+				ready: fs.existsSync( path.join( cache, entry, '.archive-sha256' ) ),
+			} ) );
+		} catch ( error ) {
+			cacheState = error.code;
+		}
+		throw new Error(
+			`${ args.join( ' ' ) }: ${ result.error.message }\n` +
+				`Cache: ${ JSON.stringify( cacheState ) }\n` +
+				`stdout:\n${ result.stdout || '' }\nstderr:\n${ result.stderr || '' }`,
+			{ cause: result.error }
+		);
+	}
 	assert.equal( result.signal, null, result.stderr );
 	assert.equal( result.status, 0, result.stderr + result.stdout );
 	return result.stdout;
@@ -50,6 +67,8 @@ try {
 		DO_NOT_TRACK: '1',
 		CI: 'true',
 		NO_COLOR: '1',
+		DEBUG: '@automattic/vip:bun-launcher,@automattic/vip:keychain,@automattic/vip:bin:vip',
+		RUNNER_TRACKING_ID: process.env.RUNNER_TRACKING_ID,
 	};
 	for ( const args of [ [], [ 'config', 'envvar', 'list' ], [ 'dev-env', 'list' ] ] ) {
 		assert.match( run( binary, [ ...args, '--help' ], env ), /Usage:/ );

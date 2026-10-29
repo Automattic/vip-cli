@@ -16,8 +16,8 @@ Fetch the target's search-replace companion before a cross-build, as shown above
 The workflow uses matching runners to execute and verify each artifact before
 upload.
 
-The build and relocated smoke checks have been verified with Bun 1.4.0 on
-Linux x64; macOS and Windows execution remain unverified.
+Local build and relocated smoke checks use Bun 1.4.0 on Linux x64. The workflow
+below executes each listed target on a matching runner before uploading artifacts.
 
 From the repository root, with the supported Node/npm versions and Bun installed:
 
