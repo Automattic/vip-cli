@@ -80,12 +80,12 @@ jobs:
       - name: Use LF on Windows
         if: runner.os == 'Windows'
         run: git config --global core.autocrlf false
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version-file: .nvmrc
           cache: npm
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
       - name: Install Linux native-addon runtime dependencies
@@ -105,13 +105,13 @@ jobs:
         run: node helpers/bun-ci-smoke.js
       - name: Run Linux handler and isolation checks
         if: runner.os == 'Linux'
-        run: node helpers/bun-binary-smoke.js "$PWD/bin/vip"
+        run: node helpers/bun-binary-smoke.js
       - name: Package executable and checksum
         env:
           ARTIFACT_NAME: vip-${{ matrix.name }}
         run: node helpers/package-bun.mjs "$ARTIFACT_NAME"
       - name: Upload executable archive
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: vip-${{ matrix.name }}
           path: artifacts/*
