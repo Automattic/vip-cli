@@ -18,6 +18,7 @@
     "check-types": "tsc",
     "postinstall": "node ./helpers/check-version.js",
     "build": "tsc -p tsconfig.build.json",
+    "build:binary": "npm run clean && npm run build && bun helpers/build-bun.mjs",
     "postbuild": "node helpers/mark-cli-executable.js",
     "build:watch": "npm run build && tsc -p tsconfig.build.json --watch --sourceMap",
     "format": "npm run cmd:format -- --write",

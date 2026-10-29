@@ -16,6 +16,7 @@ import { TrackFunction } from '../lib/analytics/clients/tracks';
 import API from '../lib/api';
 import { BackupStorageAvailability } from '../lib/backup-storage-availability/backup-storage-availability';
 import * as exit from '../lib/cli/exit';
+import { getBundledSearchReplaceBinary } from '../lib/cli/standalone-resources';
 import { unzipFile } from '../lib/client-file-uploader';
 import { fixMyDumperTransform, getSqlDumpDetails, SqlDumpType } from '../lib/database';
 import { LiveBackupCopyCLIOptions } from '../lib/live-backup-copy';
@@ -205,7 +206,10 @@ export class DevEnvSyncSQLCommand {
 	public async runSearchReplace(): Promise< void > {
 		const replacements = Object.entries( this.searchReplaceMap ).flat();
 		const readStream = fs.createReadStream( this.sqlFile );
-		const replacedStream = await replace( readStream, replacements );
+		const bundledBinary = getBundledSearchReplaceBinary();
+		const replacedStream = bundledBinary
+			? await replace( readStream, replacements, bundledBinary )
+			: await replace( readStream, replacements );
 
 		const outputFile = `${ this.tmpDir }/sql-export-sr.sql`;
 		const transforms: NodeJS.ReadWriteStream[] = [];

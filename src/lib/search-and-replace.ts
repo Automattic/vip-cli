@@ -6,6 +6,7 @@ import { Readable, Writable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import path from 'path';
 
+import { getBundledSearchReplaceBinary } from './cli/standalone-resources';
 import { fixMyDumperTransform, getSqlDumpDetails, SqlDumpType } from './database';
 import { makeTempDir } from './utils';
 import * as exit from '../lib/cli/exit';
@@ -173,7 +174,11 @@ export const searchAndReplace = async (
 
 	let replacedStream: NodeJS.ReadableStream;
 	try {
-		replacedStream = await replace( readStream, replacements, binary );
+		replacedStream = await replace(
+			readStream,
+			replacements,
+			binary ?? getBundledSearchReplaceBinary()
+		);
 	} catch ( replaceError ) {
 		// replace() throws strings... OMG
 		exit.withError( replaceError as string | Error );
