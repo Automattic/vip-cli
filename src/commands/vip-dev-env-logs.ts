@@ -1,0 +1,85 @@
+import debugLib from 'debug';
+
+import { type DevEnvCommandOptions } from './dev-env-cli-types';
+import command from '../lib/cli/command';
+import {
+	getEnvTrackingInfo,
+	getEnvironmentName,
+	handleCLIException,
+	processSlug,
+	validateDependencies,
+	getDevEnvLogFile,
+} from '../lib/dev-environment/dev-environment-cli';
+import { showLogs } from '../lib/dev-environment/dev-environment-core';
+import {
+	bootstrapLando,
+	type LandoLogsOptions,
+} from '../lib/dev-environment/dev-environment-lando';
+import { trackEvent } from '../lib/tracker';
+
+const debug = debugLib( '@automattic/vip:bin:dev-environment' );
+const exampleUsage = 'vip dev-env logs';
+const usage = 'vip dev-env logs';
+
+const examples = [
+	{
+		usage: `${ exampleUsage } --slug=example-site`,
+		description:
+			'Retrieve logs for all running services of the local environment named "example-site".',
+	},
+	{
+		usage: `${ exampleUsage } --service=elasticsearch --slug=example-site`,
+		description:
+			'Retrieve logs only for the "elasticsearch" service of the local environment named "example-site".',
+	},
+	{
+		usage: `${ exampleUsage } --service=database --follow --slug=example-site`,
+		description:
+			'Retrieve and continually output logs for the "database" service of the local environment named "example-site".',
+	},
+];
+
+export default command( {
+	usage,
+} )
+	.option(
+		'slug',
+		'A unique name for a local environment. Default is "vip-local".',
+		undefined,
+		processSlug
+	)
+	.option( [ 'f', 'follow' ], 'Continually output logs as they are generated.' )
+	.option( 'service', 'Restrict to a single service.' )
+	.examples( examples )
+	.argv< DevEnvCommandOptions >( process.argv, async ( arg, opt ) => {
+		const slug = await getEnvironmentName( opt );
+
+		const lando = await bootstrapLando( { logFile: getDevEnvLogFile( slug ) } );
+		validateDependencies( lando );
+
+		const trackingInfo = getEnvTrackingInfo( slug );
+		await trackEvent( 'dev_env_logs_command_execute', trackingInfo );
+
+		debug( 'Args: ', arg, 'Options: ', opt );
+
+		if ( ! opt.follow ) {
+			opt.follow = false;
+		}
+		if ( ! opt.service ) {
+			opt.service = false;
+		}
+
+		const options: LandoLogsOptions = {
+			follow: opt.follow,
+			service: opt.service,
+			timestamps: true,
+		};
+
+		try {
+			await showLogs( lando, slug, options );
+			await trackEvent( 'dev_env_logs_command_success', trackingInfo );
+		} catch ( error ) {
+			await handleCLIException( error as Error, 'dev_env_logs_command_error', trackingInfo );
+			process.exitCode = 1;
+		}
+	} );

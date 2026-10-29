@@ -3,7 +3,7 @@
 /**
  * Release Smoke Test Script
  *
- * Tests high-risk CLI parser/dispatch commands against built dist/bin binaries
+ * Tests high-risk CLI parser/dispatch commands against the built dist/bin/vip.js entrypoint
  * to catch regressions in option parsing, short-option equals syntax, and
  * command routing before release.
  *
@@ -20,6 +20,7 @@ const path = require( 'node:path' );
 
 const projectRoot = path.resolve( __dirname, '..' );
 const distBinDir = path.join( projectRoot, 'dist', 'bin' );
+const distCommandsDir = path.join( projectRoot, 'dist', 'commands' );
 const nodeExec = process.execPath;
 
 // Timeout for each test case (ms)
@@ -42,8 +43,8 @@ const helpExpectation = {
  * Test case definition
  * @typedef {Object} TestCase
  * @property {string} name - Human-readable test name
- * @property {string} bin - Binary name (e.g., 'vip-logs.js')
- * @property {string[]} [requiredChildBins] - Built child binaries that must be present before this case can run
+ * @property {string} bin - Entrypoint filename ('vip.js')
+ * @property {string[]} [requiredCommandModules] - Built child binaries that must be present before this case can run
  * @property {string[]} args - Argument array (no shell interpolation)
  * @property {Object} expectation - Expected outcome
  * @property {number} [expectation.exitCode] - Expected exit code (default: 0)
@@ -59,23 +60,23 @@ const testCases = [
 	// FR-2: vip logs high-risk shapes
 	{
 		name: 'vip logs: short-option equals syntax (-l=10)',
-		bin: 'vip-logs.js',
-		args: [ '-l=10', '--help' ],
+		bin: 'vip.js',
+		args: [ 'logs', '-l=10', '--help' ],
 		expectation: helpExpectation,
 		rationale: 'Tests short-option equals parsing for -l (limit). --help prevents API calls/auth.',
 	},
 	{
 		name: 'vip logs: explicit default value match (--limit=500)',
-		bin: 'vip-logs.js',
-		args: [ '--limit=500', '--help' ],
+		bin: 'vip.js',
+		args: [ 'logs', '--limit=500', '--help' ],
 		expectation: helpExpectation,
 		rationale:
 			'Tests explicit default value parsing. --help prevents API calls/auth; no credentials needed.',
 	},
 	{
 		name: 'vip logs: type option short syntax (-t=batch)',
-		bin: 'vip-logs.js',
-		args: [ '-t=batch', '--help' ],
+		bin: 'vip.js',
+		args: [ 'logs', '-t=batch', '--help' ],
 		expectation: helpExpectation,
 		rationale: 'Tests short-option equals for -t (type). --help is safe and non-executing.',
 	},
@@ -83,23 +84,23 @@ const testCases = [
 	// FR-3: vip slowlogs high-risk shapes
 	{
 		name: 'vip slowlogs: short-option equals syntax (-l=50)',
-		bin: 'vip-slowlogs.js',
-		args: [ '-l=50', '--help' ],
+		bin: 'vip.js',
+		args: [ 'slowlogs', '-l=50', '--help' ],
 		expectation: helpExpectation,
 		rationale: 'Tests short-option equals parsing for -l (limit). --help prevents API calls/auth.',
 	},
 	{
 		name: 'vip slowlogs: explicit default value match (--limit=500)',
-		bin: 'vip-slowlogs.js',
-		args: [ '--limit=500', '--help' ],
+		bin: 'vip.js',
+		args: [ 'slowlogs', '--limit=500', '--help' ],
 		expectation: helpExpectation,
 		rationale:
 			'Tests explicit default value parsing. --help prevents API calls/auth; no credentials needed.',
 	},
 	{
 		name: 'vip slowlogs: format option short syntax (-f=json)',
-		bin: 'vip-slowlogs.js',
-		args: [ '-f=json', '--help' ],
+		bin: 'vip.js',
+		args: [ 'slowlogs', '-f=json', '--help' ],
 		expectation: helpExpectation,
 		rationale: 'Tests short-option equals for -f (format). --help is safe and non-executing.',
 	},
@@ -107,22 +108,22 @@ const testCases = [
 	// FR-4: vip wp option-only and separator/subcommand shapes
 	{
 		name: 'vip wp: option-only help',
-		bin: 'vip-wp.js',
-		args: [ '--help' ],
+		bin: 'vip.js',
+		args: [ 'wp', '--help' ],
 		expectation: helpExpectation,
 		rationale: 'Tests option-only path. --help bypasses auth/API/browser prompts.',
 	},
 	{
 		name: 'vip wp: yes option parsing',
-		bin: 'vip-wp.js',
-		args: [ '--yes', '--help' ],
+		bin: 'vip.js',
+		args: [ 'wp', '--yes', '--help' ],
 		expectation: helpExpectation,
 		rationale: 'Tests yes option parsing. --help prevents execution; credential-free.',
 	},
 	{
 		name: 'vip wp: help before separator (child parser)',
-		bin: 'vip-wp.js',
-		args: [ '--help', '--', 'option', 'get', 'home' ],
+		bin: 'vip.js',
+		args: [ 'wp', '--help', '--', 'option', 'get', 'home' ],
 		expectation: helpExpectation,
 		rationale:
 			'Tests separator/subcommand parsing. --help before separator prevents execution; credential-free.',
@@ -130,7 +131,7 @@ const testCases = [
 	{
 		name: 'vip wp: help before separator (root dispatcher)',
 		bin: 'vip.js',
-		requiredChildBins: [ 'vip-wp.js' ],
+		requiredCommandModules: [ 'vip-wp.js' ],
 		args: [ 'wp', '--help', '--', 'option', 'get', 'home' ],
 		expectation: helpExpectation,
 		rationale:
@@ -151,23 +152,23 @@ const testCases = [
 	// FR-5: vip dev-env shell parent option/dispatch
 	{
 		name: 'vip dev-env shell: help without env creation',
-		bin: 'vip-dev-env-shell.js',
-		args: [ '--help' ],
+		bin: 'vip.js',
+		args: [ 'dev-env', 'shell', '--help' ],
 		expectation: helpExpectation,
 		rationale: 'Tests parent command option parsing. --help prevents Docker/Lando/env creation.',
 	},
 	{
 		name: 'vip dev-env shell: slug option with help',
-		bin: 'vip-dev-env-shell.js',
-		args: [ '--slug=test-env', '--help' ],
+		bin: 'vip.js',
+		args: [ 'dev-env', 'shell', '--slug=test-env', '--help' ],
 		expectation: helpExpectation,
 		rationale:
 			'Tests slug option parsing. --help prevents env lookup/creation; no Docker/Lando needed.',
 	},
 	{
 		name: 'vip dev-env shell: root option with help',
-		bin: 'vip-dev-env-shell.js',
-		args: [ '--root', '--help' ],
+		bin: 'vip.js',
+		args: [ 'dev-env', 'shell', '--root', '--help' ],
 		expectation: helpExpectation,
 		rationale: 'Tests boolean root option. --help prevents shell creation; safe without Docker.',
 	},
@@ -393,7 +394,7 @@ function validateTestCaseStructure( testCase ) {
 		}
 	}
 
-	const childBinsError = validateRequiredChildBinsStructure( testCase.requiredChildBins );
+	const childBinsError = validateRequiredCommandModulesStructure( testCase.requiredCommandModules );
 	if ( childBinsError ) {
 		return childBinsError;
 	}
@@ -402,27 +403,27 @@ function validateTestCaseStructure( testCase ) {
 }
 
 /**
- * Validate optional required child binary field shape
- * @param {*} requiredChildBins
+ * Validate optional required command module field shape
+ * @param {*} requiredCommandModules
  * @return {TestResult|null} error result or null if valid
  */
-function validateRequiredChildBinsStructure( requiredChildBins ) {
-	if ( requiredChildBins === undefined ) {
+function validateRequiredCommandModulesStructure( requiredCommandModules ) {
+	if ( requiredCommandModules === undefined ) {
 		return null;
 	}
 
-	if ( ! Array.isArray( requiredChildBins ) ) {
+	if ( ! Array.isArray( requiredCommandModules ) ) {
 		return {
 			passed: false,
-			detail: 'Invalid test case: requiredChildBins must be an array if specified',
+			detail: 'Invalid test case: requiredCommandModules must be an array if specified',
 		};
 	}
 
-	for ( const childBin of requiredChildBins ) {
+	for ( const childBin of requiredCommandModules ) {
 		if ( typeof childBin !== 'string' || childBin === '' ) {
 			return {
 				passed: false,
-				detail: 'Invalid test case: all requiredChildBins must be non-empty strings',
+				detail: 'Invalid test case: all requiredCommandModules must be non-empty strings',
 			};
 		}
 	}
@@ -586,26 +587,32 @@ function checkBinaryFileSystem( binPath, label = 'Binary' ) {
 }
 
 /**
- * Validate required built child binaries before root dispatch smoke cases run
- * @param {string[]|undefined} requiredChildBins
+ * Validate required built command modules before root dispatch smoke cases run
+ * @param {string[]|undefined} requiredCommandModules
  * @return {TestResult|null} error result or null if valid
  */
-function validateRequiredChildBins( requiredChildBins ) {
-	if ( requiredChildBins === undefined ) {
+function validateRequiredCommandModules( requiredCommandModules ) {
+	if ( requiredCommandModules === undefined ) {
 		return null;
 	}
 
-	for ( const childBin of requiredChildBins ) {
+	const directoryError = checkFileSystemEntry( distCommandsDir, {
+		label: 'dist/commands directory',
+		expectedType: 'directory',
+	} );
+	if ( directoryError ) return directoryError;
+
+	for ( const childBin of requiredCommandModules ) {
 		const binaryPathError = validateBinaryPathRules( childBin );
 		if ( binaryPathError ) {
 			return {
 				passed: false,
-				detail: binaryPathError.detail.replace( 'bin must', 'required child bin must' ),
+				detail: binaryPathError.detail.replace( 'bin must', 'required command module must' ),
 			};
 		}
 
-		const childBinPath = path.join( distBinDir, childBin );
-		const fileSystemError = checkBinaryFileSystem( childBinPath, 'Required child binary' );
+		const childBinPath = path.join( distCommandsDir, childBin );
+		const fileSystemError = checkBinaryFileSystem( childBinPath, 'Required command module' );
 		if ( fileSystemError ) {
 			return fileSystemError;
 		}
@@ -656,7 +663,7 @@ function validateTestCase( testCase ) {
 		return fileSystemError;
 	}
 
-	const childBinsError = validateRequiredChildBins( testCase.requiredChildBins );
+	const childBinsError = validateRequiredCommandModules( testCase.requiredCommandModules );
 	if ( childBinsError ) {
 		return childBinsError;
 	}

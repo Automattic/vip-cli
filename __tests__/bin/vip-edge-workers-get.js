@@ -1,4 +1,4 @@
-import { edgeWorkersGetCommand } from '../../src/bin/vip-edge-workers-get';
+import { edgeWorkersGetCommand } from '../../src/commands/vip-edge-workers-get';
 import * as edgeWorkersApi from '../../src/lib/api/edge-workers';
 import * as exit from '../../src/lib/cli/exit';
 import * as tracker from '../../src/lib/tracker';

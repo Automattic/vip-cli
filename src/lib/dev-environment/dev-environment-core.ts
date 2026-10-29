@@ -34,6 +34,7 @@ import {
 import { loadLandoModule } from './lando-loader';
 import { AppEnvironment } from '../../graphqlTypes';
 import app from '../api/app';
+import { getBundledResourceRoot } from '../cli/standalone-resources';
 import { appQueryFragments as softwareQueryFragment } from '../config/software';
 import {
 	DEV_ENVIRONMENT_NOT_FOUND,
@@ -61,22 +62,12 @@ import type Lando from 'lando';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
-const landoFileTemplatePath = path.join(
-	__dirname,
-	'..',
-	'..',
-	'..',
-	'assets',
-	'dev-env.lando.template.yml.ejs'
-);
-const nginxFileTemplatePath = path.join(
-	__dirname,
-	'..',
-	'..',
-	'..',
-	'assets',
-	'dev-env.nginx.template.conf.ejs'
-);
+const templatePath = ( name: string ): string => {
+	const resources = getBundledResourceRoot();
+	return resources
+		? path.join( resources, 'assets', name )
+		: path.join( __dirname, '..', '..', '..', 'assets', name );
+};
 const landoFileName = '.lando.yml';
 const landoOverridesFileName = '.lando.local.yml';
 const landoBackupFileName = '.lando.backup.yml';
@@ -605,8 +596,14 @@ async function prepareLandoEnv(
 		domain: lando.config.domain,
 	};
 
-	const landoFile = await renderTemplateFile( landoFileTemplatePath, templateData );
-	const nginxFile = await renderTemplateFile( nginxFileTemplatePath, templateData );
+	const landoFile = await renderTemplateFile(
+		templatePath( 'dev-env.lando.template.yml.ejs' ),
+		templateData
+	);
+	const nginxFile = await renderTemplateFile(
+		templatePath( 'dev-env.nginx.template.conf.ejs' ),
+		templateData
+	);
 	const instanceDataFile = JSON.stringify( instanceData );
 
 	const landoFileTargetPath = path.join( instancePath, landoFileName );
@@ -691,8 +688,8 @@ export function getEnvironmentPath( name: string ): string {
 }
 
 export async function getApplicationInformation(
-	appId: number,
-	envType: string | null
+	appId: string | number,
+	envType: string | null | undefined
 ): Promise< AppInfo > {
 	// $FlowFixMe: gql template is not supported by flow
 	const fieldsQuery = `

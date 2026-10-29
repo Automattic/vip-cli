@@ -1,4 +1,4 @@
-import { appDeployTokenGenerateCmd } from '../../src/bin/vip-app-deploy-token-generate';
+import { appDeployTokenGenerateCmd } from '../../src/commands/vip-app-deploy-token-generate';
 import API from '../../src/lib/api';
 import * as exit from '../../src/lib/cli/exit';
 import { makeCommandTracker } from '../../src/lib/tracker';

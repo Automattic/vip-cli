@@ -147,7 +147,7 @@ const COMPONENT_NAMES = {
 	nodejs: 'Node.js',
 };
 
-type ComponentName = keyof typeof COMPONENT_NAMES;
+export type ComponentName = keyof typeof COMPONENT_NAMES;
 
 const MANAGED_OPTION_KEY = 'managed_latest';
 

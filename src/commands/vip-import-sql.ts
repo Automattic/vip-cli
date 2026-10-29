@@ -1,0 +1,858 @@
+import chalk from 'chalk';
+import columns from 'cli-columns';
+import debugLib from 'debug';
+import { prompt } from 'enquirer';
+import gql from 'graphql-tag';
+
+import API from '../lib/api';
+import command from '../lib/cli/command';
+import * as exit from '../lib/cli/exit';
+import { formatEnvironment, formatSearchReplaceValues, getGlyphForStatus } from '../lib/cli/format';
+import { ProgressTracker } from '../lib/cli/progress';
+import { confirm } from '../lib/cli/prompt';
+import {
+	checkFileAccess,
+	getFileSize,
+	getFileMeta,
+	isFile,
+	uploadImportFileToS3,
+} from '../lib/client-file-uploader';
+import { searchAndReplace } from '../lib/search-and-replace';
+import {
+	currentUserCanImportForApp,
+	isSupportedApp,
+	SQL_IMPORT_FILE_SIZE_LIMIT,
+	SQL_IMPORT_FILE_SIZE_LIMIT_LAUNCHED,
+} from '../lib/site-import/db-file-import';
+import { importSqlCheckStatus, type ImportSqlCheckStatusInput } from '../lib/site-import/status';
+import { trackEventWithEnv } from '../lib/tracker';
+import { isMultiSiteInSiteMeta } from '../lib/validations/is-multi-site';
+import { fileLineValidations } from '../lib/validations/line-by-line';
+import { siteTypeValidations } from '../lib/validations/site-type';
+import {
+	staticSqlValidations,
+	getTableNames,
+	validateImportFileExtension,
+	validateFilename,
+} from '../lib/validations/sql';
+
+import type { App, AppEnvironment, AppEnvironmentImportInput } from '../graphqlTypes';
+import type { AppForImport, EnvForImport } from '../lib/site-import/db-file-import';
+
+const appQuery = `
+	id,
+	name,
+	type,
+	typeId
+	organization { id, name },
+	environments{
+		id
+		appId
+		type
+		name
+		launched
+		isK8sResident
+		syncProgress { status }
+		primaryDomain { name }
+		importStatus {
+			dbOperationInProgress
+			importInProgress
+		}
+	}
+`;
+
+const START_IMPORT_MUTATION = gql`
+	mutation StartImport($input: AppEnvironmentImportInput) {
+		startImport(input: $input) {
+			app {
+				id
+				name
+			}
+			message
+			success
+		}
+	}
+`;
+
+const usage = 'vip import sql';
+const debug = debugLib( '@automattic/vip:bin:vip-import-sql' );
+
+const SQL_IMPORT_PREFLIGHT_PROGRESS_STEPS = [
+	{ id: 'replace', name: 'Performing search and replace' },
+	{ id: 'upload', name: 'Uploading file' },
+	{ id: 'queue_import', name: 'Queueing import' },
+];
+
+type Track = (
+	eventName: string,
+	eventProps?: Record< string, unknown >
+) => ReturnType< typeof trackEventWithEnv >;
+
+type SelectedApp = App & { id: number };
+type SelectedEnvironment = AppEnvironment & { id: number; appId: number; type: string };
+
+interface ImportPlaybookOptions {
+	launched?: boolean | null;
+	formattedEnvironment: string;
+	domain: string;
+	isMultiSite: boolean;
+	tableNames: string[];
+	searchReplace?: string | string[];
+	fileName?: string;
+	app?: App;
+}
+
+/**
+ * Check if a string is a valid URL
+ * @param {string} str - The string to check
+ * @returns {boolean} True if the string is a valid URL
+ */
+function isValidUrl( str: string ) {
+	try {
+		const url = new URL( str );
+		return ! /^[a-z]:$/iu.test( url.protocol );
+	} catch {
+		return false;
+	}
+}
+
+/**
+ * Validate MD5 hash format
+ * @param {string} md5 - The MD5 hash to validate
+ * @returns {boolean} True if the hash is valid
+ */
+function isValidMd5( md5: string ) {
+	return /^[a-f0-9]{32}$/i.test( md5 );
+}
+
+/**
+ * Parse and validate headers from CLI input
+ * @param {string|string[]} headers - Header(s) in "Name: Value" format
+ * @returns {Array<{name: string, value: string}>} Parsed headers
+ */
+export function parseHeaders( headers?: string | string[] ): { name: string; value: string }[] {
+	if ( ! headers ) {
+		return [];
+	}
+
+	const headerArray = Array.isArray( headers ) ? headers : [ headers ];
+	const parsedHeaders = [];
+
+	for ( const header of headerArray ) {
+		const colonIndex = header.indexOf( ':' );
+		if ( colonIndex === -1 ) {
+			exit.withError( `Invalid header format: "${ header }". Expected format: "Name: Value"` );
+		}
+
+		const name = header.substring( 0, colonIndex ).trim();
+		const value = header.substring( colonIndex + 1 ).trim();
+
+		if ( ! name ) {
+			exit.withError( `Invalid header format: "${ header }". Header name cannot be empty.` );
+		}
+
+		parsedHeaders.push( { name, value } );
+	}
+
+	return parsedHeaders;
+}
+
+/**
+ * @param {import('../lib/site-import/db-file-import').AppForImport} app
+ * @param {import('../lib/site-import/db-file-import').EnvForImport} env
+ * @param {string} fileNameOrURL
+ * @param {boolean} isUrl
+ * @param {string|null} md5
+ */
+// eslint-disable-next-line complexity
+export async function gates(
+	app: AppForImport,
+	env: EnvForImport,
+	fileNameOrURL: string,
+	isUrl = false,
+	md5: string | null | undefined = null
+) {
+	const { id: envId, appId } = env;
+	const track = trackEventWithEnv.bind( null, appId as number, envId as number );
+
+	if ( md5 && ! isValidMd5( md5 ) ) {
+		await track( 'import_sql_command_error', { error_type: 'invalid-md5' } );
+		exit.withError(
+			'The provided MD5 hash is invalid. It should be a 32-character hexadecimal string.'
+		);
+	}
+
+	if ( ! isUrl && md5 ) {
+		console.log(
+			chalk.yellowBright(
+				'The --md5 parameter is only valid for imports from a remote URL. This option will be ignored.'
+			)
+		);
+	}
+
+	if ( ! isUrl ) {
+		const fileName = fileNameOrURL;
+		const fileMeta = await getFileMeta( fileName );
+
+		try {
+			// Extract base file name and exit if it contains unsafe character
+			validateFilename( fileMeta.basename );
+		} catch ( error ) {
+			await track( 'import_sql_command_error', { error_type: 'invalid-filename' } );
+			exit.withError( error as Error );
+		}
+
+		try {
+			validateImportFileExtension( fileName );
+		} catch ( error ) {
+			await track( 'import_sql_command_error', { error_type: 'invalid-extension' } );
+			exit.withError( error as Error );
+		}
+
+		try {
+			await checkFileAccess( fileName );
+		} catch {
+			await track( 'import_sql_command_error', { error_type: 'sqlfile-unreadable' } );
+			exit.withError( `File '${ fileName }' does not exist or is not readable.` );
+		}
+
+		if ( ! ( await isFile( fileName ) ) ) {
+			await track( 'import_sql_command_error', { error_type: 'sqlfile-notfile' } );
+			exit.withError( `Path '${ fileName }' is not a file.` );
+		}
+
+		const fileSize = await getFileSize( fileName );
+
+		if ( ! fileSize ) {
+			await track( 'import_sql_command_error', { error_type: 'sqlfile-empty' } );
+			exit.withError( `File '${ fileName }' is empty.` );
+		}
+
+		const maxFileSize = env?.launched
+			? SQL_IMPORT_FILE_SIZE_LIMIT_LAUNCHED
+			: SQL_IMPORT_FILE_SIZE_LIMIT;
+
+		if ( fileSize > maxFileSize ) {
+			await track( 'import_sql_command_error', {
+				error_type: 'sqlfile-toobig',
+				file_size: fileSize,
+				launched: Boolean( env?.launched ),
+			} );
+			exit.withError(
+				`The sql import file size (${ fileSize } bytes) exceeds the limit (${ maxFileSize } bytes).` +
+					( env.launched
+						? ' Note: This limit is lower for launched environments to maintain site stability.'
+						: '' ) +
+					'\n\nPlease split it into multiple files or contact support for assistance.'
+			);
+		}
+	}
+
+	if ( ! currentUserCanImportForApp( app ) ) {
+		await track( 'import_sql_command_error', { error_type: 'unauthorized' } );
+		exit.withError(
+			'The currently authenticated account does not have permission to perform a SQL import.'
+		);
+	}
+
+	if ( ! isSupportedApp( app ) ) {
+		await track( 'import_sql_command_error', { error_type: 'unsupported-app' } );
+		exit.withError(
+			'The type of application you specified does not currently support SQL imports.'
+		);
+	}
+
+	if ( ! env?.importStatus ) {
+		await track( 'import_sql_command_error', { error_type: 'empty-import-status' } );
+		exit.withError(
+			'Could not determine the import status for this environment. Check the app/environment and if the problem persists, contact support for assistance.'
+		);
+	}
+	const {
+		importStatus: { dbOperationInProgress, importInProgress },
+	} = env;
+
+	if ( importInProgress ) {
+		await track( 'import_sql_command_error', { error_type: 'existing-import' } );
+		exit.withError(
+			'There is already an import in progress.\n\nYou can view the status with command:\n    vip import sql status'
+		);
+	}
+
+	if ( dbOperationInProgress ) {
+		await track( 'import_sql_command_error', { error_type: 'existing-dbop' } );
+		exit.withError( 'There is already a database operation in progress. Please try again later.' );
+	}
+}
+
+// Command examples for the `vip import sql` help prompt
+const examples = [
+	// `sql` subcommand
+	{
+		usage: 'vip @example-app.develop import sql file.sql',
+		description:
+			'Import a local SQL database file named "file.sql" to the develop environment of the "example-app" application.',
+	},
+	// `search-replace` option
+	{
+		usage:
+			'vip @example-app.develop import sql file.sql --search-replace="from.example.com,to.example.com" --search-replace="example.com/from,example.com/to"',
+		description:
+			'Perform multiple search and replace operations on a local SQL database file during the import process.',
+	},
+	// `in-place` option
+	{
+		usage:
+			'vip @example-app.develop import sql file.sql --search-replace="https://from.example.com,https://to.example.com" --in-place',
+		description:
+			'Perform a search and replace operation on a local file named "file.sql", save the changes to the file, then import the updated file.',
+	},
+	// `output` option
+	{
+		usage:
+			'vip @example-app.develop import sql file.sql --search-replace="https://from.example.com,https://to.example.com" --output="updated-file.sql"',
+		description:
+			'At the completion of the import of a local SQL database file that was modified by a search and replace operation, create a copy of the file in its updated state and save it locally to a new file named "updated-file.sql".',
+	},
+	// remote URL import
+	{
+		usage:
+			'vip @example-app.develop import sql https://example.com/file.sql --md5=5d41402abc4b2a76b9719d911017c592',
+		description:
+			'Import a SQL database file from a remote URL and verify the integrity of its contents with an MD5 hash.',
+	},
+	// remote URL import with HTTP basic auth
+	{
+		usage: 'vip @example-app.develop import sql https://username:password@example.com/file.sql',
+		description:
+			'Access and import a remote SQL database file by formatting the URL with valid HTTP basic authentication credentials.',
+	},
+	// remote URL import with headers
+	{
+		usage:
+			'vip @example-app.develop import sql https://example.com/file.sql --header="Authorization: bearer-token-value"',
+		description:
+			'Access and import a SQL database file located at a remote URL by passing a valid authorization header and bearer token.',
+	},
+	// `sql status` subcommand
+	{
+		usage: 'vip @example-app.develop import sql status',
+		description:
+			'Check the status of the most recent SQL database import to the develop environment of the "example-app" application.\n' +
+			'       * This will continue to poll until the import is complete.',
+	},
+];
+
+export const promptToContinue = async ( {
+	launched,
+	formattedEnvironment,
+	track,
+	domain,
+	isMultiSite,
+	tableNames,
+}: ImportPlaybookOptions & { track: Track } ) => {
+	console.log();
+	const promptToMatch = domain.toUpperCase();
+	const source = ! isMultiSite && tableNames?.length ? 'the above tables' : 'the above file';
+	const promptResponse = await prompt< { confirmedDomain: string } >( {
+		type: 'input',
+		name: 'confirmedDomain',
+		message: `You are about to import ${ source } into the ${
+			launched ? 'launched' : 'unlaunched'
+		} ${ formattedEnvironment } environment ${ chalk.yellow( domain ) }.\nType '${ chalk.yellow(
+			promptToMatch
+		) }' (without the quotes) to continue:\n`,
+	} );
+
+	if ( promptResponse.confirmedDomain.toUpperCase() !== promptToMatch ) {
+		await track( 'import_sql_unexpected_tables' );
+		exit.withError( 'The input did not match the expected environment label. Import aborted.' );
+	}
+};
+
+/**
+ * Show a huge warning and prompt the user to confirm twice when skipping backup
+ *
+ * @param {Function} track - Tracking function
+ * @returns {Promise<boolean>} True if user confirmed both times, false otherwise
+ */
+export const confirmSkipBackup = async ( track: Track ) => {
+	console.log( chalk.bold.red( '⚠️ WARNING ⚠️' ) );
+	console.log(
+		chalk.red( chalk.bold.red( 'YOU ARE ABOUT TO SKIP CREATING A BACKUP BEFORE IMPORTING SQL!\n' ) )
+	);
+	console.log( chalk.bold.yellow( 'This action is EXTREMELY DANGEROUS and can result in:' ) );
+	console.log( chalk.bold.yellow( '• Permanent data loss' ) );
+	console.log( chalk.bold.yellow( '• Inability to automatically restore your database' ) );
+	console.log( chalk.bold.yellow( '• Complete site failure' ) );
+	console.log( chalk.bold.red( 'There is NO way to undo this action once the import begins!\n' ) );
+
+	const importAbortedMsg = chalk.red( '✗ Import aborted.' );
+
+	try {
+		// First confirmation: y/n prompt
+		const firstConfirm = await prompt< { firstConfirm: boolean } >( {
+			type: 'confirm',
+			name: 'firstConfirm',
+			message: 'Are you absolutely certain you want to skip the backup?',
+		} ).catch( () => {
+			return { firstConfirm: false };
+		} );
+
+		if ( ! firstConfirm.firstConfirm ) {
+			await track( 'import_sql_skip_backup_cancelled' );
+			console.log( importAbortedMsg );
+			return false;
+		}
+
+		// Second confirmation: requires typing "yes"
+		const secondConfirm = await prompt< { secondConfirm: string } >( {
+			type: 'input',
+			name: 'secondConfirm',
+			message: `Type '${ chalk.yellow(
+				'yes'
+			) }' (without quotes) to proceed WITHOUT creating a backup (this cannot be undone):\n`,
+		} ).catch( () => {
+			return { secondConfirm: '' };
+		} );
+
+		if ( secondConfirm.secondConfirm?.toLowerCase() !== 'yes' ) {
+			await track( 'import_sql_skip_backup_cancelled' );
+			console.error( 'Failed to confirm!' );
+			console.log( importAbortedMsg );
+			return false;
+		}
+	} catch ( error ) {
+		await track( 'import_sql_skip_backup_cancelled' );
+		console.log( importAbortedMsg );
+		console.error( error );
+		return false;
+	}
+
+	await track( 'import_sql_skip_backup_confirmed' );
+	console.log( chalk.red( '⚠️ Backup will be skipped. Proceeding with import...' ) );
+	return true;
+};
+
+/**
+ * @returns {Promise<string[]>}
+ */
+export async function validateAndGetTableNames( {
+	skipValidate,
+	appId,
+	envId,
+	fileNameToUpload,
+	searchReplace,
+}: {
+	skipValidate?: boolean;
+	appId: number;
+	envId: number;
+	fileNameToUpload: string;
+	searchReplace?: string | string[];
+} ): Promise< string[] > {
+	const validations = [ staticSqlValidations, siteTypeValidations ];
+	if ( skipValidate ) {
+		console.log( 'Skipping SQL file validation.' );
+		return [];
+	}
+	try {
+		await fileLineValidations(
+			appId,
+			envId,
+			fileNameToUpload,
+			validations,
+			searchReplace as string | string[]
+		);
+	} catch ( validateErr ) {
+		console.log( '' );
+		exit.withError( `${ ( validateErr as Error ).message }\n
+If you are confident that the file does not contain unsupported statements, you can retry the command with the ${ chalk.yellow(
+			'--skip-validate'
+		) } option.
+` );
+	}
+	// this can only be called after static validation of the SQL file
+	return getTableNames();
+}
+
+const displayPlaybook = ( {
+	launched,
+	tableNames,
+	searchReplace,
+	fileName,
+	domain,
+	formattedEnvironment,
+	isMultiSite,
+	app,
+}: ImportPlaybookOptions & { fileName: string; app: App } ) => {
+	console.log();
+	console.log( `  importing: ${ chalk.blueBright( fileName ) }` );
+	console.log( `         to: ${ chalk.cyan( domain ) }` );
+	console.log( `       site: ${ app.name } (${ formattedEnvironment })` );
+
+	if ( searchReplace?.length ) {
+		const output = ( from: string, to: string ) => {
+			const message = `        s-r: ${ chalk.blue( from ) } -> ${ chalk.blue( to ) }`;
+			console.log( message );
+		};
+
+		formatSearchReplaceValues( searchReplace, output );
+	}
+
+	if ( isMultiSite ) {
+		console.log( `  multisite: ${ isMultiSite.toString() }` );
+	}
+
+	if ( ! tableNames.length ) {
+		debug( 'Validation was skipped. No playbook information will be displayed.' );
+	} else {
+		// output the table names
+		console.log();
+		if ( isMultiSite && launched ) {
+			console.log(
+				chalk.yellowBright(
+					'You are updating tables in a launched multisite environment. The performance of sites on the network might be impacted by this operation.'
+				)
+			);
+		}
+		console.log( 'Tables that will be imported by this process:' );
+		console.log( columns( tableNames ) );
+	}
+};
+
+/* eslint-disable complexity */
+export default command( {
+	appContext: true,
+	appQuery,
+	envContext: true,
+	requiredArgs: 1,
+	module: 'import-sql',
+	usage,
+} )
+	.command( 'status', 'Check the status of a SQL database import currently in progress.' )
+	.option(
+		'skip-validate',
+		'Do not perform file validation prior to import. If the file contains unsupported entries, the import is likely to fail.'
+	)
+	.option(
+		'search-replace',
+		'Search for a string in a local or remote SQL database file and replace it with a new string. Separate the values by a comma only; no spaces (e.g. --search-replace="from,to"). Can be passed more than once.'
+	)
+	.option(
+		'in-place',
+		'Overwrite a local SQL database file with the results of a search and replace operation prior to import.'
+	)
+	.option(
+		'output',
+		'Save the results of a --search-replace operation that is run against a local SQL database file to a copy of that file. Accepts a local file path. Ignored when used with the --in-place option.'
+	)
+	.option(
+		'skip-maintenance-mode',
+		'Prevent an unlaunched environment from going into maintenance mode during the import of a local or remote SQL database file. Skipping maintenance mode can cause site instability during import.'
+	)
+	.option( 'md5', 'Verify the integrity of a remote SQL database file. Accepts an MD5 hash value.' )
+	.option(
+		'header',
+		'Pass a header name and value (Formatted as "Name: Value") in a request for a remote SQL database file. Can be passed more than once for multiple headers and values.'
+	)
+	.option(
+		[ 'B', 'skip-backup' ],
+		'Skip creating a backup before importing the SQL file. WARNING: This is extremely dangerous and can result in permanent data loss.'
+	)
+	.examples( examples )
+
+	.argv(
+		process.argv,
+
+		async (
+			arg: string[],
+			opts: {
+				app: App;
+				env: AppEnvironment;
+				skipValidate?: boolean;
+				searchReplace?: string | string[];
+				skipMaintenanceMode?: boolean;
+				md5?: string;
+				header?: string | string[];
+				skipBackup?: boolean;
+				inPlace?: boolean;
+				output?: string | boolean;
+			}
+		) => {
+			const app = opts.app as SelectedApp;
+			const env = opts.env as SelectedEnvironment;
+			const { skipValidate, searchReplace, skipMaintenanceMode, md5, header, skipBackup } = opts;
+			const { id: envId, appId } = env;
+			const [ fileNameOrURL ] = arg;
+			const isMultiSite = await isMultiSiteInSiteMeta( appId, envId );
+			const isUrl = isValidUrl( fileNameOrURL );
+
+			// Parse and validate headers
+			const headers = parseHeaders( header );
+
+			if ( ! isUrl && headers.length > 0 ) {
+				console.log(
+					chalk.yellowBright(
+						'The --header option is only valid for imports from a remote URL. This option will be ignored.'
+					)
+				);
+			}
+
+			if ( isUrl && opts.inPlace ) {
+				console.log(
+					chalk.yellowBright(
+						'The --in-place option is only valid for imports from a remote URL. This option will be ignored.'
+					)
+				);
+				opts.inPlace = false;
+			}
+
+			if ( isUrl && opts.output ) {
+				console.log(
+					chalk.yellowBright(
+						'The --output option is only valid for imports of a local file. This option will be ignored.'
+					)
+				);
+				opts.output = undefined;
+			}
+
+			debug( 'Options: ', opts );
+			debug( 'Args: ', arg );
+
+			const track = trackEventWithEnv.bind( null, appId, envId );
+
+			await track( 'import_sql_command_execute', { is_url: isUrl } );
+
+			// halt operation of the import based on some rules
+			await gates( app, env, fileNameOrURL, isUrl, md5 );
+
+			// Log summary of import details
+			const domain = env?.primaryDomain?.name ? env.primaryDomain.name : `#${ env.id }`;
+			const formattedEnvironment = formatEnvironment( env.type );
+			const launched = opts.env.launched;
+
+			const fileNameToUpload = fileNameOrURL;
+
+			// SQL file validations - only for local files
+			let tableNames: string[] = [];
+			if ( ! isUrl ) {
+				tableNames = await validateAndGetTableNames( {
+					skipValidate,
+					appId,
+					envId,
+					fileNameToUpload,
+					searchReplace,
+				} );
+				/* eslint-enable complexity */
+			}
+
+			// display playbook of what will happen during execution
+			displayPlaybook( {
+				launched,
+				tableNames,
+				searchReplace,
+				fileName: fileNameOrURL,
+				domain,
+				formattedEnvironment,
+				isMultiSite,
+				app,
+			} );
+
+			// PROMPT TO PROCEED WITH THE IMPORT
+			await promptToContinue( {
+				launched,
+				formattedEnvironment,
+				track,
+				domain,
+				isMultiSite,
+				tableNames,
+			} );
+
+			if ( skipBackup ) {
+				const confirmed = await confirmSkipBackup( track );
+				if ( ! confirmed ) {
+					process.exit( 0 );
+				}
+			}
+
+			if ( ! isUrl && opts.inPlace ) {
+				const approved = await confirm(
+					[],
+					'Are you sure you want to run search and replace on your input file? This operation is not reversible.'
+				);
+
+				if ( ! approved ) {
+					// Retain the legacy two-argument telemetry call during the TypeScript move.
+					await Reflect.apply( trackEventWithEnv, undefined, [
+						'search_replace_in_place_cancelled',
+						{ is_import: true, in_place: opts.inPlace },
+					] );
+
+					process.exit();
+				}
+			}
+
+			/**
+			 * =========== WARNING =============
+			 *
+			 * NO `console.log` after this point!
+			 * Yes, even inside called functions.
+			 * It will break the progress printing.
+			 *
+			 * =========== WARNING =============
+			 */
+			const progressTracker = new ProgressTracker( SQL_IMPORT_PREFLIGHT_PROGRESS_STEPS );
+
+			let status = 'running';
+
+			const setProgressTrackerPrefixAndSuffix = () => {
+				progressTracker.prefix = `
+=============================================================
+Processing the SQL import for your environment...
+`;
+				progressTracker.suffix = `\n${ getGlyphForStatus(
+					status,
+					progressTracker.runningSprite
+				) } ${ status === 'running' ? 'Loading remaining steps' : '' }`;
+			};
+
+			const failWithError = ( failureError: string | Error ) => {
+				status = 'failed';
+				setProgressTrackerPrefixAndSuffix();
+				progressTracker.stopPrinting();
+				progressTracker.print( { clearAfter: true } );
+
+				exit.withError( failureError );
+			};
+
+			progressTracker.startPrinting( setProgressTrackerPrefixAndSuffix );
+
+			// Run Search and Replace if the --search-replace flag was provided (local files only)
+			if ( ! isUrl && searchReplace && searchReplace.length ) {
+				progressTracker.stepRunning( 'replace' );
+
+				const { outputFileName } = await searchAndReplace( fileNameOrURL, searchReplace, {
+					isImport: true,
+					inPlace: opts.inPlace,
+					output: opts.output ?? true,
+					batchMode: true,
+				} );
+
+				if ( typeof outputFileName !== 'string' ) {
+					progressTracker.stepFailed( 'replace' );
+					return failWithError(
+						'Unable to determine location of the intermediate search and replace file.'
+					);
+				}
+
+				progressTracker.stepSuccess( 'replace' );
+			} else {
+				progressTracker.stepSkipped( 'replace' );
+			}
+
+			// Call the Public API
+			const api = API();
+
+			const startImportVariables: {
+				input: AppEnvironmentImportInput & { skipBackup?: boolean };
+			} = {
+				input: {
+					id: app.id,
+					environmentId: env.id,
+					skipMaintenanceMode,
+					...( skipBackup && { skipBackup: true } ),
+				},
+			};
+
+			if ( isUrl ) {
+				progressTracker.stepSkipped( 'upload' );
+
+				startImportVariables.input = {
+					...startImportVariables.input,
+					url: fileNameOrURL,
+					searchReplace: [],
+					md5,
+					urlHeaders: headers,
+				};
+			} else {
+				progressTracker.stepRunning( 'upload' );
+
+				const fileMeta = await getFileMeta( fileNameOrURL );
+
+				const progressCallback = ( percentage: string ) => {
+					progressTracker.setUploadPercentage( percentage );
+				};
+
+				fileMeta.fileName = fileNameToUpload;
+
+				try {
+					const {
+						fileMeta: { basename },
+						checksum: uploadedMD5,
+						result,
+					} = await uploadImportFileToS3( {
+						app,
+						env,
+						fileMeta,
+						progressCallback,
+					} );
+
+					startImportVariables.input = {
+						...startImportVariables.input,
+						basename,
+						md5: uploadedMD5,
+						searchReplace: [],
+					};
+
+					debug( { basename, uploadedMD5, result, startImportVariables } );
+					debug( 'Upload complete. Initiating the import.' );
+					progressTracker.stepSuccess( 'upload' );
+					await track( 'import_sql_upload_complete' );
+				} catch ( uploadError ) {
+					await track( 'import_sql_command_error', {
+						error_type: 'upload_failed',
+						upload_error: ( uploadError as Error ).message,
+					} );
+
+					progressTracker.stepFailed( 'upload' );
+					return failWithError( uploadError as Error );
+				}
+			}
+
+			if ( searchReplace ) {
+				const pairs = Array.isArray( searchReplace ) ? searchReplace : [ searchReplace ];
+
+				// determine all the replacements required
+				const replacementsArr = pairs.map( pair => pair.split( ',' ).map( str => str.trim() ) );
+
+				startImportVariables.input.searchReplace = replacementsArr.map( arr => {
+					return {
+						from: arr[ 0 ],
+						to: arr[ 1 ],
+					};
+				} );
+			}
+
+			// Start the import
+			try {
+				const startImportResults = await api.mutate( {
+					mutation: START_IMPORT_MUTATION,
+					variables: startImportVariables,
+				} );
+
+				debug( { startImportResults } );
+			} catch ( gqlErr ) {
+				await track( 'import_sql_command_error', {
+					error_type: 'StartImport-failed',
+					gql_err: gqlErr,
+				} );
+
+				progressTracker.stepFailed( 'queue_import' );
+				return failWithError( `StartImport call failed: ${ gqlErr as string }` );
+			}
+
+			progressTracker.stepSuccess( 'queue_import' );
+
+			await importSqlCheckStatus( { app, env, progressTracker } as ImportSqlCheckStatusInput );
+		}
+	);

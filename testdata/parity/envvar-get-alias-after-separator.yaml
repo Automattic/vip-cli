@@ -1,0 +1,13 @@
+name: envvar-get-alias-after-separator
+description: |
+  An alias-shaped variable name after -- remains one literal positional
+  argument through nested config/envvar/get dispatch. Explicit app/env flags
+  make accidental promotion of the payload to an app alias fail.
+argv: ["config", "envvar", "get", "--app", "parityapp", "--env", "develop", "--", "@literal"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+recording: envvar-get-not-found
+expect:
+  exit_code: 0

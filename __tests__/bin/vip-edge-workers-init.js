@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import { edgeWorkersInitCommand } from '../../src/bin/vip-edge-workers-init';
+import { edgeWorkersInitCommand } from '../../src/commands/vip-edge-workers-init';
 import * as exit from '../../src/lib/cli/exit';
 import * as toolchains from '../../src/lib/edge-workers/toolchains';
 import * as tracker from '../../src/lib/tracker';

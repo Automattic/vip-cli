@@ -9,9 +9,10 @@ cross-compile every target**. Only _signing_ is platform-specific: Authenticode
 OS-enforced executable signature (publish checksums/detached signatures
 instead).
 
-This is the repository's only standalone executable flow. The Node CLI remains
-an npm package; Go cross-compiles the Windows `.exe` directly without embedding
-Node or requiring WSL.
+This is the signed Go release flow. The Node CLI is distributed as an npm
+package and has a separate experimental [Bun executable build](BUILD-BUN.md).
+Go cross-compiles the Windows `.exe` directly without embedding Node or
+requiring WSL.
 
 ## Prerequisites
 

@@ -1,11 +1,11 @@
 import { describe, expect, it, jest, beforeEach, afterEach } from '@jest/globals';
-import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 
 import command, { containsAppEnvArgument } from '../../../src/lib/cli/command';
+import { runCommand } from '../../../src/lib/cli/run-command';
 
-jest.mock( 'node:child_process', () => ( {
-	spawnSync: jest.fn( () => ( { status: 0 } ) ),
+jest.mock( '../../../src/lib/cli/run-command', () => ( {
+	runCommand: jest.fn( async () => {} ),
 } ) );
 
 jest.mock( '../../../src/lib/tracker', () => ( {
@@ -43,43 +43,51 @@ describe( 'utils/cli/command', () => {
 	describe( 'subcommand dispatch', () => {
 		it( 'allows wp option-only invocations without separator', async () => {
 			const parentScript = path.join( process.cwd(), 'src/bin/vip.js' );
-			const childScript = path.join( process.cwd(), 'src/bin/vip-wp.js' );
+			const childScript = path.join( process.cwd(), 'src/commands/vip-wp.js' );
 
-			const cmd = command( { requiredArgs: 0 } ).command( 'wp', 'Run WP-CLI commands.' );
+			const cmd = command( {
+				requiredArgs: 0,
+				commandDirectory: path.join( process.cwd(), 'src/commands' ),
+			} ).command( 'wp', 'Run WP-CLI commands.' );
 
 			await cmd.argv( [ process.execPath, parentScript, 'wp', '--help' ] );
 
-			expect( spawnSync ).toHaveBeenCalledWith( process.execPath, [ childScript, '--help' ], {
-				stdio: 'inherit',
-				env: process.env,
-			} );
-			expect( process.exit ).toHaveBeenCalledWith( 0 );
+			expect( runCommand ).toHaveBeenCalledWith( childScript, [
+				process.execPath,
+				childScript,
+				'--help',
+			] );
+			expect( process.exit ).not.toHaveBeenCalled();
 		} );
 
 		it( 'allows wp option-only invocations with option values without separator', async () => {
 			const parentScript = path.join( process.cwd(), 'src/bin/vip.js' );
-			const childScript = path.join( process.cwd(), 'src/bin/vip-wp.js' );
+			const childScript = path.join( process.cwd(), 'src/commands/vip-wp.js' );
 
-			const cmd = command( { requiredArgs: 0 } ).command( 'wp', 'Run WP-CLI commands.' );
+			const cmd = command( {
+				requiredArgs: 0,
+				commandDirectory: path.join( process.cwd(), 'src/commands' ),
+			} ).command( 'wp', 'Run WP-CLI commands.' );
 
 			await cmd.argv( [ process.execPath, parentScript, 'wp', '--path', '/tmp/wp' ] );
 
-			expect( spawnSync ).toHaveBeenCalledWith(
+			expect( runCommand ).toHaveBeenCalledWith( childScript, [
 				process.execPath,
-				[ childScript, '--path', '/tmp/wp' ],
-				{
-					stdio: 'inherit',
-					env: process.env,
-				}
-			);
-			expect( process.exit ).toHaveBeenCalledWith( 0 );
+				childScript,
+				'--path',
+				'/tmp/wp',
+			] );
+			expect( process.exit ).not.toHaveBeenCalled();
 		} );
 
 		it( 'dispatches when child options appear before -- and subcommand follows separator', async () => {
 			const parentScript = path.join( process.cwd(), 'src/bin/vip.js' );
-			const childScript = path.join( process.cwd(), 'src/bin/vip-wp.js' );
+			const childScript = path.join( process.cwd(), 'src/commands/vip-wp.js' );
 
-			const cmd = command( { requiredArgs: 0 } ).command( 'wp', 'Run WP-CLI commands.' );
+			const cmd = command( {
+				requiredArgs: 0,
+				commandDirectory: path.join( process.cwd(), 'src/commands' ),
+			} ).command( 'wp', 'Run WP-CLI commands.' );
 
 			await cmd.argv( [
 				process.execPath,
@@ -93,20 +101,25 @@ describe( 'utils/cli/command', () => {
 				'home',
 			] );
 
-			expect( spawnSync ).toHaveBeenCalledWith(
+			expect( runCommand ).toHaveBeenCalledWith( childScript, [
 				process.execPath,
-				[ childScript, '@jdk-test.production', '--yes', '--', 'option', 'get', 'home' ],
-				{
-					stdio: 'inherit',
-					env: process.env,
-				}
-			);
-			expect( process.exit ).toHaveBeenCalledWith( 0 );
+				childScript,
+				'@jdk-test.production',
+				'--yes',
+				'--',
+				'option',
+				'get',
+				'home',
+			] );
+			expect( process.exit ).not.toHaveBeenCalled();
 		} );
 
 		it( 'requires -- separator for wp command arguments', async () => {
 			const parentScript = path.join( process.cwd(), 'src/bin/vip.js' );
-			const cmd = command( { requiredArgs: 0 } ).command( 'wp', 'Run WP-CLI commands.' );
+			const cmd = command( {
+				requiredArgs: 0,
+				commandDirectory: path.join( process.cwd(), 'src/commands' ),
+			} ).command( 'wp', 'Run WP-CLI commands.' );
 
 			await expect(
 				cmd.argv( [
@@ -125,14 +138,17 @@ describe( 'utils/cli/command', () => {
 					'A double dash ("--") must separate the arguments of "vip" from those of "wp".'
 				)
 			);
-			expect( spawnSync ).not.toHaveBeenCalled();
+			expect( runCommand ).not.toHaveBeenCalled();
 		} );
 
 		it( 'dispatches when argv starts with alias then -- then subcommand', async () => {
 			const parentScript = path.join( process.cwd(), 'src/bin/vip.js' );
-			const childScript = path.join( process.cwd(), 'src/bin/vip-wp.js' );
+			const childScript = path.join( process.cwd(), 'src/commands/vip-wp.js' );
 
-			const cmd = command( { requiredArgs: 0 } ).command( 'wp', 'Run WP-CLI commands.' );
+			const cmd = command( {
+				requiredArgs: 0,
+				commandDirectory: path.join( process.cwd(), 'src/commands' ),
+			} ).command( 'wp', 'Run WP-CLI commands.' );
 
 			await cmd.argv( [
 				process.execPath,
@@ -145,20 +161,21 @@ describe( 'utils/cli/command', () => {
 				'--posts_per_page=10',
 			] );
 
-			expect( spawnSync ).toHaveBeenCalledWith(
+			expect( runCommand ).toHaveBeenCalledWith( childScript, [
 				process.execPath,
-				[ childScript, '@docs-multisite.develop', '--', 'post', 'list', '--posts_per_page=10' ],
-				{
-					stdio: 'inherit',
-					env: process.env,
-				}
-			);
-			expect( process.exit ).toHaveBeenCalledWith( 0 );
+				childScript,
+				'@docs-multisite.develop',
+				'--',
+				'post',
+				'list',
+				'--posts_per_page=10',
+			] );
+			expect( process.exit ).not.toHaveBeenCalled();
 		} );
 
 		it( 'forwards parent-level options and command payload to nested subcommands', async () => {
-			const parentScript = path.join( process.cwd(), 'src/bin/vip-dev-env.js' );
-			const childScript = path.join( process.cwd(), 'src/bin/vip-dev-env-shell.js' );
+			const parentScript = path.join( process.cwd(), 'src/commands/vip-dev-env.js' );
+			const childScript = path.join( process.cwd(), 'src/commands/vip-dev-env-shell.js' );
 			const commandPayload = [
 				'curl',
 				'-X',
@@ -170,10 +187,10 @@ describe( 'utils/cli/command', () => {
 				'{ "type": "fs", "settings":{ "location": "/usr/share/elasticsearch/data/gtf",  "compress": true } }',
 			];
 
-			const cmd = command( { requiredArgs: 0 } ).command(
-				'shell',
-				'Create a shell and run commands against a local environment.'
-			);
+			const cmd = command( {
+				requiredArgs: 0,
+				commandDirectory: path.join( process.cwd(), 'src/commands' ),
+			} ).command( 'shell', 'Create a shell and run commands against a local environment.' );
 
 			await cmd.argv( [
 				process.execPath,
@@ -184,19 +201,34 @@ describe( 'utils/cli/command', () => {
 				...commandPayload,
 			] );
 
-			expect( spawnSync ).toHaveBeenCalledWith(
+			expect( runCommand ).toHaveBeenCalledWith( childScript, [
 				process.execPath,
-				[ childScript, '--slug=what-mu', '--', ...commandPayload ],
-				{
-					stdio: 'inherit',
-					env: process.env,
-				}
-			);
-			expect( process.exit ).toHaveBeenCalledWith( 0 );
+				childScript,
+				'--slug=what-mu',
+				'--',
+				...commandPayload,
+			] );
+			expect( process.exit ).not.toHaveBeenCalled();
 		} );
 	} );
 
 	describe( 'option parsing', () => {
+		it( 'keeps options on each command instance', async () => {
+			const formatted = command( { format: true, requiredArgs: 0 } );
+			const positional = command( { format: false, requiredArgs: 1 } );
+
+			await formatted.argv(
+				[ process.execPath, '/path/to/vip-app-list.js', '--format=json' ],
+				async () => []
+			);
+			expect( console.log ).toHaveBeenCalledWith( '[]' );
+
+			await positional.argv( [ process.execPath, '/path/to/vip-app.js' ], async () => {
+				throw new Error( 'missing positional argument reached handler' );
+			} );
+			expect( console.log ).toHaveBeenCalledWith( expect.stringContaining( 'Usage:' ) );
+		} );
+
 		it( 'prints valid empty JSON from the real formatted command wrapper', async () => {
 			const cmd = command( { format: true, requiredArgs: 0 } );
 

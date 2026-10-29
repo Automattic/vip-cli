@@ -1,0 +1,119 @@
+name: Bun binaries
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/bun-binaries.yml'
+      - '.buildkite/fetch-search-replace.sh'
+      - 'src/**'
+      - 'assets/**'
+      - 'config/config.publish.json'
+      - 'helpers/*bun*'
+      - 'helpers/mark-cli-executable.js'
+      - 'package*.json'
+      - 'tsconfig*.json'
+      - 'third_party/go-search-replace/MANIFEST'
+      - '__fixtures__/cli/bun-binary/**'
+      - '.nvmrc'
+  push:
+    branches: [trunk]
+    paths:
+      - '.github/workflows/bun-binaries.yml'
+      - '.buildkite/fetch-search-replace.sh'
+      - 'src/**'
+      - 'assets/**'
+      - 'config/config.publish.json'
+      - 'helpers/*bun*'
+      - 'helpers/mark-cli-executable.js'
+      - 'package*.json'
+      - 'tsconfig*.json'
+      - 'third_party/go-search-replace/MANIFEST'
+      - '__fixtures__/cli/bun-binary/**'
+      - '.nvmrc'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DO_NOT_TRACK: '1'
+  BUN_VERSION: '1.4.0'
+
+jobs:
+  native:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-amd64
+            runner: ubuntu-24.04
+            target: bun-linux-x64
+            companion: linux/amd64
+          - name: linux-arm64
+            runner: ubuntu-24.04-arm
+            target: bun-linux-arm64
+            companion: linux/arm64
+          - name: macos-amd64
+            runner: macos-15-intel
+            target: bun-darwin-x64
+            companion: darwin/amd64
+          - name: macos-arm64
+            runner: macos-15
+            target: bun-darwin-arm64
+            companion: darwin/arm64
+          - name: windows-amd64
+            runner: windows-2025
+            target: bun-windows-x64
+            companion: windows/amd64
+          # Bun has no Windows 386 runtime or compilation target.
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Use LF on Windows
+        if: runner.os == 'Windows'
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - name: Install Linux native-addon runtime dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libsecret-1-0 strace
+      - name: Install dependencies
+        run: npm ci
+      - name: Fetch and verify the companion
+        env:
+          COMPANION_TARGET: ${{ matrix.companion }}
+        run: bash .buildkite/fetch-search-replace.sh "$COMPANION_TARGET"
+      - name: Build native executable
+        env:
+          BUN_TARGET: ${{ matrix.target }}
+        run: npm run build:binary -- --target "$BUN_TARGET"
+      - name: Verify relocated executable and resources
+        run: node helpers/bun-ci-smoke.js
+      - name: Run Linux handler and isolation checks
+        if: runner.os == 'Linux'
+        run: node helpers/bun-binary-smoke.js
+      - name: Package executable and checksum
+        env:
+          ARTIFACT_NAME: vip-${{ matrix.name }}
+        run: node helpers/package-bun.mjs "$ARTIFACT_NAME"
+      - name: Upload executable archive
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: vip-${{ matrix.name }}
+          path: artifacts/*
+          if-no-files-found: error
+          compression-level: 0

@@ -1,4 +1,4 @@
-import { appDeployValidateCmd } from '../../src/bin/vip-app-deploy-validate';
+import { appDeployValidateCmd } from '../../src/commands/vip-app-deploy-validate';
 import * as exit from '../../src/lib/cli/exit';
 import { getFileMeta } from '../../src/lib/client-file-uploader';
 import { validateFile } from '../../src/lib/custom-deploy/custom-deploy';

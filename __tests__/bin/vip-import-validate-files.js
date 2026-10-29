@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 
-import { vipImportValidateFilesCmd } from '../../src/bin/vip-import-validate-files';
+import { vipImportValidateFilesCmd } from '../../src/commands/vip-import-validate-files';
 import { getMediaImportConfig } from '../../src/lib/media-import/config';
 import {
 	findNestedDirectories,

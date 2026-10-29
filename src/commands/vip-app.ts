@@ -1,0 +1,113 @@
+import chalk from 'chalk';
+
+import app from '../lib/api/app';
+import command, { getEnvIdentifier } from '../lib/cli/command';
+import { trackEvent } from '../lib/tracker';
+import { parseApiError } from '../lib/utils';
+
+import type { AppEnvironment } from '../graphqlTypes';
+
+type SelectedEnvironment = AppEnvironment & {
+	id: number;
+	type: string;
+	currentCommit: string;
+	primaryDomain: { name: string };
+};
+
+export default command( { requiredArgs: 1, format: true } )
+	.example(
+		'vip app list',
+		'Retrieve a list of applications that can be accessed by the current authenticated VIP-CLI user.'
+	)
+	.example(
+		'vip app example-app',
+		'Retrieve information about the application named "example-app" and its environments.'
+	)
+	.example(
+		'WPVIP_DEPLOY_TOKEN=1234 vip @example-app.develop app deploy file.zip',
+		'Deploy a local archived file named "file.zip" that contains application code to a VIP Platform environment that has Custom Deployment enabled.'
+	)
+	.example(
+		'vip @example-app.develop app deploy-token generate --format=json',
+		'Generate a custom deploy token for the environment and print it in JSON format for use with tools like jq.'
+	)
+	.command(
+		'list',
+		'Retrieve a list of applications that can be accessed by the current authenticated VIP-CLI user.'
+	)
+	.command(
+		'deploy',
+		'Deploy an archived file of application code to an environment that has Custom Deployment enabled.'
+	)
+	.command(
+		'deploy-token',
+		'Generate and manage custom deploy access tokens for environments that have Custom Deployment enabled.'
+	)
+	.argv( process.argv, async ( arg: string[] ) => {
+		await trackEvent( 'app_command_execute' );
+
+		let res;
+		try {
+			res = await app(
+				arg[ 0 ],
+				'id,repo,name,environments{id,appId,name,type,branch,currentCommit,primaryDomain{name},launched,deploymentStrategy}'
+			);
+		} catch ( err ) {
+			await trackEvent( 'app_command_fetch_error', {
+				error: `App ${ arg[ 0 ] } does not exist`,
+			} );
+
+			// Get error message, if available.
+			const apiErrorMsg = parseApiError( err );
+
+			let errorMsg = `Unable to locate app ${ chalk.blueBright( arg[ 0 ] ) }: `;
+
+			if ( apiErrorMsg ) {
+				errorMsg += apiErrorMsg;
+			} else {
+				// No error message, so let's include stack trace for debugging.
+				errorMsg +=
+					'Unknown error. Please contact VIP support if this persists.\n' + ( err as Error ).stack;
+			}
+
+			console.log( errorMsg );
+			return;
+		}
+
+		if ( ! res || ! res.environments ) {
+			await trackEvent( 'app_command_fetch_error', {
+				error: `App ${ arg[ 0 ] } does not exist`,
+			} );
+
+			console.log( `App ${ chalk.blueBright( arg[ 0 ] ) } was not found` );
+			return;
+		}
+
+		await trackEvent( 'app_command_success' );
+
+		// Clone the read-only response object so we can modify it
+		const clonedEnvironments = res.environments.map( env => {
+			const selectedEnv = env as SelectedEnvironment;
+			const clonedEnv: Record< string, unknown > = { ...env };
+
+			clonedEnv.name = getEnvIdentifier( selectedEnv );
+
+			// Use the short version of git commit hash
+			clonedEnv.currentCommit = selectedEnv.currentCommit.substring( 0, 7 );
+
+			// Flatten object
+			clonedEnv.primaryDomain = selectedEnv.primaryDomain.name;
+
+			// Set branch to empty for custom deployments
+			if ( selectedEnv.deploymentStrategy === 'custom-deploy' ) {
+				clonedEnv.branch = '-';
+			}
+
+			// Hide "deployment strategy" column
+			delete clonedEnv.deploymentStrategy;
+
+			return clonedEnv;
+		} );
+
+		return clonedEnvironments;
+	} );

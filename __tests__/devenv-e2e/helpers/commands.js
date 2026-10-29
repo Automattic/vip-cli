@@ -1,16 +1,16 @@
-import { join, resolve } from 'node:path';
+import { resolve } from 'node:path';
 
-const vipPath = resolve( __dirname, '../../../dist/bin' );
+const vip = resolve( __dirname, '../../../dist/bin/vip.js' );
 
-export const vipDevEnvCreate = join( vipPath, 'vip-dev-env-create.js' );
-export const vipDevEnvDestroy = join( vipPath, 'vip-dev-env-destroy.js' );
-export const vipDevEnvExec = join( vipPath, 'vip-dev-env-exec.js' );
-export const vipDevEnvImportMedia = join( vipPath, 'vip-dev-env-import-media.js' );
-export const vipDevEnvImportSQL = join( vipPath, 'vip-dev-env-import-sql.js' );
-export const vipDevEnvInfo = join( vipPath, 'vip-dev-env-info.js' );
-export const vipDevEnvList = join( vipPath, 'vip-dev-env-list.js' );
-export const vipDevEnvShell = join( vipPath, 'vip-dev-env-shell.js' );
-export const vipDevEnvStart = join( vipPath, 'vip-dev-env-start.js' );
-export const vipDevEnvStop = join( vipPath, 'vip-dev-env-stop.js' );
-export const vipDevEnvUpdate = join( vipPath, 'vip-dev-env-update.js' );
-export const vipDevEnvLogs = join( vipPath, 'vip-dev-env-logs.js' );
+export const vipDevEnvCreate = [ vip, 'dev-env', 'create' ];
+export const vipDevEnvDestroy = [ vip, 'dev-env', 'destroy' ];
+export const vipDevEnvExec = [ vip, 'dev-env', 'exec' ];
+export const vipDevEnvImportMedia = [ vip, 'dev-env', 'import', 'media' ];
+export const vipDevEnvImportSQL = [ vip, 'dev-env', 'import', 'sql' ];
+export const vipDevEnvInfo = [ vip, 'dev-env', 'info' ];
+export const vipDevEnvList = [ vip, 'dev-env', 'list' ];
+export const vipDevEnvShell = [ vip, 'dev-env', 'shell' ];
+export const vipDevEnvStart = [ vip, 'dev-env', 'start' ];
+export const vipDevEnvStop = [ vip, 'dev-env', 'stop' ];
+export const vipDevEnvUpdate = [ vip, 'dev-env', 'update' ];
+export const vipDevEnvLogs = [ vip, 'dev-env', 'logs' ];
