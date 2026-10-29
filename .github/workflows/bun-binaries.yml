@@ -105,15 +105,15 @@ jobs:
         run: node helpers/bun-ci-smoke.js
       - name: Run Linux handler and isolation checks
         if: runner.os == 'Linux'
-        run: node helpers/bun-binary-smoke.js "$PWD/bin/vip-bun"
+        run: node helpers/bun-binary-smoke.js "$PWD/bin/vip"
       - name: Package executable and checksum
         env:
-          ARTIFACT_NAME: vip-bun-${{ matrix.name }}
+          ARTIFACT_NAME: vip-${{ matrix.name }}
         run: node helpers/package-bun.mjs "$ARTIFACT_NAME"
       - name: Upload executable archive
         uses: actions/upload-artifact@v4
         with:
-          name: vip-bun-${{ matrix.name }}
+          name: vip-${{ matrix.name }}
           path: artifacts/*
           if-no-files-found: error
           compression-level: 0

@@ -42,7 +42,7 @@ function run( executable, args, env, cwd = scope, timeout = 60000 ) {
 }
 
 try {
-	const name = process.platform === 'win32' ? 'vip-bun.exe' : 'vip-bun';
+	const name = process.platform === 'win32' ? 'vip.exe' : 'vip';
 	const binary = path.join( scope, name );
 	fs.copyFileSync( path.join( sourceRoot, 'bin', name ), binary );
 	fs.chmodSync( binary, 0o700 );

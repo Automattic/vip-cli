@@ -7,24 +7,23 @@ import { c as createTar } from 'tar';
 
 const artifactName = process.argv[ 2 ];
 const supported = new Set( [
-	'vip-bun-linux-amd64',
-	'vip-bun-linux-arm64',
-	'vip-bun-macos-amd64',
-	'vip-bun-macos-arm64',
-	'vip-bun-windows-amd64',
+	'vip-linux-amd64',
+	'vip-linux-arm64',
+	'vip-macos-amd64',
+	'vip-macos-arm64',
+	'vip-windows-amd64',
 ] );
 if ( ! supported.has( artifactName ) ) {
-	throw new Error( 'Pass a supported vip-bun-<platform>-<architecture> artifact name.' );
+	throw new Error( 'Pass a supported vip-<platform>-<architecture> artifact name.' );
 }
 const root = path.resolve( path.dirname( fileURLToPath( import.meta.url ) ), '..' );
 const output = path.join( root, 'artifacts' );
 const temporary = fs.mkdtempSync( path.join( os.tmpdir(), 'vip-bun-package-' ) );
 try {
-	const windows = artifactName === 'vip-bun-windows-amd64';
+	const windows = artifactName === 'vip-windows-amd64';
 	const binaryName = windows ? 'vip.exe' : 'vip';
-	const builtName = windows ? 'vip-bun.exe' : 'vip-bun';
 	const stagedBinary = path.join( temporary, binaryName );
-	fs.copyFileSync( path.join( root, 'bin', builtName ), stagedBinary );
+	fs.copyFileSync( path.join( root, 'bin', binaryName ), stagedBinary );
 	fs.chmodSync( stagedBinary, 0o755 );
 	fs.mkdirSync( output, { recursive: true } );
 	const archiveName = `${ artifactName }.tar.gz`;
