@@ -148,7 +148,7 @@ function main() {
 	}
 	if ( ! binaryArgument || ! resourceRootArgument || rest.length ) {
 		throw new Error(
-			'Usage: node helpers/bun-resource-smoke.js /absolute/path/to/vip-bun /absolute/path/to/extracted-resources'
+			'Usage: node helpers/bun-resource-smoke.js /absolute/path/to/vip /absolute/path/to/extracted-resources'
 		);
 	}
 

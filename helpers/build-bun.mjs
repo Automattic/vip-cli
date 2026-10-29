@@ -271,7 +271,7 @@ function launcherSource() {
 
 async function main() {
 	const target = buildTarget();
-	const output = path.join( root, 'bin', `vip-bun${ target.platform === 'win32' ? '.exe' : '' }` );
+	const output = path.join( root, 'bin', `vip${ target.platform === 'win32' ? '.exe' : '' }` );
 	const temporary = fs.mkdtempSync( path.join( os.tmpdir(), 'vip-bun-build-' ) );
 	try {
 		const payload = path.join( temporary, 'payload' );

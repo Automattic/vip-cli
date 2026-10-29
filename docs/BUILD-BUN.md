@@ -27,7 +27,7 @@ make vendor-search-replace
 npm run build:binary
 ```
 
-The result is `bin/vip-bun` (`bin/vip-bun.exe` on Windows). It can be copied out
+The result is `bin/vip` (`bin/vip.exe` on Windows). It can be copied out
 of the checkout and run without an installed Node, Bun, npm, or adjacent
 configuration directory. It embeds `config/config.publish.json`; local developer
 configuration is excluded.
@@ -67,7 +67,7 @@ filesystem layout.
 The relocated smoke harness runs on Linux with `strace` installed:
 
 ```sh
-node helpers/bun-binary-smoke.js "$PWD/bin/vip-bun"
+node helpers/bun-binary-smoke.js "$PWD/bin/vip"
 node helpers/bun-ci-smoke.js
 ```
 
@@ -83,11 +83,11 @@ the signed Go release pipeline in [BUILD-SIGNING.md](BUILD-SIGNING.md).
 changes, pushes to `trunk`, and manual dispatch. Each job builds and tests on its
 target architecture.
 
-| Platform    | Architectures | Artifact names                |
-| ----------- | ------------- | ----------------------------- |
-| Linux glibc | amd64, arm64  | `vip-bun-linux-{amd64,arm64}` |
-| macOS       | amd64, arm64  | `vip-bun-macos-{amd64,arm64}` |
-| Windows     | amd64         | `vip-bun-windows-amd64`       |
+| Platform    | Architectures | Artifact names            |
+| ----------- | ------------- | ------------------------- |
+| Linux glibc | amd64, arm64  | `vip-linux-{amd64,arm64}` |
+| macOS       | amd64, arm64  | `vip-macos-{amd64,arm64}` |
+| Windows     | amd64         | `vip-windows-amd64`       |
 
 Windows 386 is unavailable: [Bun has no 32-bit Windows runtime or compilation
 target](https://bun.com/docs/bundler/executables#supported-targets). The workflow

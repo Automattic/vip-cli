@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // Smoke test a copied native executable from an empty, isolated directory.
-// Usage: node helpers/bun-binary-smoke.js /absolute/path/to/vip-bun
+// Usage: node helpers/bun-binary-smoke.js /absolute/path/to/vip
 const assert = require( 'node:assert/strict' );
 const { spawn } = require( 'node:child_process' );
 const fs = require( 'node:fs' );
