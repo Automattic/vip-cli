@@ -10,12 +10,12 @@ const path = require( 'node:path' );
 const sourceRoot = path.resolve( __dirname, '..' );
 const scope = fs.mkdtempSync( path.join( os.tmpdir(), 'vip-bun-ci-' ) );
 
-function run( executable, args, env, cwd = scope ) {
+function run( executable, args, env, cwd = scope, timeout = 60000 ) {
 	const result = spawnSync( executable, args, {
 		cwd,
 		env,
 		encoding: 'utf8',
-		timeout: 60000,
+		timeout,
 		maxBuffer: 4 * 1024 * 1024,
 	} );
 	if ( result.error ) {
@@ -70,11 +70,32 @@ try {
 		DEBUG: '@automattic/vip:bun-launcher,@automattic/vip:keychain,@automattic/vip:bin:vip',
 		RUNNER_TRACKING_ID: process.env.RUNNER_TRACKING_ID,
 	};
+	const coldTimeout = process.platform === 'win32' ? 180000 : 60000;
 	for ( const args of [ [], [ 'config', 'envvar', 'list' ], [ 'dev-env', 'list' ] ] ) {
-		assert.match( run( binary, [ ...args, '--help' ], env ), /Usage:/ );
+		const started = Date.now();
+		assert.match(
+			run( binary, [ ...args, '--help' ], env, scope, args.length ? 60000 : coldTimeout ),
+			/Usage:/
+		);
+		console.log( `PASS ${ args.join( ' ' ) || 'root' } help (${ Date.now() - started }ms)` );
 	}
 	const { version } = require( '../package.json' );
 	assert.ok( run( binary, [ '--version' ], env ).includes( version ) );
+	if ( process.platform === 'win32' ) {
+		// Also exercise cold startup with production's default logging behavior.
+		const started = Date.now();
+		assert.match(
+			run(
+				binary,
+				[ '--help' ],
+				{ ...env, DEBUG: '', XDG_CACHE_HOME: path.join( scope, 'default-cache' ) },
+				scope,
+				coldTimeout
+			),
+			/Usage:/
+		);
+		console.log( `PASS Windows cold startup without DEBUG (${ Date.now() - started }ms)` );
+	}
 	const cache = path.join( env.XDG_CACHE_HOME, 'vip-cli', 'standalone-resources' );
 	const roots = fs.readdirSync( cache ).filter( entry => /^[a-f0-9]{64}$/.test( entry ) );
 	assert.equal( roots.length, 1, 'Expected one extracted runtime payload' );

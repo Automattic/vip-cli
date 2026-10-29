@@ -106,7 +106,32 @@ export function getBundledResourceRoot(): string | null {
 	try {
 		const physicalArchive = path.join( staging, 'resources.tar.gz' );
 		fs.writeFileSync( physicalArchive, archive, { mode: 0o600 } );
-		extractTar( { cwd: staging, file: physicalArchive, sync: true, strict: true } );
+		// Runtime files are addressed by archive hash, so preserving timestamps is
+		// unnecessary. Avoid one metadata update per file, especially on Windows.
+		const trace = process.env.DEBUG?.split( ',' ).includes( '@automattic/vip:bun-launcher' );
+		const started = Date.now();
+		let entries = 0;
+		extractTar( {
+			cwd: staging,
+			file: physicalArchive,
+			sync: true,
+			strict: true,
+			noMtime: true,
+			...( trace
+				? {
+						onReadEntry: () => {
+							entries++;
+							if ( entries % 500 === 0 ) {
+								console.error(
+									`@automattic/vip:bun-launcher extract:entries=${ entries } elapsed=${
+										Date.now() - started
+									}ms`
+								);
+							}
+						},
+				  }
+				: {} ),
+		} );
 		fs.unlinkSync( physicalArchive );
 		fs.writeFileSync( path.join( staging, '.archive-sha256' ), digest, { mode: 0o600 } );
 		try {
