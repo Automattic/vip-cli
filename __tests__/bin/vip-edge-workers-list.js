@@ -1,4 +1,4 @@
-import { edgeWorkersListCommand } from '../../src/bin/vip-edge-workers-list';
+import { edgeWorkersListCommand } from '../../src/commands/vip-edge-workers-list';
 import * as api from '../../src/lib/api/edge-workers';
 import * as exit from '../../src/lib/cli/exit';
 import * as tracker from '../../src/lib/tracker';

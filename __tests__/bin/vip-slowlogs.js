@@ -1,4 +1,4 @@
-import { getSlowlogs } from '../../src/bin/vip-slowlogs';
+import { getSlowlogs } from '../../src/commands/vip-slowlogs';
 import * as slowlogsLib from '../../src/lib/app-slowlogs/app-slowlogs';
 import * as exit from '../../src/lib/cli/exit';
 import * as tracker from '../../src/lib/tracker';

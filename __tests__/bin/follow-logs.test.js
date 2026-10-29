@@ -1,7 +1,7 @@
 import { setTimeout as delay } from 'timers/promises';
 
-import { followLogs as followRuntime } from '../../src/bin/vip-logs';
-import { followLogs as followSlow } from '../../src/bin/vip-slowlogs';
+import { followLogs as followRuntime } from '../../src/commands/vip-logs';
+import { followLogs as followSlow } from '../../src/commands/vip-slowlogs';
 import { getRecentLogs } from '../../src/lib/app-logs/app-logs';
 import { getRecentSlowlogs } from '../../src/lib/app-slowlogs/app-slowlogs';
 

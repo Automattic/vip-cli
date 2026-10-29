@@ -1,4 +1,4 @@
-import { edgeWorkersDeleteCommand } from '../../src/bin/vip-edge-workers-delete';
+import { edgeWorkersDeleteCommand } from '../../src/commands/vip-edge-workers-delete';
 import * as edgeWorkersApi from '../../src/lib/api/edge-workers';
 import * as exit from '../../src/lib/cli/exit';
 import { confirm } from '../../src/lib/envvar/input';

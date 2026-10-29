@@ -10,6 +10,6 @@ interface App {
 	id: number;
 }
 
-export function getEnvContext( app: App, env: string ): string {
+export function getEnvContext( app: App, env: Parameters< typeof getEnvIdentifier >[ 0 ] ): string {
 	return `@${ app.id }.${ getEnvIdentifier( env ) }`;
 }

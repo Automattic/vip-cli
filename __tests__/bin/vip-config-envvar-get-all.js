@@ -1,4 +1,4 @@
-import { getAllEnvVarsCommand } from '../../src/bin/vip-config-envvar-get-all';
+import { getAllEnvVarsCommand } from '../../src/commands/vip-config-envvar-get-all';
 import command from '../../src/lib/cli/command';
 import { formatData } from '../../src/lib/cli/format';
 import { getEnvVars } from '../../src/lib/envvar/api';

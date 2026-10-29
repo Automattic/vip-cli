@@ -57,6 +57,7 @@ var m5DifferentialScenarios = []string{
 	// help request, so it is an ordinary read and belongs here.
 	"envvar-get-baseline",
 	"envvar-get-not-found",
+	"envvar-get-alias-after-separator",
 	"envvar-get-lowercase-input",
 	"envvar-get-named-help",
 

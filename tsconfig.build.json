@@ -8,6 +8,7 @@
     "rootDir": "./src",
     "outDir": "./dist"
   },
+  "files": [ "src/cli-vendor.d.ts" ],
   "include": [ "src/**/*" ],
   "exclude": [ "src/**/*.d.ts" ]
 }

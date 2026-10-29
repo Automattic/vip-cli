@@ -517,7 +517,7 @@ export async function landoStart( lando: Lando, instancePath: string ): Promise<
 
 export interface LandoLogsOptions {
 	follow?: boolean;
-	service?: string;
+	service?: string | false;
 	timestamps?: boolean;
 }
 

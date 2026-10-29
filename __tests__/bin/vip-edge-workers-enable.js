@@ -1,4 +1,4 @@
-import { edgeWorkersEnableCommand } from '../../src/bin/vip-edge-workers-enable';
+import { edgeWorkersEnableCommand } from '../../src/commands/vip-edge-workers-enable';
 import * as edgeWorkersApi from '../../src/lib/api/edge-workers';
 import * as exit from '../../src/lib/cli/exit';
 import * as confirmation from '../../src/lib/edge-workers/confirmation';

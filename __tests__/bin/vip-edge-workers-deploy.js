@@ -1,4 +1,4 @@
-import { edgeWorkersDeployCommand } from '../../src/bin/vip-edge-workers-deploy';
+import { edgeWorkersDeployCommand } from '../../src/commands/vip-edge-workers-deploy';
 import command from '../../src/lib/cli/command';
 import * as exit from '../../src/lib/cli/exit';
 import * as format from '../../src/lib/cli/format';

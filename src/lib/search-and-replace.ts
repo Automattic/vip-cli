@@ -100,7 +100,7 @@ export function getReadAndWriteStreams( {
 
 export interface SearchReplaceOptions {
 	isImport: boolean;
-	inPlace: boolean;
+	inPlace?: boolean;
 	output: boolean | string | Writable;
 	batchMode?: boolean;
 }

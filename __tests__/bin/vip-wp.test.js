@@ -95,7 +95,7 @@ beforeEach( () => {
 	jest.spyOn( process.stdout, 'write' ).mockReturnValue( true );
 	jest.spyOn( process, 'exit' ).mockImplementation( () => {} );
 	jest.spyOn( console, 'log' ).mockImplementation( () => {} );
-	require( '../../src/bin/vip-wp' );
+	require( '../../src/commands/vip-wp' );
 } );
 
 afterEach( () => {

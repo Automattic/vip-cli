@@ -1,6 +1,6 @@
 import os from 'os';
 
-import { getLogs } from '../../src/bin/vip-logs';
+import { getLogs } from '../../src/commands/vip-logs';
 import * as logsLib from '../../src/lib/app-logs/app-logs';
 import * as exit from '../../src/lib/cli/exit';
 import * as tracker from '../../src/lib/tracker';
