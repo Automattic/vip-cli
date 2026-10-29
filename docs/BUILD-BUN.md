@@ -46,6 +46,11 @@ configuration, and command initialization run only in the CLI process.
 
 Later runs reuse that directory. The cache must be writable on first use and
 allow execution of the search-replace companion and loading of native addons.
+
+Windows CI measured cold-cache help at 67–69 seconds, including extraction;
+cached help checks completed in under one second. These timings are specific to
+the CI host.
+
 Credentials and local development environments retain their existing storage
 locations. Docker and other tools required by individual commands still need to
 be installed on the host. In particular, `edge-workers build` invokes the project's
