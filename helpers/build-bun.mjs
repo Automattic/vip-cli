@@ -7,12 +7,55 @@ import { fileURLToPath } from 'node:url';
 import { c as createTar } from 'tar';
 
 const root = path.resolve( path.dirname( fileURLToPath( import.meta.url ) ), '..' );
-const output = path.join( root, 'bin', `vip-bun${ process.platform === 'win32' ? '.exe' : '' }` );
+const supportedTargets = {
+	'bun-linux-x64': { platform: 'linux', go: 'linux/amd64', keytar: 'linux-x64' },
+	'bun-linux-arm64': { platform: 'linux', go: 'linux/arm64', keytar: 'linux-arm64' },
+	'bun-darwin-x64': { platform: 'darwin', go: 'darwin/amd64', keytar: 'darwin-x64' },
+	'bun-darwin-arm64': { platform: 'darwin', go: 'darwin/arm64', keytar: 'darwin-arm64' },
+	'bun-windows-x64': { platform: 'win32', go: 'windows/amd64', keytar: 'win32-x64' },
+};
 
-function stagePackages( payload ) {
-	const installed = execFileSync(
-		'npm',
-		[ 'ls', '--all', '--parseable', '--omit=dev', '--silent' ],
+function buildTarget() {
+	const args = process.argv.slice( 2 );
+	if ( args.length === 0 ) {
+		const target = `bun-${ process.platform === 'win32' ? 'windows' : process.platform }-${
+			process.arch
+		}`;
+		if ( process.platform === 'linux' ) {
+			const header = process.report?.getReport?.()?.header;
+			if ( ! header?.glibcVersionRuntime ) {
+				throw new Error( 'Native Linux binary builds require glibc; musl is unsupported.' );
+			}
+		}
+		if ( ! Object.hasOwn( supportedTargets, target ) ) {
+			throw new Error( `Unsupported Bun binary host: ${ process.platform }/${ process.arch }` );
+		}
+		return { name: target, ...supportedTargets[ target ], explicit: false };
+	}
+	if (
+		args.length !== 2 ||
+		args[ 0 ] !== '--target' ||
+		! Object.hasOwn( supportedTargets, args[ 1 ] )
+	) {
+		throw new Error(
+			`Expected --target followed by one of: ${ Object.keys( supportedTargets ).join( ', ' ) }`
+		);
+	}
+	const target = args[ 1 ];
+	return { name: target, ...supportedTargets[ target ], explicit: true };
+}
+
+function productionPackagePaths() {
+	const npmCli = process.env.npm_execpath;
+	const npmNode = process.env.npm_node_execpath;
+	if ( ! npmCli || ! npmNode || ! /\.[cm]?js$/i.test( npmCli ) ) {
+		throw new Error(
+			'Build through npm run build:binary so npm can supply its CLI and Node paths.'
+		);
+	}
+	return execFileSync(
+		npmNode,
+		[ npmCli, 'ls', '--all', '--parseable', '--omit=dev', '--silent' ],
 		{
 			cwd: root,
 			encoding: 'utf8',
@@ -20,13 +63,20 @@ function stagePackages( payload ) {
 		}
 	)
 		.trim()
-		.split( '\n' )
-		.filter( filename => filename !== root );
+		.split( /\r?\n/ )
+		.filter( filename => path.relative( root, filename ) !== '' );
+}
+
+function stagePackages( payload, targetDetails ) {
+	const installed = productionPackagePaths();
 	for ( const source of installed ) {
 		const relative = path.relative( root, source );
 		if ( relative.startsWith( '..' ) || ! relative.startsWith( `node_modules${ path.sep }` ) ) {
 			throw new Error( `Production dependency outside node_modules: ${ source }` );
 		}
+		const packageName = JSON.parse(
+			fs.readFileSync( path.join( source, 'package.json' ), 'utf8' )
+		).name;
 		const target = path.join( payload, relative );
 		fs.cpSync( source, target, {
 			recursive: true,
@@ -38,6 +88,18 @@ function stagePackages( payload ) {
 					return true;
 				}
 				const segments = path.relative( source, filename ).split( path.sep );
+				if (
+					( packageName === '@github/keytar' &&
+						( segments[ 0 ] === 'build' || segments[ 0 ] === 'prebuilds' ) ) ||
+					( packageName === 'cpu-features' && segments[ 0 ] === 'build' ) ||
+					( packageName === 'ssh2' &&
+						segments.slice( 0, 4 ).join( '/' ) === 'lib/protocol/crypto/build' )
+				) {
+					return false;
+				}
+				if ( filename.endsWith( '.node' ) ) {
+					throw new Error( `Unknown production native addon: ${ filename }` );
+				}
 				if (
 					segments.some(
 						segment =>
@@ -54,12 +116,41 @@ function stagePackages( payload ) {
 					return false;
 				}
 				return ! (
-					relative === 'node_modules/@automattic/vip-search-replace' && segments[ 0 ] === 'bin'
+					relative.split( path.sep ).join( '/' ) ===
+						'node_modules/@automattic/vip-search-replace' && segments[ 0 ] === 'bin'
 				);
 			},
 		} );
 	}
+	const keytarSource = path.join(
+		root,
+		'node_modules',
+		'@github',
+		'keytar',
+		'prebuilds',
+		targetDetails.keytar,
+		'keytar.node'
+	);
+	if ( ! fs.statSync( keytarSource, { throwIfNoEntry: false } )?.isFile() ) {
+		throw new Error( `Missing keytar prebuild for ${ targetDetails.name }: ${ keytarSource }` );
+	}
+	const stagedKeytar = path.join( payload, 'node_modules', '@github', 'keytar', 'package.json' );
+	if ( ! fs.statSync( stagedKeytar, { throwIfNoEntry: false } )?.isFile() ) {
+		throw new Error( 'Production dependencies do not include @github/keytar.' );
+	}
+	const keytarTarget = path.join(
+		payload,
+		'node_modules',
+		'@github',
+		'keytar',
+		'build',
+		'Release',
+		'keytar.node'
+	);
+	fs.mkdirSync( path.dirname( keytarTarget ), { recursive: true } );
+	fs.copyFileSync( keytarSource, keytarTarget );
 	console.log( `Staged ${ installed.length } production packages.` );
+	console.log( `Staged keytar addon for ${ targetDetails.keytar }.` );
 }
 
 function stageAssets( payload ) {
@@ -82,13 +173,9 @@ function stageAssets( payload ) {
 	console.log( `Staged ${ tracked.length } tracked assets.` );
 }
 
-function stageSearchReplace( payload ) {
-	const arch = { x64: 'amd64', arm64: 'arm64', ia32: '386' }[ process.arch ];
-	if ( ! arch ) {
-		throw new Error( `Unsupported standalone architecture: ${ process.arch }` );
-	}
-	const platformName = process.platform === 'win32' ? 'windows' : process.platform;
-	const platform = `${ platformName }/${ arch }`;
+function stageSearchReplace( payload, targetDetails ) {
+	const platform = targetDetails.go;
+	const [ platformName, arch ] = platform.split( '/' );
 	const manifest = fs.readFileSync(
 		path.join( root, 'third_party/go-search-replace/MANIFEST' ),
 		'utf8'
@@ -100,7 +187,7 @@ function stageSearchReplace( payload ) {
 	if ( ! expected ) {
 		throw new Error( `No pinned go-search-replace digest for ${ platform }` );
 	}
-	const extension = process.platform === 'win32' ? '.exe' : '';
+	const extension = targetDetails.platform === 'win32' ? '.exe' : '';
 	const source = path.join(
 		root,
 		'third_party/go-search-replace',
@@ -176,14 +263,16 @@ function launcherSource() {
 }
 
 async function main() {
+	const target = buildTarget();
+	const output = path.join( root, 'bin', `vip-bun${ target.platform === 'win32' ? '.exe' : '' }` );
 	const temporary = fs.mkdtempSync( path.join( os.tmpdir(), 'vip-bun-build-' ) );
 	try {
 		const payload = path.join( temporary, 'payload' );
 		fs.mkdirSync( payload );
 		stageCli( payload );
-		stagePackages( payload );
+		stagePackages( payload, target );
 		stageAssets( payload );
-		stageSearchReplace( payload );
+		stageSearchReplace( payload, target );
 		const archive = path.join( temporary, 'resources.tar.gz' );
 		await createTar(
 			{ cwd: payload, file: archive, gzip: true, portable: true, mtime: new Date( 0 ) },
@@ -196,6 +285,7 @@ async function main() {
 			entrypoints: [ entry ],
 			compile: {
 				outfile: output,
+				...( target.explicit ? { target: target.name } : {} ),
 				autoloadDotenv: false,
 				autoloadBunfig: false,
 				autoloadTsconfig: false,
