@@ -1,5 +1,11 @@
 import { spawn } from 'child_process';
 
+/** Expand a canonical VIP command in the script position of a Node invocation. */
+export function expandCliArgs( args ) {
+	const [ command, script, ...rest ] = args;
+	return Array.isArray( script ) ? [ command, ...script, ...rest ] : args;
+}
+
 /**
  * @typedef {Object} CliResult
  * @property {string} stdout Standard output
@@ -8,7 +14,7 @@ import { spawn } from 'child_process';
  */
 export class CliTest {
 	/**
-	 * @param {string[]} args               Command and its arguments
+	 * @param {(string|string[])[]} args    Command and its arguments
 	 * @param {Object}   options            Spawn options
 	 * @param {boolean}  printStderrOnError Whether to print stderr on error
 	 * @param {Object} control Cancellation options
@@ -17,7 +23,7 @@ export class CliTest {
 	 * @return {Promise<CliResult>} Return value of the command
 	 */
 	spawn( args, options, printStderrOnError = false, control = {} ) {
-		const [ command, ...commandArgs ] = args;
+		const [ command, ...commandArgs ] = expandCliArgs( args );
 
 		let stdout = '';
 		let stderr = '';

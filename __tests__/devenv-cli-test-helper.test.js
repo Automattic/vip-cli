@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { CliTest } from './devenv-e2e/helpers/cli-test';
+import { CliTest, expandCliArgs } from './devenv-e2e/helpers/cli-test';
 
 function killEscapedChild( pidFile ) {
 	try {
@@ -17,6 +17,21 @@ function killEscapedChild( pidFile ) {
 
 describe( 'dev-env CLI subprocess helper', () => {
 	const cli = new CliTest();
+	it( 'expands canonical VIP subcommands without changing ordinary arguments', () => {
+		expect( expandCliArgs( [ 'node', [ 'vip.js', 'dev-env', 'exec' ], '--', 'wp' ] ) ).toEqual( [
+			'node',
+			'vip.js',
+			'dev-env',
+			'exec',
+			'--',
+			'wp',
+		] );
+		expect( expandCliArgs( [ 'node', '-e', 'console.log(1)' ] ) ).toEqual( [
+			'node',
+			'-e',
+			'console.log(1)',
+		] );
+	} );
 	const run = ( script, control, args = [] ) =>
 		cli.spawn( [ process.execPath, '-e', script, ...args ], {}, false, control );
 

@@ -94,7 +94,7 @@ describe( 'vip app deploy rechallenge smoke', () => {
 			throw new Error( 'exit.withError called' );
 		} );
 
-		appDeployCmd = require( '../../src/bin/vip-app-deploy' ).appDeployCmd;
+		appDeployCmd = require( '../../src/commands/vip-app-deploy' ).appDeployCmd;
 		http = require( '../../src/lib/api/http' ).default;
 		runRechallenge = require( '../../src/lib/rechallenge/flow' ).runRechallenge;
 

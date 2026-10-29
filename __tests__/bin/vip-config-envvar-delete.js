@@ -1,6 +1,6 @@
 import { describe, expect, it, jest, beforeEach } from '@jest/globals';
 
-import { deleteEnvVarCommand } from '../../src/bin/vip-config-envvar-delete';
+import { deleteEnvVarCommand } from '../../src/commands/vip-config-envvar-delete';
 import command from '../../src/lib/cli/command';
 import { deleteEnvVar, validateNameWithMessage } from '../../src/lib/envvar/api';
 import {

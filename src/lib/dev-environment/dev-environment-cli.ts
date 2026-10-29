@@ -516,7 +516,7 @@ async function processComponent(
 	return result;
 }
 
-export function ensureValidPathsInOptions( opt: Record< string, string | boolean | number > ) {
+export function ensureValidPathsInOptions( opt: InstanceOptions ) {
 	if ( opt.appCode ) {
 		const result = validateAppCodeLocalPath( `${ opt.appCode }` );
 		if ( ! result.result ) {

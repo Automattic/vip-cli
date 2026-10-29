@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { cachePurgeCommand } from '../../src/bin/vip-cache-purge-url';
+import { cachePurgeCommand } from '../../src/commands/vip-cache-purge-url';
 import * as purgeCacheLib from '../../src/lib/api/cache-purge';
 import * as exit from '../../src/lib/cli/exit';
 import { readFromFile } from '../../src/lib/read-file';

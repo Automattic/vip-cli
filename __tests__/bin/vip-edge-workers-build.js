@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import { edgeWorkersBuildCommand } from '../../src/bin/vip-edge-workers-build';
+import { edgeWorkersBuildCommand } from '../../src/commands/vip-edge-workers-build';
 import * as exit from '../../src/lib/cli/exit';
 import * as lib from '../../src/lib/edge-workers';
 import * as project from '../../src/lib/edge-workers/project';

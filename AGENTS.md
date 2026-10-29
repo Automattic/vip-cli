@@ -4,7 +4,7 @@ Guide for future agents working on this codebase. Focus on traps, cross-cutting 
 
 ## Repo Orientation
 
-- Node.js entrypoints live in `src/bin` (one file per CLI command) and are compiled to `dist/**`. Do not edit `dist`; rebuild via `npm run build` before publishing.
+- The sole Node.js executable entrypoint is `src/bin/vip.ts`, compiled to `dist/bin/vip.js`. TypeScript command modules live in `src/commands/vip-*.ts`. Do not edit `dist`; rebuild via `npm run build` before publishing.
 - Node.js shared logic sits under `src/lib`; GraphQL command wrappers in `src/commands`; fixtures/tests in `__fixtures__` and `__tests__` (E2E lives in `__tests__/devenv-e2e`).
 - Go entrypoint and command registration live in `cmd/vip-next/main.go` and `cmd/vip-next/root.go`; Cobra command implementations live in `cmd/vip-next/commands`, shared logic in `internal`, and tests alongside the Go source. Build `bin/vip-next` with `make build`.
 - Cross-runtime parity tests live in `internal/parity`, with scenarios in `testdata/parity`.
@@ -13,7 +13,7 @@ Guide for future agents working on this codebase. Focus on traps, cross-cutting 
 ## Command Changes: Both Runtimes Required
 
 - Implement every new command, command enhancement, and command bug fix in both the Node.js and Go runtimes in the same change. A command change is not complete when only one runtime supports it. If one runtime cannot support the change, surface the blocker and get explicit approval for an exception before treating the work as complete.
-- Trace and update both command registrations and implementations. For new Node.js bins, update `package.json#bin` and the parent command. Wire Go commands into their parent Cobra command or `cmd/vip-next/root.go`; do not assume a shared API change updates both clients.
+- Trace and update both command registrations and implementations. For new Node.js commands, add a module under `src/commands` and register it with its parent; keep `vip` as the sole `package.json#bin` entry. Wire Go commands into their parent Cobra command or `cmd/vip-next/root.go`; do not assume a shared API change updates both clients.
 - Preserve parity for command names, aliases, positional arguments, flags, defaults, parsing (including `-x=value` and the `--` boundary), help, and examples. Match app/env resolution, validation, authentication, confirmation prompts, production safeguards, and non-interactive behavior.
 - Match observable results: stdout/stderr, output formats and fields, errors and exit codes, API requests, filesystem effects, and telemetry. Reuse each runtime's existing helpers rather than bypassing its safety or middleware contracts.
 - Add or update tests in both runtimes and extend the relevant differential scenarios in `internal/parity` and `testdata/parity`. Cover successful execution and applicable validation, error, and confirmation paths using equivalent inputs and fixtures.
@@ -24,13 +24,13 @@ Guide for future agents working on this codebase. Focus on traps, cross-cutting 
 
 ### Node.js
 
-- Node.js bins use `command()` from `src/lib/cli/command.js`. Its `CommanderArgsCompat` wrapper uses Commander while retaining the chainable command API; `_opts` remains module-scoped. The wrapper's `argv()` adds async parsing, validation, telemetry, and app/env lookup before your handler runs.
+- Node.js bins use `command()` from `src/lib/cli/command.js`. Its `CommanderArgsCompat` wrapper uses Commander while retaining the chainable command API; options belong to each parser instance. The wrapper's `argv()` adds async parsing, validation, telemetry, and app/env lookup before your handler runs.
+- `vip` dispatches lazily in the same Node.js process through `src/lib/cli/run-command.ts`. Every command module must default-export its `.argv()` execution promise so dispatch can await middleware and handler completion. The root sets `commandDirectory` to the internal commands directory; nested modules resolve their children alongside themselves. Only `vip` is exposed in npm's bin map. The loader supplies the selected module's `process.argv` while it runs and restores the caller's argv afterward; do not introduce command-routing subprocesses or eagerly import sibling commands.
 - Call shape: `command(opts).option(...).command(...sub...).example(...).argv(process.argv, handler)`. `handler` receives `(subArgsArray, optionsObject)` where `subArgsArray` are positional args (alias removed) and `optionsObject` holds flags plus resolved `app`/`env` when requested.
 - `_opts` knobs: `appContext`/`envContext`/`childEnvContext` run GraphQL lookups (using `appQuery` + optional fragments) and interactive prompts when `--app/--env` are missing; `childEnvContext` forbids production. `requiredArgs` enforces positional count; `wildcardCommand` disables subcommand validation. `format` adds `--format` defaulting to table and postprocesses handler results; `requireConfirm` + `--force` gates destructive paths with `enquirer` prompts; `skipConfirmPrompt` bypasses the prompt (used in tests).
 - Alias handling happens before parsing: `@app` or `@app.env` is stripped from `argv` in `src/lib/cli/envAlias.ts` (only before `--`) and populates `options.app/options.env`. Using both alias and `--app/--env` exits with an error.
 - Global flags injected everywhere: `--help/--version/--debug`. `--debug` enables debug namespaces (`*` when given without a value). Preserve short-option equals normalization and apply parser defaults only when the parsed value is `undefined`; explicit values must win.
 - Automatic output formatting requires `_opts.format`. An array is formatted after removing each row's top-level `__typename`; `{header,data}` prints the header as key/value only for non-JSON output, then formats `data`. Returning `undefined` skips automatic printing. Supported command output formats are `table|csv|json`.
-- Caveat: `_opts` is shared. Instantiating multiple command runners in one process (tests, composite commands) can leak settings—avoid or refactor.
 
 ### Go
 
@@ -48,6 +48,7 @@ Guide for future agents working on this codebase. Focus on traps, cross-cutting 
 - `npm test` runs lint, type-checking, and Jest, excluding dev-env E2E. Use `npm run jest -- --runTestsByPath <test-path>` while iterating; still run relevant lint and type checks before completing code changes.
 - For Go, use `make test` and `make lint`; these targets exclude Go source under `node_modules`. Use focused `go test` package paths while iterating.
 - For fixture-based parity, rebuild Node.js with `npm run build`, then run `make require-node-vip-bin` and `make test-parity-unit`. The latter builds Go for differential tests and uses `dist/bin/vip.js` by default (`NODE_VIP_BIN` overrides it). Check for skips even when the target succeeds.
+- After changing Node.js dispatch, run `npm run smoke:single-process` after a clean build. It checks every command through `vip`, the single-bin package layout, symlink invocation, nested dispatch, async completion, argv forwarding, root safeguards, and exit status with credential mocks and subprocess guards.
 - Run `make test-parity-unit-hostile` after changing the parity harness or subprocess environment handling. `make test-parity` builds both runtimes and runs live Parker parity; verify its API, database, and Redis prerequisites before attributing failures to code. Report unavailable checks as unverified.
 - Differential tests seed and clean up Node.js credentials for their test API host. Preserve this isolation and inspect credential-related skips; never substitute the user's production credentials.
 - Dev-env E2E tests are separate, opt-in checks with host side effects; see the dev-env section before running them. Pure documentation changes need documentation/diff checks, not runtime or parity test execution.
@@ -59,7 +60,7 @@ Guide for future agents working on this codebase. Focus on traps, cross-cutting 
 
 ## Auth & Session Flow
 
-- Node.js bootstraps auth in `src/bin/vip.js` through `Token.get()`. Preserve its help/version/logout, local dev-env, and deploy-token login bypasses; an explicit `login` starts the login flow. Token validity requires an identity and valid issue time, with expiry enforced when present. The stored token is read before bypass checks, so even help can access the credential store.
+- Node.js bootstraps auth in `src/bin/vip.ts` through `Token.get()`. Preserve its help/version/logout, local dev-env, and deploy-token login bypasses; an explicit `login` starts the login flow. Token validity requires an identity and valid issue time, with expiry enforced when present. The stored token is read before bypass checks, so even help can access the credential store.
 - Node.js login asks before opening the dashboard token URL, validates and saves the entered token, clears cached elevation, and calls `aliasUser`. Go bootstrap lives in `cmd/vip-next/auth_bootstrap.go`, with login/storage under `internal/auth`. Preserve cancellation, validation errors, and resumption of the original command after login.
 - Go auth bypass rules live in `internal/auth/bypass.go`; unlike Node.js, `dev-env sync sql` requires login even without explicit app/env flags. Go's `--non-interactive` makes missing/invalid credentials fail without a login prompt. A login bypass must not discard the stored token needed by downstream API calls.
 - Credentials are scoped by API host and runtime: Node.js owns `vip-go-cli`, Go owns `vip-next-cli`. Go may read the legacy Node.js namespace as a best-effort fallback, but must never write or delete it. Go logout uses `Store.LoadPrimary()` so it cannot revoke a borrowed Node.js session. Keep elevated tokens separate from primary credentials and preserve each runtime's cache invalidation hooks.

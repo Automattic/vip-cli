@@ -1,6 +1,6 @@
 import { prompt } from 'enquirer';
 
-import { appDeployCmd } from '../../src/bin/vip-app-deploy';
+import { appDeployCmd } from '../../src/commands/vip-app-deploy';
 import API from '../../src/lib/api';
 import * as exit from '../../src/lib/cli/exit';
 import { uploadImportFileToS3 } from '../../src/lib/client-file-uploader';

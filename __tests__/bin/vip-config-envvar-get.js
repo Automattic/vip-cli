@@ -1,4 +1,4 @@
-import { getEnvVarCommand } from '../../src/bin/vip-config-envvar-get';
+import { getEnvVarCommand } from '../../src/commands/vip-config-envvar-get';
 import command from '../../src/lib/cli/command';
 import { getEnvVar } from '../../src/lib/envvar/api';
 import { trackEvent } from '../../src/lib/tracker';

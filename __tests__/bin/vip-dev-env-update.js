@@ -70,7 +70,7 @@ jest.mock( '../../src/lib/tracker', () => ( {
 import command from '../../src/lib/cli/command';
 import { promptForArguments } from '../../src/lib/dev-environment/dev-environment-cli';
 
-import '../../src/bin/vip-dev-env-update';
+import '../../src/commands/vip-dev-env-update';
 
 function setStdinTTY( value ) {
 	Object.defineProperty( process.stdin, 'isTTY', {

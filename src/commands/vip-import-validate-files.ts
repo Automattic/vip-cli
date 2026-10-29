@@ -1,0 +1,165 @@
+/**
+ * External dependencies
+ */
+import chalk from 'chalk';
+
+/**
+ * Internal dependencies
+ */
+import command from '../lib/cli/command';
+import { getMediaImportConfig } from '../lib/media-import/config';
+import { trackEvent } from '../lib/tracker';
+import {
+	findNestedDirectories,
+	folderStructureValidation,
+	isDirectory,
+	summaryLogs,
+	validateFiles,
+	logErrors,
+	ValidateFilesErrors,
+} from '../lib/vip-import-validate-files';
+
+export async function vipImportValidateFilesCmd( arg: string[] = [] ) {
+	await trackEvent( 'import_validate_files_command_execute' );
+	/**
+	 * File manipulation
+	 *
+	 * Manipulating the file path/name to extract the folder name
+	 */
+	const filePath = arg.join(); // File comes in as an array as part of the args- turn it into a string
+
+	if ( ! ( await isDirectory( filePath ) ) ) {
+		console.error(
+			chalk.red( '✕ Error:' ),
+			'The given path is not a directory. Provide a valid directory path.'
+		);
+		return;
+	}
+
+	let folderValidation = [];
+
+	/**
+	 * Folder structure validation
+	 *
+	 * Find nested directories and files to see if media files follow the WordPress recommended folder structure
+	 *
+	 * Recommended structure: `uploads/year/month` (Single sites)
+	 */
+	const nestedFiles = findNestedDirectories( filePath );
+
+	// Terminates the command here if no nested files found
+	if ( ! nestedFiles ) {
+		return;
+	}
+
+	const { files, folderStructureObj } = nestedFiles; // Destructure
+
+	// Check if there are any nested directories within the given folder
+	const nestedDirectories = Object.keys( folderStructureObj );
+
+	if ( nestedDirectories && nestedDirectories.length > 0 ) {
+		folderValidation = folderStructureValidation( nestedDirectories );
+	}
+
+	/**
+	 * Individual file validations
+	 *
+	 * - Media file extension/type validation
+	 * - Filename validation
+	 * - Intermediate image validation
+	 */
+	if ( ! files || ! files.length || files.length <= 0 ) {
+		console.error( chalk.red( '✕ Error:' ), 'The media files directory cannot be empty.' );
+	}
+
+	/**
+	 * Get Media Import configuration
+	 */
+	const mediaImportConfig = await getMediaImportConfig();
+
+	if ( ! mediaImportConfig ) {
+		console.error(
+			chalk.red( '✕ Error:' ),
+			'Could not retrieve validation metadata. Please contact VIP Support.'
+		);
+		return;
+	}
+
+	/**
+	 * File Validation
+	 * Collect all errors from file validation
+	 */
+	const {
+		intermediateImagesTotal,
+		errorFileTypes,
+		errorFileNames,
+		errorFileSizes,
+		errorFileNamesCharCount,
+		intermediateImages,
+	} = await validateFiles( files, mediaImportConfig );
+
+	/**
+	 * Error logging
+	 * Not sure if the changes made to the error logging better
+	 */
+	logErrors( {
+		errorType: ValidateFilesErrors.INVALID_TYPES,
+		invalidFiles: errorFileTypes,
+		limit: Object.keys( mediaImportConfig.allowedFileTypes as object ) as unknown as string,
+	} );
+	logErrors( {
+		errorType: ValidateFilesErrors.INVALID_SIZES,
+		invalidFiles: errorFileSizes,
+		limit: mediaImportConfig.fileSizeLimitInBytes as number,
+	} );
+	logErrors( {
+		errorType: ValidateFilesErrors.INVALID_NAME_CHARACTER_COUNTS,
+		invalidFiles: errorFileNamesCharCount,
+		limit: mediaImportConfig.fileNameCharCount as number,
+	} );
+	logErrors( {
+		errorType: ValidateFilesErrors.INVALID_NAMES,
+		invalidFiles: errorFileNames,
+	} );
+	logErrors( {
+		errorType: ValidateFilesErrors.INTERMEDIATE_IMAGES,
+		invalidFiles: Object.keys( intermediateImages ),
+		invalidFilesObj: intermediateImages,
+	} as Parameters< typeof logErrors >[ 0 ] & { invalidFilesObj: typeof intermediateImages } );
+
+	// Log a summary of all errors
+	summaryLogs( {
+		folderErrorsLength: folderValidation.length,
+		intImagesErrorsLength: intermediateImagesTotal,
+		fileTypeErrorsLength: errorFileTypes.length,
+		fileErrorFileSizesLength: errorFileSizes.length,
+		filenameErrorsLength: errorFileNames.length,
+		fileNameCharCountErrorsLength: errorFileNamesCharCount.length,
+		totalFiles: files.length,
+		totalFolders: nestedDirectories.length,
+	} );
+
+	// Tracks events to track activity
+	// Props (object keys) need to be in Snake case vs. camelCase
+	const allErrors = {
+		folder_errors_length: folderValidation.length,
+		int_images_errors_length: intermediateImagesTotal,
+		file_type_errors_length: errorFileTypes.length,
+		filename_errors_length: errorFileNames.length,
+		total_files: files.length,
+		total_folders: nestedDirectories.length,
+	};
+
+	await trackEvent( 'import_validate_files_command_success', allErrors );
+}
+const usage = 'vip import validate-files';
+
+export default command( { requiredArgs: 1, usage } )
+	.examples( [
+		{
+			usage: 'vip import validate-files /Users/user-name/Desktop/uploads',
+			description:
+				'Validate the directory structure and contents of the local directory "uploads/".',
+		},
+	] )
+	.argv( process.argv, vipImportValidateFilesCmd );
