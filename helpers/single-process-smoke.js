@@ -67,12 +67,12 @@ test( 'the package exposes one executable and routes to every internal command',
 	assert.deepEqual( readdirSync( path.join( root, 'dist/bin' ) ), [ 'vip.js' ] );
 	const modules = readdirSync( path.join( root, 'dist/commands' ) )
 		.filter( filename => /^vip-.*\.js$/.test( filename ) )
-		.sort();
+		.sort( ( left, right ) => left.localeCompare( right ) );
 	assert.deepEqual(
 		routes
 			.slice( 1 )
 			.map( route => path.basename( route.filename ) )
-			.sort(),
+			.sort( ( left, right ) => left.localeCompare( right ) ),
 		modules
 	);
 } );

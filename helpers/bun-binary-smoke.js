@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // Smoke test a copied native executable from an empty, isolated directory.
-// Usage: node helpers/bun-binary-smoke.js /absolute/path/to/vip
+// Usage: node helpers/bun-binary-smoke.js
 const assert = require( 'node:assert/strict' );
 const { spawn } = require( 'node:child_process' );
 const fs = require( 'node:fs' );
@@ -20,7 +20,6 @@ function routesFrom( filename, args = [] ) {
 	const source = fs.readFileSync( filename, 'utf8' );
 	for ( const match of source.matchAll( /\.command\(\s*['"]([^'"]+)['"]/g ) ) {
 		const child = path.join( sourceRoot, 'src/commands', `${ basename }-${ match[ 1 ] }.ts` );
-		assert.ok( fs.existsSync( child ), `Missing source command ${ child }` );
 		routes.push( ...routesFrom( child, [ ...args, match[ 1 ] ] ) );
 	}
 	return routes;
@@ -108,10 +107,33 @@ function seedLoopbackToken( env, apiHost, token ) {
 	assert.ok( Number( url.port ) >= 32768, 'Credential needs an ephemeral loopback port' );
 	const service = `vip-go-cli:${ apiHost.replace( /[^a-z0-9]/gi, '-' ) }`;
 	const store = path.join( env.XDG_CONFIG_HOME, 'configstore', 'vip-go-cli.json' );
-	fs.mkdirSync( path.dirname( store ), { recursive: true } );
-	const values = fs.existsSync( store ) ? JSON.parse( fs.readFileSync( store, 'utf8' ) ) : {};
+	fs.mkdirSync( path.dirname( store ), { recursive: true, mode: 0o700 } );
+	let values;
+	try {
+		values = JSON.parse( fs.readFileSync( store, 'utf8' ) );
+	} catch ( error ) {
+		if ( error.code !== 'ENOENT' ) throw error;
+		values = {};
+	}
 	values[ service ] = token;
-	fs.writeFileSync( store, JSON.stringify( values ) );
+	fs.writeFileSync( store, JSON.stringify( values ), { mode: 0o600 } );
+}
+
+function copyELFExecutable( input, binary ) {
+	// Validate and copy the same opened file, even if its path is replaced.
+	const descriptor = fs.openSync( input, 'r' );
+	try {
+		assert.ok( fs.fstatSync( descriptor ).isFile(), 'Target must be a regular file' );
+		const contents = fs.readFileSync( descriptor );
+		assert.deepEqual(
+			[ ...contents.subarray( 0, 4 ) ],
+			[ 0x7f, 0x45, 0x4c, 0x46 ],
+			'Target must be a native ELF'
+		);
+		fs.writeFileSync( binary, contents, { flag: 'wx', mode: 0o700 } );
+	} finally {
+		fs.closeSync( descriptor );
+	}
 }
 
 function fixtureToken() {
@@ -193,23 +215,13 @@ async function main() {
 	if ( process.platform !== 'linux' ) {
 		throw new Error( 'This harness requires Linux D-Bus isolation and strace.' );
 	}
-	const input = process.argv[ 2 ];
-	assert.ok( input && path.isAbsolute( input ), 'Pass an absolute native executable path' );
-	assert.ok( fs.statSync( input ).isFile(), 'Target must be a regular file' );
-	const descriptor = fs.openSync( input, 'r' );
-	try {
-		const magic = Buffer.alloc( 4 );
-		fs.readSync( descriptor, magic, 0, magic.length, 0 );
-		assert.deepEqual( [ ...magic ], [ 0x7f, 0x45, 0x4c, 0x46 ], 'Target must be a native ELF' );
-	} finally {
-		fs.closeSync( descriptor );
-	}
+	assert.equal( process.argv.length, 2, 'This harness uses bin/vip and accepts no path arguments' );
+	const input = path.join( sourceRoot, 'bin', 'vip' );
 	const scope = fs.mkdtempSync( path.join( os.tmpdir(), 'vip-bun-binary-' ) );
 	let api;
 	try {
 		const binary = path.join( scope, 'vip' );
-		fs.copyFileSync( input, binary );
-		fs.chmodSync( binary, 0o700 );
+		copyELFExecutable( input, binary );
 		api = await mockApi();
 		const token = fixtureToken();
 		const base = { cwd: scope, env: environment( scope, api.host ) };
@@ -344,4 +356,4 @@ if ( require.main === module ) {
 	} );
 }
 
-module.exports = { routesFrom };
+module.exports = { routesFrom, copyELFExecutable, seedLoopbackToken };

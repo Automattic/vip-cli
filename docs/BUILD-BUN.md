@@ -67,7 +67,7 @@ filesystem layout.
 The relocated smoke harness runs on Linux with `strace` installed:
 
 ```sh
-node helpers/bun-binary-smoke.js "$PWD/bin/vip"
+node helpers/bun-binary-smoke.js
 node helpers/bun-ci-smoke.js
 ```
 

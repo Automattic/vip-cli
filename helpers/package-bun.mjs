@@ -24,12 +24,24 @@ try {
 	const binaryName = windows ? 'vip.exe' : 'vip';
 	const stagedBinary = path.join( temporary, binaryName );
 	fs.copyFileSync( path.join( root, 'bin', binaryName ), stagedBinary );
-	fs.chmodSync( stagedBinary, 0o755 );
+	// Keep the staging copy owner-only; publish install permissions in the archive.
+	fs.chmodSync( stagedBinary, 0o700 );
 	fs.mkdirSync( output, { recursive: true } );
 	const archiveName = `${ artifactName }.tar.gz`;
 	const archive = path.join( output, archiveName );
 	await createTar(
-		{ cwd: temporary, file: archive, gzip: true, portable: true, mtime: new Date( 0 ) },
+		{
+			cwd: temporary,
+			file: archive,
+			gzip: true,
+			portable: true,
+			mtime: new Date( 0 ),
+			onWriteEntry: entry => {
+				// Public CLI installs need shared read/execute, never group/world write.
+				// eslint-disable-next-line no-bitwise
+				entry.stat.mode = ( entry.stat.mode & 0o170000 ) | 0o755;
+			},
+		},
 		[ binaryName ]
 	);
 	const digest = createHash( 'sha256' ).update( fs.readFileSync( archive ) ).digest( 'hex' );

@@ -154,23 +154,17 @@ function stagePackages( payload, targetDetails ) {
 }
 
 function stageAssets( payload ) {
-	const tracked = execFileSync( 'git', [ 'ls-files', '-z', '--', 'assets' ], { cwd: root } )
-		.toString( 'utf8' )
-		.split( '\0' )
-		.filter( Boolean );
-	for ( const relative of tracked ) {
-		if (
-			! relative.startsWith( 'assets/' ) ||
-			path.isAbsolute( relative ) ||
-			relative.includes( '..' )
-		) {
-			throw new Error( `Unexpected tracked asset path: ${ relative }` );
-		}
+	// These are the only templates read by the bundled dev-env runtime.
+	const assets = [
+		'assets/dev-env.lando.template.yml.ejs',
+		'assets/dev-env.nginx.template.conf.ejs',
+	];
+	for ( const relative of assets ) {
 		const target = path.join( payload, relative );
 		fs.mkdirSync( path.dirname( target ), { recursive: true } );
 		fs.copyFileSync( path.join( root, relative ), target );
 	}
-	console.log( `Staged ${ tracked.length } tracked assets.` );
+	console.log( `Staged ${ assets.length } runtime assets.` );
 }
 
 function stageSearchReplace( payload, targetDetails ) {
@@ -201,7 +195,8 @@ function stageSearchReplace( payload, targetDetails ) {
 	const target = path.join( payload, 'bin', `go-search-replace${ extension }` );
 	fs.mkdirSync( path.dirname( target ), { recursive: true } );
 	fs.copyFileSync( source, target );
-	fs.chmodSync( target, 0o755 );
+	// The companion runs inside the same user's private extracted resource cache.
+	fs.chmodSync( target, 0o700 );
 	console.log( `Staged verified go-search-replace for ${ platform }.` );
 }
 
@@ -237,8 +232,8 @@ function launcherSource() {
 		"import { spawn } from 'node:child_process';",
 		"import path from 'node:path';",
 		`import { getBundledResourceRoot } from ${ JSON.stringify( helper ) };`,
-		"const debugEnabled = (process.env.DEBUG || '').split(/[,\\s]+/).includes('@automattic/vip:bun-launcher');",
-		"const trace = message => { if (debugEnabled) process.stderr.write('@automattic/vip:bun-launcher ' + message + '\\n'); };",
+		String.raw`const debugEnabled = (process.env.DEBUG || '').split(/[,\s]+/).includes('@automattic/vip:bun-launcher');`,
+		String.raw`const trace = message => { if (debugEnabled) process.stderr.write('@automattic/vip:bun-launcher ' + message + '\n'); };`,
 		'globalThis.__VIP_BUNDLED_ARCHIVE_PATH__ = archivePath;',
 		"trace('extract:start');",
 		'const resourceRoot = getBundledResourceRoot();',
