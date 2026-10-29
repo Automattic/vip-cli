@@ -62,12 +62,17 @@ const examples = [
 	{
 		usage: 'vip @example-app.production import media /path/to/uploads.zip',
 		description:
-			'Import the archived file "uploads.zip" from the user\'s local machine to a production environment.',
+			'Import the archived file "uploads.zip" from the user\'s local machine to the production environment.',
 	},
 	{
 		usage: 'vip @example-app.production import media https://example.com/uploads.tar.gz',
 		description:
-			'Import the archived file "uploads.tar.gz" from a publicly accessible URL to a production environment.',
+			'Import the archived file "uploads.tar.gz" from a publicly accessible URL to the production environment.',
+	},
+	{
+		usage: 'vip @example-app.develop import media https://example.com/uploads.tar.gz',
+		description:
+			'Import the archived file "uploads.tar.gz" from a publicly accessible URL to the develop environment.',
 	},
 	// Format error logs
 	{
