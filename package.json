@@ -148,7 +148,7 @@
     "dockerode": "^5.0.0",
     "jest": "^30.0.0",
     "prettier": "npm:wp-prettier@3.0.3",
-    "ts-jest": "29.4.11",
+    "ts-jest": "29.4.15",
     "typescript": "^6.0.2"
   },
   "dependencies": {
