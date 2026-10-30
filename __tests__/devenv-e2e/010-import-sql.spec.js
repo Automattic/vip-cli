@@ -74,30 +74,71 @@ describe( 'vip dev-env import sql', () => {
 			}
 		} );
 
+		const assertRejectedImportPreservesDatabase = async ( baseName, errors ) => {
+			const marker = `vip_import_guard_${ Date.now() }_${ Math.random()
+				.toString( 36 )
+				.slice( 2 ) }`;
+			const isAutoIncrementFixture = baseName.startsWith( 'fail-autoIncrement-' );
+			const column = `vip_guard_${ Math.random().toString( 36 ).slice( 2 ) }`;
+			const wp = async ( ...args ) =>
+				cliTest.spawn(
+					[ process.argv[ 0 ], vipDevEnvExec, '--slug', slug, '--quiet', '--', 'wp', ...args ],
+					{ env },
+					true
+				);
+			if ( isAutoIncrementFixture ) {
+				const create = await wp(
+					'db',
+					'query',
+					'CREATE TABLE IF NOT EXISTS `wp_a8c_cron_control_jobs` (`ID` bigint unsigned NOT NULL PRIMARY KEY)'
+				);
+				expect( create.rc ).toBe( 0 );
+				const seed = await wp(
+					'db',
+					'query',
+					`ALTER TABLE \`wp_a8c_cron_control_jobs\` ADD COLUMN \`${ column }\` varchar(64) NULL`
+				);
+				expect( seed.rc ).toBe( 0 );
+			} else {
+				const seed = await wp( 'option', 'update', 'e2etest', marker );
+				expect( seed.rc ).toBe( 0 );
+			}
+			const file = path.join( __dirname, `../../__fixtures__/dev-env-e2e/${ baseName }` );
+			const result = await cliTest.spawn(
+				[ process.argv[ 0 ], vipDevEnvImportSQL, '--slug', slug, file ],
+				{ env }
+			);
+			expect( result.rc ).toBeGreaterThan( 0 );
+			for ( const error of errors ) expect( result.stderr ).toContain( error );
+			expect( result.stdout ).not.toContain( 'Success: Database imported' );
+			const read = isAutoIncrementFixture
+				? await wp(
+						'db',
+						'query',
+						`SHOW COLUMNS FROM \`wp_a8c_cron_control_jobs\` WHERE Field = '${ column }'`
+				  )
+				: await wp( 'option', 'get', 'e2etest' );
+			expect( read.rc ).toBe( 0 );
+			if ( isAutoIncrementFixture ) expect( read.stdout ).toContain( column );
+			else expect( read.stdout.trim() ).toBe( marker );
+		};
+
 		it.each( [ 'fail-validation.sql.gz', 'fail-validation.sql' ] )(
 			'should fail if the file fails validation',
 			async baseName => {
-				const file = path.join( __dirname, `../../__fixtures__/dev-env-e2e/${ baseName }` );
-				const result = await cliTest.spawn(
-					[ process.argv[ 0 ], vipDevEnvImportSQL, '--slug', slug, file ],
-					{ env }
-				);
-				expect( result.rc ).toBeGreaterThan( 0 );
-				expect( result.stderr ).toContain( 'SQL Error: DROP TABLE was not found' );
-				expect( result.stderr ).toContain( 'SQL Error: CREATE TABLE was not found' );
+				await assertRejectedImportPreservesDatabase( baseName, [
+					'SQL Error: DROP TABLE was not found',
+					'SQL Error: CREATE TABLE was not found',
+				] );
 			}
 		);
 
 		it.each( [ 'fail-autoIncrement-validation.sql.gz', 'fail-autoIncrement-validation.sql' ] )(
 			'should fail if the file fails auto increment validation',
 			async baseName => {
-				const file = path.join( __dirname, `../../__fixtures__/dev-env-e2e/${ baseName }` );
-				const result = await cliTest.spawn(
-					[ process.argv[ 0 ], vipDevEnvImportSQL, '--slug', slug, file ],
-					{ env }
-				);
-				expect( result.rc ).toBeGreaterThan( 0 );
-				expect( result.stderr ).toContain( 'SQL Error: AUTO_INCREMENT attribute was not found' );
+				await assertRejectedImportPreservesDatabase( baseName, [
+					'SQL Error: AUTO_INCREMENT attribute was not found',
+				] );
 			}
 		);
 
