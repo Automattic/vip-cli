@@ -34,8 +34,9 @@ type Env struct {
 	DefaultDomain string
 	// UniqueLabel is the env's dashboard slug (e.g. "develop"); used in
 	// dashboard URLs by export sql and app deploy.
-	UniqueLabel  string
-	IsMultisite bool
+	UniqueLabel   string
+	IsMultisite   bool
+	IsK8sResident *bool
 }
 
 // AppEnv pairs the resolved App with its target Env. Either field may be
