@@ -3,6 +3,7 @@
 package update
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -16,8 +17,7 @@ func AcquireLock(cli string) (func() error, error) {
 		return nil, err
 	}
 	if err = unix.Flock(int(f.Fd()), unix.LOCK_EX|unix.LOCK_NB); err != nil {
-		f.Close()
-		return nil, fmt.Errorf("another update is running: %w", err)
+		return nil, errors.Join(fmt.Errorf("another update is running: %w", err), f.Close())
 	}
 	return func() error { return f.Close() }, nil
 }

@@ -1,6 +1,7 @@
 package update
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -15,8 +16,7 @@ func AcquireLock(cli string) (func() error, error) {
 	}
 	var overlapped windows.Overlapped
 	if err = windows.LockFileEx(windows.Handle(f.Fd()), windows.LOCKFILE_EXCLUSIVE_LOCK|windows.LOCKFILE_FAIL_IMMEDIATELY, 0, 1, 0, &overlapped); err != nil {
-		f.Close()
-		return nil, fmt.Errorf("another update is running: %w", err)
+		return nil, errors.Join(fmt.Errorf("another update is running: %w", err), f.Close())
 	}
 	return func() error { return f.Close() }, nil
 }
