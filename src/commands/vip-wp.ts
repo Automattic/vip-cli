@@ -201,7 +201,7 @@ const bindStreamEvents = ( {
 const getTokenForCommand = async ( appId: number, envId: number, command: string ) => {
 	const api = API();
 
-	return api.mutate< {
+	return await api.mutate< {
 		triggerWPCLICommandOnAppEnvironment: {
 			inputToken: string;
 			command: { guid: string };
