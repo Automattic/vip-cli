@@ -1,6 +1,7 @@
 /* Jest mocks are method spies; inspecting them does not invoke detached methods. */
 /* eslint-disable @typescript-eslint/unbound-method */
-import { describe, expect, it, jest, beforeEach } from '@jest/globals';
+import { describe, expect, it, jest, beforeEach, afterEach } from '@jest/globals';
+import { createHash } from 'node:crypto';
 
 import * as keychain from '../../../src/lib/keychain';
 import tokenCache from '../../../src/lib/rechallenge/token-cache';
@@ -15,6 +16,11 @@ jest.mock( '../../../src/lib/token', () => ( {
 		resolve: jest.fn(),
 		isEnvironmentSet: jest.fn( () => false ),
 	},
+} ) );
+
+jest.mock( '../../../src/lib/api/constants', () => ( {
+	API_HOST: 'https://api.test.example:8443',
+	PRODUCTION_API_HOST: 'https://api.wpvip.com',
 } ) );
 
 jest.mock( '../../../src/lib/keychain', () => {
@@ -62,6 +68,10 @@ describe( 'rechallenge token cache', () => {
 		} );
 		jest.mocked( Token.isEnvironmentSet ).mockReturnValue( false );
 	} );
+	afterEach( async () => {
+		const kc = ( await keychain.getKeychain() ) as Keychain & { __store: Map< string, string > };
+		kc.__store.delete( 'vip-go-cli' );
+	} );
 
 	it( 'returns null when no token has been stored for a scope', async () => {
 		expect( await tokenCache.get( 'updateDefensiveModeStatus' ) ).toBeNull();
@@ -80,6 +90,52 @@ describe( 'rechallenge token cache', () => {
 		await tokenCache.set( 'updateDefensiveModeConfig', tokenB );
 		expect( ( await tokenCache.get( 'updateDefensiveModeStatus' ) )?.token ).toBe( 'A' );
 		expect( ( await tokenCache.get( 'updateDefensiveModeConfig' ) )?.token ).toBe( 'B' );
+	} );
+
+	it( 'reloads persisted scopes and preserves deletion and expiry across memory resets', async () => {
+		const kc = ( await keychain.getKeychain() ) as Keychain & { __store: Map< string, string > };
+		const service = 'vip-go-cli:elevated:https---api-test-example-8443';
+		kc.__store.set( 'vip-go-cli', 'primary-token' );
+		const tokenA = makeToken( { token: 'A' } );
+		const tokenB = makeToken( { token: 'B' } );
+		const primaryTokenFingerprint = createHash( 'sha256' ).update( VALID_PAT_A ).digest( 'hex' );
+		const cached = ( token: ElevatedToken ) => ( { ...token, primaryTokenFingerprint } );
+		const expired = makeToken( {
+			token: 'expired',
+			expiresAt: new Date( Date.now() - 1_000 ).toISOString(),
+		} );
+		await tokenCache.set( 'alpha', tokenA );
+		await tokenCache.set( 'beta', tokenB );
+		await tokenCache.set( 'expired', expired );
+		expect( kc.__store.get( service ) ).toBe(
+			JSON.stringify( {
+				alpha: cached( tokenA ),
+				beta: cached( tokenB ),
+				expired: cached( expired ),
+			} )
+		);
+		expect( kc.__store.get( 'vip-go-cli' ) ).toBe( 'primary-token' );
+
+		tokenCache._resetInMemoryForTests();
+		expect( await tokenCache.get( 'alpha' ) ).toEqual( tokenA );
+		expect( await tokenCache.get( 'beta' ) ).toEqual( tokenB );
+		expect( await tokenCache.get( 'expired' ) ).toBeNull();
+		expect( kc.__store.get( service ) ).toBe(
+			JSON.stringify( { alpha: cached( tokenA ), beta: cached( tokenB ) } )
+		);
+
+		tokenCache._resetInMemoryForTests();
+		expect( await tokenCache.get( 'expired' ) ).toBeNull();
+		await tokenCache.clearScope( 'alpha' );
+		expect( kc.__store.get( service ) ).toBe( JSON.stringify( { beta: cached( tokenB ) } ) );
+		tokenCache._resetInMemoryForTests();
+		expect( await tokenCache.get( 'alpha' ) ).toBeNull();
+		expect( await tokenCache.get( 'beta' ) ).toEqual( tokenB );
+
+		await tokenCache.clearAll();
+		expect( [ ...kc.__store.entries() ] ).toEqual( [ [ 'vip-go-cli', 'primary-token' ] ] );
+		tokenCache._resetInMemoryForTests();
+		expect( await tokenCache.get( 'beta' ) ).toBeNull();
 	} );
 
 	it( 'returns null and self-evicts when token is expired', async () => {

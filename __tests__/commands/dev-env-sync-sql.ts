@@ -1,12 +1,16 @@
+/* eslint-disable jest/no-conditional-expect, no-await-in-loop */
 import { replace } from '@automattic/vip-search-replace';
 import fs from 'fs';
 import Lando from 'lando';
+import os from 'node:os';
 import path from 'path';
 
 import { DevEnvImportSQLCommand } from '../../src/commands/dev-env-import-sql';
 import { DevEnvSyncSQLCommand, findSiteHomeUrl } from '../../src/commands/dev-env-sync-sql';
 import { ExportSQLCommand } from '../../src/commands/export-sql';
+import * as exit from '../../src/lib/cli/exit';
 import * as clientFileUploader from '../../src/lib/client-file-uploader';
+import * as utils from '../../src/lib/utils';
 
 jest.mock( '@automattic/vip-search-replace', () => {
 	// eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -18,11 +22,16 @@ jest.mock( '@automattic/vip-search-replace', () => {
 	};
 } );
 
-jest.spyOn( clientFileUploader, 'unzipFile' );
-
-jest.spyOn( console, 'log' ).mockImplementation( () => {} );
-
 describe( 'commands/DevEnvSyncSQLCommand', () => {
+	beforeEach( () => {
+		jest.spyOn( console, 'log' ).mockImplementation( () => {} );
+		jest
+			.spyOn( utils, 'makeTempDir' )
+			.mockImplementation( () => fs.mkdtempSync( path.join( os.tmpdir(), 'vip-sync-test-' ) ) );
+	} );
+	afterEach( () => {
+		jest.restoreAllMocks();
+	} );
 	const app = { id: 123, name: 'test-app' };
 	const env = { id: 456, name: 'test-env', wpSitesSDS: {} };
 	const msEnv = {
@@ -51,13 +60,24 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 	};
 
 	const lando = new Lando( { domain: 'vipdev.lndo.site' } );
+	const tempDirs: string[] = [];
+	const makeCommand = ( selectedEnv: typeof env ) => {
+		const command = new DevEnvSyncSQLCommand( app, selectedEnv, 'test-slug', lando );
+		tempDirs.push( command.tmpDir );
+		return command;
+	};
+	afterAll( async () => {
+		await Promise.all(
+			tempDirs.map( dir => fs.promises.rm( dir, { recursive: true, force: true } ) )
+		);
+	} );
 
 	describe( '.generateExport', () => {
 		it( 'should create an instance of ExportSQLCommand and run', async () => {
 			const mockExport = jest.spyOn( ExportSQLCommand.prototype, 'run' );
 			mockExport.mockResolvedValue();
 
-			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando );
+			const cmd = makeCommand( env );
 			await cmd.generateExport();
 
 			expect( mockExport ).toHaveBeenCalled();
@@ -66,7 +86,7 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 
 	describe( 'generateSearchReplaceMap', () => {
 		it( 'should return a map of search-replace values', () => {
-			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando );
+			const cmd = makeCommand( env );
 			cmd.slug = 'test-slug';
 			cmd.siteUrls = [ 'http://test.go-vip.com' ];
 			cmd.generateSearchReplaceMap();
@@ -75,7 +95,7 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 		} );
 
 		it( 'should return a map of search-replace values for multisite', () => {
-			const cmd = new DevEnvSyncSQLCommand( app, msEnv, 'test-slug', lando );
+			const cmd = makeCommand( msEnv );
 			cmd.slug = 'test-slug';
 			cmd.sdsSiteUrls = msEnv.wpSitesSDS.nodes;
 			cmd.siteUrls = msEnv.wpSitesSDS.nodes.map( node => node.homeUrl );
@@ -92,7 +112,7 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 
 	describe( '.runSearchReplace', () => {
 		it( 'should run search-replace operation on the mysqldump file', async () => {
-			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando );
+			const cmd = makeCommand( env );
 			fs.copyFileSync(
 				path.join( __dirname, '../../__fixtures__/dev-env-e2e/mysqldump-detection.sql.gz' ),
 				cmd.gzFile
@@ -113,7 +133,7 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 		} );
 
 		it( 'should run search-replace operation on the mydumper file', async () => {
-			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando );
+			const cmd = makeCommand( env );
 			fs.copyFileSync(
 				path.join( __dirname, '../../__fixtures__/dev-env-e2e/mydumper-detection.sql.gz' ),
 				cmd.gzFile
@@ -147,7 +167,7 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 			const mockImport = jest.spyOn( DevEnvImportSQLCommand.prototype, 'run' );
 			mockImport.mockResolvedValue();
 
-			const cmd = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando );
+			const cmd = makeCommand( env );
 			await cmd.runImport();
 
 			expect( mockImport ).toHaveBeenCalled();
@@ -155,43 +175,105 @@ describe( 'commands/DevEnvSyncSQLCommand', () => {
 	} );
 
 	describe( '.run', () => {
-		const syncCommand = new DevEnvSyncSQLCommand( app, env, 'test-slug', lando );
-		const exportSpy = jest.spyOn( syncCommand, 'generateExport' );
-		const getSiteUrlsFromSDSSpy = jest.spyOn( syncCommand, 'getSiteUrlsFromSDS' );
-		const generateSearchReplaceMapSpy = jest.spyOn( syncCommand, 'generateSearchReplaceMap' );
-		const searchReplaceSpy = jest.spyOn( syncCommand, 'runSearchReplace' );
-		const importSpy = jest.spyOn( syncCommand, 'runImport' );
-
-		beforeAll( () => {
-			fs.copyFileSync(
-				path.join( __dirname, '../../__fixtures__/dev-env-e2e/mysqldump-detection.sql.gz' ),
-				syncCommand.gzFile
-			);
+		const setup = () => {
+			const command = makeCommand( env );
 			fs.copyFileSync(
 				path.join( __dirname, '../../__fixtures__/dev-env-e2e/mysqldump-detection.sql' ),
-				syncCommand.sqlFile
+				command.sqlFile
 			);
-			exportSpy.mockResolvedValue();
-			getSiteUrlsFromSDSSpy.mockResolvedValue( [] );
-			searchReplaceSpy.mockResolvedValue();
-			importSpy.mockResolvedValue();
+			const stages = {
+				export: jest.spyOn( command, 'generateExport' ).mockResolvedValue(),
+				extract: jest
+					.spyOn( clientFileUploader, 'unzipFile' )
+					.mockResolvedValue( undefined as never ),
+				dumpType: jest.spyOn( command, 'initSqlDumpType' ).mockResolvedValue(),
+				sds: jest.spyOn( command, 'getSiteUrlsFromSDS' ).mockResolvedValue( [] ),
+				mapping: jest.spyOn( command, 'generateSearchReplaceMap' ).mockImplementation( () => {} ),
+				replace: jest.spyOn( command, 'runSearchReplace' ).mockResolvedValue(),
+				import: jest.spyOn( command, 'runImport' ).mockResolvedValue(),
+			};
+			jest.spyOn( exit, 'withError' ).mockImplementation( message => {
+				throw new Error( String( message ) );
+			} );
+			return { command, stages };
+		};
+
+		it( 'waits for export, extraction, replacement and import in order', async () => {
+			const { command, stages } = setup();
+			const events: string[] = [];
+			const names = [ 'export', 'extract', 'replace', 'import' ] as const;
+			const gates = names.map( name => {
+				let release!: () => void;
+				let notify!: () => void;
+				const wait = new Promise< void >( resolve => {
+					release = resolve;
+				} );
+				const started = new Promise< void >( resolve => {
+					notify = resolve;
+				} );
+				stages[ name ].mockImplementation( async () => {
+					events.push( `${ name }:start` );
+					notify();
+					await wait;
+					events.push( `${ name }:done` );
+				} );
+				return { started, release };
+			} );
+			const running = command.run();
+			for ( const [ index, gate ] of gates.entries() ) {
+				await gate.started;
+				expect( events ).toEqual(
+					names
+						.slice( 0, index )
+						.flatMap( name => [ `${ name }:start`, `${ name }:done` ] )
+						.concat( `${ names[ index ] }:start` )
+				);
+				gate.release();
+			}
+			await expect( running ).resolves.toBe( true );
+			expect( events ).toEqual( names.flatMap( name => [ `${ name }:start`, `${ name }:done` ] ) );
 		} );
 
-		afterAll( () => {
-			exportSpy.mockRestore();
-			searchReplaceSpy.mockRestore();
-			importSpy.mockRestore();
-		} );
-
-		it( 'should sequentially run all the steps', async () => {
-			await syncCommand.run();
-
-			expect( exportSpy ).toHaveBeenCalled();
-			expect( clientFileUploader.unzipFile ).toHaveBeenCalled();
-			expect( getSiteUrlsFromSDSSpy ).toHaveBeenCalled();
-			expect( generateSearchReplaceMapSpy ).toHaveBeenCalled();
-			expect( searchReplaceSpy ).toHaveBeenCalled();
-			expect( importSpy ).toHaveBeenCalled();
+		it.each( [
+			'export',
+			'extract',
+			'dumpType',
+			'urls',
+			'sds',
+			'mapping',
+			'replace',
+			'import',
+		] as const )( 'stops downstream stages after %s fails', async failing => {
+			const { command, stages } = setup();
+			if ( failing === 'urls' ) fs.unlinkSync( command.sqlFile );
+			else if ( failing === 'mapping' )
+				stages.mapping.mockImplementation( () => {
+					throw new Error( 'stage failed' );
+				} );
+			else stages[ failing ].mockRejectedValueOnce( new Error( 'stage failed' ) );
+			await expect( command.run() ).rejects.toThrow();
+			const order = [
+				'export',
+				'extract',
+				'dumpType',
+				'urls',
+				'sds',
+				'mapping',
+				'replace',
+				'import',
+			];
+			for ( const name of order.slice( order.indexOf( failing ) + 1 ) ) {
+				if ( name !== 'urls' )
+					expect( stages[ name as keyof typeof stages ] ).not.toHaveBeenCalled();
+			}
+			expect( console.log ).not.toHaveBeenCalledWith(
+				expect.stringContaining( 'SQL file imported' )
+			);
+			if ( order.indexOf( failing ) <= order.indexOf( 'replace' ) ) {
+				expect( console.log ).not.toHaveBeenCalledWith(
+					expect.stringContaining( 'Search-replace operation is complete' )
+				);
+			}
 		} );
 	} );
 } );

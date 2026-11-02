@@ -33,6 +33,83 @@ describe( 'edge-workers toolchains', () => {
 
 	describe( 'assemblyscript', () => {
 		const tc = getToolchain( 'assemblyscript' );
+		const compileFixture = () => {
+			const project = path.join( tmp, 'proj' );
+			tc.scaffoldProject( project );
+			tc.scaffoldWorker( project, 'demo' );
+			return {
+				project,
+				worker: {
+					dir: path.join( project, 'workers', 'demo' ),
+					manifest: { name: 'demo', entry: 'assembly/index.ts' },
+				},
+			};
+		};
+
+		it.each( [ false, true ] )(
+			'passes compiler arguments with json-as installed: %s',
+			installed => {
+				const { project, worker } = compileFixture();
+				const nodeModules = path.join( project, 'node_modules' );
+				if ( installed ) fs.mkdirSync( path.join( nodeModules, 'json-as' ), { recursive: true } );
+				const originalOptions = process.env.NODE_OPTIONS;
+				process.env.NODE_OPTIONS = '--trace-warnings';
+				try {
+					const expectedOutput = path.join(
+						fs.realpathSync.native( project ),
+						'build',
+						'demo.wasm'
+					);
+					const expectedEnv = { ...process.env };
+					delete expectedEnv.NODE_OPTIONS;
+					const output = tc.compile( project, worker );
+					expect( process.env.NODE_OPTIONS ).toBe( '--trace-warnings' );
+					expect( output ).toBe( expectedOutput );
+					const args = [
+						fs.realpathSync.native( path.join( worker.dir, worker.manifest.entry ) ),
+						'--runtime',
+						'stub',
+						'--path',
+						nodeModules,
+						'--outFile',
+						expectedOutput,
+						'--optimizeLevel',
+						'3',
+						'--shrinkLevel',
+						'2',
+					];
+					if ( installed ) args.push( '--transform', 'json-as/transform' );
+					expect( spawnSync ).toHaveBeenCalledTimes( 1 );
+					expect( spawnSync ).toHaveBeenCalledWith(
+						path.join( nodeModules, '.bin', process.platform === 'win32' ? 'asc.cmd' : 'asc' ),
+						args,
+						{
+							cwd: project,
+							encoding: 'utf8',
+							env: expectedEnv,
+						}
+					);
+				} finally {
+					if ( originalOptions === undefined ) delete process.env.NODE_OPTIONS;
+					else process.env.NODE_OPTIONS = originalOptions;
+				}
+			}
+		);
+
+		it.each( [
+			[
+				{ status: 1, stderr: 'compiler error', stdout: '' },
+				/Compilation failed for worker "demo":\ncompiler error/,
+			],
+			[
+				{ error: new Error( 'spawn failed' ) },
+				/Failed to run the AssemblyScript compiler: spawn failed/,
+			],
+		] )( 'propagates compiler failure', ( result, expected ) => {
+			const { project, worker } = compileFixture();
+			spawnSync.mockReturnValueOnce( result );
+			expect( () => tc.compile( project, worker ) ).toThrow( expected );
+		} );
 
 		it( 'scaffolds a project with the expected layout', () => {
 			const project = path.join( tmp, 'proj' );

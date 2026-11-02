@@ -78,6 +78,13 @@ describe( 'vip dev-env stop', () => {
 	it( 'should not fail if the environment is stopped', async () => {
 		slug = getProjectSlug();
 		await createAndStartEnvironment( cliTest, slug, env );
+		const firstStop = await cliTest.spawn(
+			[ process.argv[ 0 ], vipDevEnvStop, '--slug', slug ],
+			{ env },
+			true
+		);
+		expect( firstStop.rc ).toBe( 0 );
+		expect( await getContainersForProject( docker, slug ) ).toHaveLength( 0 );
 
 		const result = await cliTest.spawn(
 			[ process.argv[ 0 ], vipDevEnvStop, '--slug', slug ],

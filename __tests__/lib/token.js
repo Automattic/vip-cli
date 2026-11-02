@@ -1,4 +1,20 @@
-import Token, { SERVICE } from '../../src/lib/token';
+jest.mock( '../../src/lib/keychain', () => {
+	const store = new Map();
+	return {
+		getKeychain: jest.fn( async () => ( {
+			getPassword: async key => store.get( key ) ?? null,
+			setPassword: async ( key, value ) => {
+				store.set( key, value );
+				return true;
+			},
+			deletePassword: async key => store.delete( key ),
+		} ) ),
+	};
+} );
+
+jest.resetModules();
+const { getKeychain } = require( '../../src/lib/keychain' );
+const { default: Token, SERVICE } = require( '../../src/lib/token' );
 
 describe( 'token tests', () => {
 	it( 'should correctly validate token', () => {
@@ -59,6 +75,15 @@ describe( 'token tests', () => {
 		} );
 	} );
 
+	it( 'preserves unrelated fake credentials across token operations and failures', async () => {
+		const keychain = await getKeychain();
+		await keychain.setPassword( 'unrelated', 'sentinel' );
+		await Token.set( 'test-token' );
+		await expect( Token.get() ).rejects.toThrow();
+		await Token.purge();
+		expect( await keychain.getPassword( 'unrelated' ) ).toBe( 'sentinel' );
+	} );
+
 	describe( 'getServiceName()', () => {
 		// TODO how do we test this when it comes from env var, which we've already overridden?
 		it.todo( 'should return default service name for default API_HOST' );
@@ -92,6 +117,7 @@ describe( 'environment PAT resolution', () => {
 	let keychainSpy;
 
 	beforeEach( () => {
+		getKeychain.mockClear();
 		delete process.env.VIP_CLI_TOKEN;
 		keychainSpy = jest
 			.spyOn( require( '../../src/lib/keychain' ), 'getKeychain' )

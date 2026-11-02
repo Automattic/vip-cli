@@ -19,12 +19,19 @@ const consoleErrorMock = jest.spyOn( console, 'error' ).mockImplementation( () =
 
 const mockExec = jest.fn< Client[ 'exec' ] >();
 const mockEnd = jest.fn< Client[ 'end' ] >();
+const mockConnect = jest.fn< Client[ 'connect' ] >();
+let connectionEvent: 'ready' | 'error' | 'close' = 'ready';
 
 const EventEmitter = jest.requireActual< typeof import('events') >( 'events' );
 
 class MockClient extends EventEmitter {
-	public connect() {
-		this.emit( 'ready' );
+	public connect( config: Parameters< Client[ 'connect' ] >[ 0 ] ) {
+		mockConnect( config );
+		const event = connectionEvent;
+		process.nextTick( () => {
+			if ( event === 'error' ) this.emit( 'error', new Error( 'connection failed' ) );
+			else this.emit( event );
+		} );
 
 		return this;
 	}
@@ -48,14 +55,14 @@ jest.mock( 'ssh2', () => {
 } );
 
 // Mock the API
-const triggerWPCLIMutationMock = jest.fn( async () => {
+const triggerWPCLIMutationMock = jest.fn( async ( _request: any ) => {
 	return Promise.resolve( {
 		data: {
 			triggerWPCLICommandOnAppEnvironment: {
 				inputToken: 'test-token',
 				sshAuthentication: {
 					host: 'test-host',
-					port: 22,
+					port: 2222,
 					username: 'test-user',
 					privateKey: 'test-key',
 					passphrase: 'test-passphrase',
@@ -90,12 +97,16 @@ describe( 'WPCommand', () => {
 
 	beforeEach( () => {
 		jest.clearAllMocks();
+		connectionEvent = 'ready';
 		cmd = new WPCliCommandOverSSH( app, env );
 	} );
 
 	describe( 'run', () => {
 		it( 'should pass the correct arguments to the SSH connection when executing a command', async () => {
 			const dummyStream = new PassThrough();
+			const sigintListeners = process.listenerCount( 'SIGINT' );
+			const sigtermListeners = process.listenerCount( 'SIGTERM' );
+			const stdinDataListeners = process.stdin.listenerCount( 'data' );
 
 			mockExec.mockImplementation( ( (
 				_cmd: string,
@@ -109,6 +120,21 @@ describe( 'WPCommand', () => {
 
 			await cmd.run( 'plugin list' );
 
+			expect( triggerWPCLIMutationMock ).toHaveBeenCalledTimes( 1 );
+			expect( triggerWPCLIMutationMock ).toHaveBeenCalledWith(
+				expect.objectContaining( {
+					variables: { input: { id: 123, environmentId: 456, command: 'plugin list' } },
+				} )
+			);
+			expect( mockConnect ).toHaveBeenCalledWith( {
+				host: 'test-host',
+				port: 2222,
+				username: 'test-user',
+				privateKey: 'test-key',
+				passphrase: 'test-passphrase',
+				readyTimeout: 5000,
+			} );
+
 			expect( mockExec ).toHaveBeenCalledWith(
 				expect.stringMatching(
 					/GUID=test-guid INPUT_TOKEN=test-token VERSION=\S+ ROWS=\d+ COLUMNS=\d+ TTY=\S+/
@@ -117,9 +143,27 @@ describe( 'WPCommand', () => {
 			);
 
 			dummyStream.end();
+			expect( mockEnd ).toHaveBeenCalledTimes( 1 );
+			expect( process.listenerCount( 'SIGINT' ) ).toBe( sigintListeners );
+			expect( process.listenerCount( 'SIGTERM' ) ).toBe( sigtermListeners );
+			expect( process.stdin.listenerCount( 'data' ) ).toBe( stdinDataListeners );
 
 			expect( processExitMock ).not.toHaveBeenCalled();
 		} );
+
+		it.each( [ 'error', 'close' ] as const )(
+			'fails when the connection emits %s before ready',
+			async event => {
+				connectionEvent = event;
+				await expect( cmd.run( 'plugin list' ) ).rejects.toThrow( 'Process exited with code: 1' );
+				expect( mockExec ).not.toHaveBeenCalled();
+				expect( consoleErrorMock ).toHaveBeenCalledWith(
+					expect.stringContaining(
+						event === 'error' ? 'connection failed' : 'Connection closed before command started'
+					)
+				);
+			}
+		);
 
 		it( 'should throw an error when SSH connection failed', async () => {
 			const dummyStream = new PassThrough();

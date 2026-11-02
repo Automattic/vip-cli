@@ -11,17 +11,7 @@ import {
 	getEnvironmentPath,
 } from '../../../src/lib/dev-environment/dev-environment-core';
 
-let id = 0;
-
-/**
- * @return {string} Project slug
- */
-export function getProjectSlug() {
-	++id;
-	const workerID = `${ Number( process.env.JEST_WORKER_ID || '1' ) }`.padStart( 4, '0' );
-	const envID = `${ id }`.padStart( 4, '0' );
-	return `dev-env-${ workerID }-${ envID }`;
-}
+export { getProjectSlug } from './identity';
 
 /**
  * @param {string|undefined} xdgDataHome XDG Data Home

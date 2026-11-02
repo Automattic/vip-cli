@@ -2,7 +2,7 @@
 
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
-import { BackupDBCommand } from '../../src/commands/backup-db';
+import { BackupDBCommand, CREATE_DB_BACKUP_JOB_MUTATION } from '../../src/commands/backup-db';
 import API from '../../src/lib/api';
 
 const mockApp = {
@@ -40,7 +40,7 @@ const queryMock = jest.fn( () => {
 	} );
 } );
 
-const mutationMock = jest.fn( async () => {
+const mutationMock = jest.fn( async ( _request: any ) => {
 	return Promise.resolve( {
 		data: {
 			triggerDatabaseBackup: {
@@ -60,7 +60,9 @@ jest.mocked( API ).mockImplementation(
 );
 
 describe( 'commands/BackupDBCommand', () => {
-	beforeEach( () => {} );
+	beforeEach( () => {
+		jest.clearAllMocks();
+	} );
 
 	describe( '.loadBackupJob', () => {
 		const app = { id: 123 };
@@ -79,11 +81,11 @@ describe( 'commands/BackupDBCommand', () => {
 	describe( '.run', () => {
 		const app = { id: 123 };
 		const env = { id: 456, jobs: [] };
-		const cmd = new BackupDBCommand( app, env );
-		const loadBackupJobSpy = jest.spyOn( cmd, 'loadBackupJob' );
-		const logSpy = jest.spyOn( cmd, 'log' );
 
 		it( 'should check if a backup is already running', async () => {
+			const cmd = new BackupDBCommand( app, env );
+			const loadBackupJobSpy = jest.spyOn( cmd, 'loadBackupJob' );
+			const logSpy = jest.spyOn( cmd, 'log' );
 			loadBackupJobSpy.mockImplementationOnce( () => {
 				cmd.job = { inProgressLock: true } as any;
 				cmd.backupName = 'test-backup';
@@ -92,6 +94,21 @@ describe( 'commands/BackupDBCommand', () => {
 
 			await cmd.run();
 			expect( logSpy ).toHaveBeenCalledWith( 'Database backup already in progress...' );
+			expect( mutationMock ).not.toHaveBeenCalled();
+			expect( loadBackupJobSpy ).toHaveBeenCalledTimes( 3 );
+			expect( queryMock ).toHaveBeenCalledTimes( 2 );
+		} );
+
+		it( 'should create one backup for the selected app and environment when none is running', async () => {
+			const cmd = new BackupDBCommand( app, env );
+			const loadBackupJobSpy = jest.spyOn( cmd, 'loadBackupJob' );
+			await cmd.run();
+			expect( mutationMock ).toHaveBeenCalledTimes( 1 );
+			expect( mutationMock ).toHaveBeenCalledWith( {
+				mutation: CREATE_DB_BACKUP_JOB_MUTATION,
+				variables: { input: { id: 123, environmentId: 456 } },
+			} );
+			expect( loadBackupJobSpy ).toHaveBeenCalledTimes( 3 );
 		} );
 	} );
 } );

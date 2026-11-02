@@ -11,7 +11,7 @@ try {
 
 	const version = engines.node;
 
-	if ( version && ! satisfies( process.version, version ) ) {
+	if ( version && ! satisfies( process.version, version, { includePrerelease: true } ) ) {
 		console.warn(
 			`${ boldRed }WARNING: The current version of Node (${ process.version }) does not meet the minimum requirements; ` +
 				`${ name } requires Node version ${ version }.\n\n` +
