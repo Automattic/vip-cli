@@ -213,7 +213,7 @@ function stageCli( payload ) {
 	);
 }
 
-function launcherSource() {
+function launcherSource( archiveDigest ) {
 	const helper = path.join( root, 'src/lib/cli/standalone-resources.ts' );
 	const commands = fs
 		.readdirSync( path.join( root, 'dist', 'commands' ) )
@@ -233,6 +233,7 @@ function launcherSource() {
 		String.raw`const debugEnabled = (process.env.DEBUG || '').split(/[,\s]+/).includes('@automattic/vip:bun-launcher');`,
 		String.raw`const trace = message => { if (debugEnabled) process.stderr.write('@automattic/vip:bun-launcher ' + message + '\n'); };`,
 		'globalThis.__VIP_BUNDLED_ARCHIVE_PATH__ = archivePath;',
+		`globalThis.__VIP_BUNDLED_ARCHIVE_SHA256__ = ${ JSON.stringify( archiveDigest ) };`,
 		"trace('extract:start');",
 		'const resourceRoot = getBundledResourceRoot();',
 		"trace('extract:ready');",
@@ -264,7 +265,10 @@ async function main() {
 			[ 'package.json', 'config', 'node_modules', 'assets', 'bin' ]
 		);
 		const entry = path.join( temporary, 'launcher.ts' );
-		fs.writeFileSync( entry, launcherSource() );
+		const archiveDigest = createHash( 'sha256' )
+			.update( fs.readFileSync( archive ) )
+			.digest( 'hex' );
+		fs.writeFileSync( entry, launcherSource( archiveDigest ) );
 		fs.mkdirSync( path.dirname( output ), { recursive: true } );
 		const result = await globalThis.Bun.build( {
 			entrypoints: [ entry ],

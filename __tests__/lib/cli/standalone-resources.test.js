@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -17,6 +18,7 @@ describe( 'standalone runtime resources', () => {
 		const binaryName = process.platform === 'win32' ? 'go-search-replace.exe' : 'go-search-replace';
 		const previousRoot = globalThis.__VIP_BUNDLED_RESOURCE_ROOT__;
 		const previousArchive = globalThis.__VIP_BUNDLED_ARCHIVE_PATH__;
+		const previousDigest = globalThis.__VIP_BUNDLED_ARCHIVE_SHA256__;
 		const previousBun = globalThis.Bun;
 
 		try {
@@ -41,6 +43,7 @@ describe( 'standalone runtime resources', () => {
 		} finally {
 			globalThis.__VIP_BUNDLED_RESOURCE_ROOT__ = previousRoot;
 			globalThis.__VIP_BUNDLED_ARCHIVE_PATH__ = previousArchive;
+			globalThis.__VIP_BUNDLED_ARCHIVE_SHA256__ = previousDigest;
 			globalThis.Bun = previousBun;
 			fs.rmSync( root, { recursive: true, force: true } );
 		}
@@ -63,6 +66,61 @@ describe( 'standalone runtime resources', () => {
 		}
 	} );
 
+	it.each( [ undefined, '../escape', 'g'.repeat( 64 ) ] )(
+		'rejects invalid embedded archive digest %s before reading the archive',
+		digest => {
+			const previousBun = globalThis.Bun;
+			const previousArchive = globalThis.__VIP_BUNDLED_ARCHIVE_PATH__;
+			const previousDigest = globalThis.__VIP_BUNDLED_ARCHIVE_SHA256__;
+			try {
+				globalThis.Bun = { isStandaloneExecutable: true };
+				globalThis.__VIP_BUNDLED_ARCHIVE_PATH__ = '/unreadable/runtime.tar.gz';
+				globalThis.__VIP_BUNDLED_ARCHIVE_SHA256__ = digest;
+				jest.isolateModules( () => {
+					const resources = require( '../../../src/lib/cli/standalone-resources' );
+					expect( () => resources.getBundledResourceRoot() ).toThrow(
+						'digest is missing or invalid'
+					);
+				} );
+			} finally {
+				globalThis.Bun = previousBun;
+				globalThis.__VIP_BUNDLED_ARCHIVE_PATH__ = previousArchive;
+				globalThis.__VIP_BUNDLED_ARCHIVE_SHA256__ = previousDigest;
+			}
+		}
+	);
+
+	it( 'rejects archive bytes that do not match the embedded digest without extracting them', () => {
+		const scope = fs.mkdtempSync( path.join( os.tmpdir(), 'vip-bun-digest-test-' ) );
+		const previousCacheHome = process.env.XDG_CACHE_HOME;
+		const previousBun = globalThis.Bun;
+		const previousArchive = globalThis.__VIP_BUNDLED_ARCHIVE_PATH__;
+		const previousDigest = globalThis.__VIP_BUNDLED_ARCHIVE_SHA256__;
+		try {
+			process.env.XDG_CACHE_HOME = path.join( scope, 'cache' );
+			globalThis.Bun = { isStandaloneExecutable: true };
+			globalThis.__VIP_BUNDLED_ARCHIVE_PATH__ = path.join( scope, 'archive.tar.gz' );
+			globalThis.__VIP_BUNDLED_ARCHIVE_SHA256__ = '0'.repeat( 64 );
+			fs.writeFileSync( globalThis.__VIP_BUNDLED_ARCHIVE_PATH__, 'altered bytes' );
+			jest.isolateModules( () => {
+				const resources = require( '../../../src/lib/cli/standalone-resources' );
+				expect( () => resources.getBundledResourceRoot() ).toThrow(
+					'digest does not match its contents'
+				);
+			} );
+			expect(
+				fs.readdirSync( path.join( scope, 'cache', 'vip-cli', 'standalone-resources' ) )
+			).toEqual( [] );
+		} finally {
+			if ( previousCacheHome === undefined ) delete process.env.XDG_CACHE_HOME;
+			else process.env.XDG_CACHE_HOME = previousCacheHome;
+			globalThis.Bun = previousBun;
+			globalThis.__VIP_BUNDLED_ARCHIVE_PATH__ = previousArchive;
+			globalThis.__VIP_BUNDLED_ARCHIVE_SHA256__ = previousDigest;
+			fs.rmSync( scope, { recursive: true, force: true } );
+		}
+	} );
+
 	it( 'extracts a bundled package, template, and companion into a stable cache', () => {
 		const fixtureRoot = fs.mkdtempSync( path.join( os.tmpdir(), 'vip-bun-resources-test-' ) );
 		const inputRoot = path.join( fixtureRoot, 'input' );
@@ -73,6 +131,7 @@ describe( 'standalone runtime resources', () => {
 		const previousCacheHome = process.env.XDG_CACHE_HOME;
 		const previousBun = globalThis.Bun;
 		const previousArchive = globalThis.__VIP_BUNDLED_ARCHIVE_PATH__;
+		const previousDigest = globalThis.__VIP_BUNDLED_ARCHIVE_SHA256__;
 
 		try {
 			fs.mkdirSync( packageDir, { recursive: true } );
@@ -95,6 +154,9 @@ describe( 'standalone runtime resources', () => {
 			process.env.XDG_CACHE_HOME = path.join( fixtureRoot, 'cache' );
 			globalThis.Bun = { isStandaloneExecutable: true };
 			globalThis.__VIP_BUNDLED_ARCHIVE_PATH__ = archivePath;
+			globalThis.__VIP_BUNDLED_ARCHIVE_SHA256__ = createHash( 'sha256' )
+				.update( fs.readFileSync( archivePath ) )
+				.digest( 'hex' );
 
 			const root = getBundledResourceRoot();
 			expect( root ).toBeTruthy();
@@ -107,6 +169,22 @@ describe( 'standalone runtime resources', () => {
 			);
 			expect( getBundledSearchReplaceBinary() ).toBe( path.join( root, 'bin', binaryName ) );
 			expect( getBundledResourceRoot() ).toBe( root );
+
+			// Simulate a separate process reusing the cache with an unreadable archive.
+			const read = fs.readFileSync;
+			const spy = jest.spyOn( fs, 'readFileSync' ).mockImplementation( ( filename, ...args ) => {
+				if ( filename === archivePath )
+					throw new Error( 'Archive must not be read on a cache hit' );
+				return read( filename, ...args );
+			} );
+			try {
+				jest.isolateModules( () => {
+					const resources = require( '../../../src/lib/cli/standalone-resources' );
+					expect( resources.getBundledResourceRoot() ).toBe( root );
+				} );
+			} finally {
+				spy.mockRestore();
+			}
 		} finally {
 			if ( previousCacheHome === undefined ) {
 				delete process.env.XDG_CACHE_HOME;
@@ -115,6 +193,7 @@ describe( 'standalone runtime resources', () => {
 			}
 			globalThis.Bun = previousBun;
 			globalThis.__VIP_BUNDLED_ARCHIVE_PATH__ = previousArchive;
+			globalThis.__VIP_BUNDLED_ARCHIVE_SHA256__ = previousDigest;
 			fs.rmSync( fixtureRoot, { recursive: true, force: true } );
 		}
 	} );

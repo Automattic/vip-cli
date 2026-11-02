@@ -8,6 +8,7 @@ import { x as extractTar } from 'tar';
 type StandaloneGlobal = typeof globalThis & {
 	Bun?: { isStandaloneExecutable?: boolean };
 	__VIP_BUNDLED_ARCHIVE_PATH__?: string;
+	__VIP_BUNDLED_ARCHIVE_SHA256__?: string;
 	__VIP_BUNDLED_RESOURCE_ROOT__?: string;
 };
 
@@ -90,8 +91,10 @@ export function getBundledResourceRoot(): string | null {
 		throw new Error( 'Standalone VIP runtime archive is missing from the executable.' );
 	}
 
-	const archive = fs.readFileSync( archivePath );
-	const digest = createHash( 'sha256' ).update( archive ).digest( 'hex' );
+	const digest = runtime.__VIP_BUNDLED_ARCHIVE_SHA256__;
+	if ( typeof digest !== 'string' || ! /^[a-f0-9]{64}$/.test( digest ) ) {
+		throw new Error( 'Standalone VIP runtime archive digest is missing or invalid.' );
+	}
 	const cacheDir = path.join( cacheHome(), 'vip-cli', 'standalone-resources' );
 	const root = path.join( cacheDir, digest );
 	fs.mkdirSync( cacheDir, { recursive: true, mode: 0o700 } );
@@ -101,6 +104,12 @@ export function getBundledResourceRoot(): string | null {
 	if ( validCache( root, digest ) ) {
 		resourceRoot = root;
 		return root;
+	}
+
+	// A valid cache needs no archive I/O. Verify embedded bytes before any extraction.
+	const archive = fs.readFileSync( archivePath );
+	if ( createHash( 'sha256' ).update( archive ).digest( 'hex' ) !== digest ) {
+		throw new Error( 'Standalone VIP runtime archive digest does not match its contents.' );
 	}
 
 	const staging = path.join( cacheDir, `.staging-${ process.pid }-${ randomUUID() }` );
