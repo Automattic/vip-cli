@@ -2,11 +2,13 @@ import command from '../lib/cli/command';
 
 import type { AppEnvOptions } from './vip-config';
 
+type DefensiveModeOptionValue = string | number | boolean;
+
 export interface DefensiveModeOptions extends AppEnvOptions {
 	enabled?: string | boolean;
-	challengeType?: string | number | boolean;
-	connectionThresholdAbsolute?: string | number | boolean;
-	connectionThresholdPercentage?: string | number | boolean;
+	challengeType?: DefensiveModeOptionValue;
+	connectionThresholdAbsolute?: DefensiveModeOptionValue;
+	connectionThresholdPercentage?: DefensiveModeOptionValue;
 	env: AppEnvOptions[ 'env' ] & {
 		defensiveMode?: {
 			config?: {
