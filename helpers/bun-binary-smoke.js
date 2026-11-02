@@ -363,6 +363,78 @@ async function main() {
 			assertResult( result, 0, /Found 0 environments\./ );
 		} );
 
+		await check( 'dev-env list rejects invalid Docker configuration before listing', async () => {
+			const result = await traced(
+				binary,
+				[ 'dev-env', 'list' ],
+				{
+					...base,
+					env: {
+						...base.env,
+						PATH: path.join( scope, 'docker-fixture' ),
+						DOCKER_HOST: 'tcp://127.0.0.1:not-a-port',
+					},
+				},
+				path.join( scope, 'dev-env-invalid-host.trace' )
+			);
+			assertResult( result, 1, /DOCKER_HOST/ );
+			assert.doesNotMatch( result.stdout, /Found 0 environments/ );
+		} );
+
+		await check(
+			'dev-env list initializes its Docker client for a stored environment',
+			async () => {
+				const requests = [];
+				const server = http.createServer( ( request, response ) => {
+					requests.push( { method: request.method, url: request.url } );
+					if ( request.method !== 'GET' || ! request.url.startsWith( '/containers/json?' ) ) {
+						response.writeHead( 405 );
+						response.end( 'Unexpected Docker fixture operation' );
+						return;
+					}
+					response.writeHead( 200, { 'Content-Type': 'application/json' } );
+					response.end( '[]' );
+				} );
+				await new Promise( resolve => server.listen( 0, '127.0.0.1', resolve ) );
+				try {
+					const inventory = path.join( base.env.XDG_DATA_HOME, 'vip', 'dev-environment', 'demo' );
+					fs.mkdirSync( inventory, { recursive: true } );
+					fs.writeFileSync(
+						path.join( inventory, 'instance_data.json' ),
+						JSON.stringify( { siteSlug: 'demo' } )
+					);
+					fs.writeFileSync(
+						path.join( inventory, '.lando.yml' ),
+						'name: demo\nservices:\n  nginx:\n    type: compose\n    services:\n      image: fixture/nginx\n'
+					);
+					const result = await traced(
+						binary,
+						[ 'dev-env', 'list' ],
+						{
+							...base,
+							env: {
+								...base.env,
+								PATH: path.join( scope, 'docker-fixture' ),
+								DOCKER_HOST: `tcp://127.0.0.1:${ server.address().port }`,
+							},
+						},
+						path.join( scope, 'dev-env-stored.trace' )
+					);
+					assertResult( result, 0, /Found 1 environments:/ );
+					assert.match( result.stdout, /SLUG\s+demo/ );
+					assert.match( result.stdout, /STATUS\s+DOWN/ );
+					assert.ok( requests.length > 0, 'Stored environment must query the Docker API fixture' );
+					assert.ok(
+						requests.every(
+							request => request.method === 'GET' && request.url.startsWith( '/containers/json?' )
+						)
+					);
+				} finally {
+					await new Promise( resolve => server.close( resolve ) );
+				}
+			}
+		);
+
 		await check( 'edge worker project and worker templates', async () => {
 			const project = path.join( scope, 'edge-project' );
 			let result = await traced(

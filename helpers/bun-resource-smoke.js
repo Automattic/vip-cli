@@ -32,6 +32,9 @@ async function probe( root, scratch ) {
 		logLevelConsole: 'error',
 	} );
 	await lando.bootstrap( 'app' );
+	const docker = lando.engine.docker;
+	assert.equal( docker.getContainer( 'fixture' ).id, 'fixture' );
+	assert.equal( lando.engine.docker, docker );
 	const plugins = lando.config.plugins.map( plugin => plugin.name );
 	const tasks = lando.tasks.map( task => task.command );
 	const builders = lando.factory.get().map( builder => builder.name );
@@ -84,6 +87,7 @@ async function probe( root, scratch ) {
 	console.log(
 		JSON.stringify( {
 			plugins: plugins.length,
+			docker: 'loaded on first access without a connection',
 			tasks: tasks.length,
 			builders: builders.length,
 			keytar: 'loaded without credential access',
