@@ -70,9 +70,8 @@ jobs:
       # exactly how ~90 parity divergences reached a review unnoticed.
       #
       # Version comes from .nvmrc (lts/*), the same source ci.yml pins by hand.
-      # It must satisfy package.json#engines or the
-      # `postinstall` guard (helpers/check-version.js) aborts the install with
-      # exit 1.
+      # Keep it within package.json#engines so the reference CLI runs on a
+      # supported Node version.
       - name: Set up Node.js environment
         uses: actions/setup-node@v7
         with:
