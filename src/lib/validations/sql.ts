@@ -58,7 +58,7 @@ export interface CheckResult {
 export interface CheckType {
 	excerpt: string;
 	matchHandler: ( lineNumber: number, result: string[], extraParam: string ) => CheckResult;
-	matcher: RegExp | string;
+	matcher?: RegExp | string;
 	message: string;
 	outputFormatter: ( check: CheckType, type: string, isImport: boolean ) => ValidationResult;
 	recommendation: string;
@@ -352,7 +352,6 @@ const checks: Checks = {
 		recommendation: "Disabling 'UNIQUE_CHECKS' is not allowed. These lines should be removed",
 	},
 	siteHomeUrl: {
-		matcher: String.raw`['"](siteurl|home)['"]\s*,\s*['"]([^'"]*)['"]`,
 		matchHandler: ( lineNumber, results ) => ( { text: results[ 1 ] + ' ' + results[ 2 ] } ),
 		outputFormatter: infoCheckFormatter,
 		results: [],
@@ -361,12 +360,8 @@ const checks: Checks = {
 		recommendation: '',
 	},
 	siteHomeUrlLando: {
-		matcher: String.raw`['"](siteurl|home)['"]\s*,\s*['"]([^'"]+)['"]`,
 		matchHandler: ( lineNumber, results, expectedDomain ) => {
 			let foundDomain = results[ 2 ];
-			if ( ! /^https?:\/\//i.test( foundDomain ) ) {
-				return { falsePositive: true };
-			}
 			foundDomain = foundDomain.replace( /^https?:\/\//, '' );
 			if ( ! foundDomain.trim() ) {
 				return { falsePositive: true };
@@ -635,9 +630,19 @@ const perLineValidations = (
 
 	checkForTableName( line );
 
-	const uncommentedLine = stripSqlCommentsOutsideQuotedStrings( line, currentSqlCommentStripState );
+	const rawInsertInfo = getInsertStatementInfo( line );
+	const shouldStripComments =
+		currentSqlCommentStripState.inBlockComment ||
+		line.includes( '/*' ) ||
+		isWordPressOptionsTable( currentInsertStatementTableName ) ||
+		isWordPressOptionsTable( rawInsertInfo?.tableName );
+	const uncommentedLine = shouldStripComments
+		? stripSqlCommentsOutsideQuotedStrings( line, currentSqlCommentStripState )
+		: line;
 
-	const insertStatementInfo = getInsertStatementInfo( uncommentedLine );
+	const insertStatementInfo = shouldStripComments
+		? getInsertStatementInfo( uncommentedLine )
+		: rawInsertInfo;
 	if ( insertStatementInfo ) {
 		currentInsertStatementTableName = insertStatementInfo.tableName;
 		currentInsertStatementColumns = parseInsertColumnList(
@@ -666,7 +671,7 @@ const perLineValidations = (
 			continue;
 		}
 
-		const results = line.match( check.matcher ); // NOSONAR
+		const results = check.matcher === undefined ? null : line.match( check.matcher ); // NOSONAR
 		if ( results ) {
 			check.results.push( check.matchHandler( lineNum, results, extraCheckParams ) );
 		}

@@ -91,3 +91,6 @@ INSERT INTO wp_10_options (option_name, option_value, autoload)
 INSERT INTO wp_abc_options (option_name, option_value, autoload)
     VALUES
         ('siteurl', 'https://pseudo.example', 'yes');
+INSERT INTO wp_posts VALUES ('ordinary post'); /* comment starts after a non-options statement
+INSERT INTO wp_options (option_name, option_value) VALUES ('home', 'https://non-options-comment.example');
+*/

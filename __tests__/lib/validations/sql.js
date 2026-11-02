@@ -274,6 +274,9 @@ describe( 'lib/validations/sql', () => {
 		} );
 		it( 'should not suggest replacements from multiline block comment option rows', () => {
 			expect( output ).not.toContain(
+				'Use \'--search-replace="non-options-comment.example,test.domain"\' switch to replace the domain'
+			);
+			expect( output ).not.toContain(
 				'Use \'--search-replace="top-level-commented-insert.example,test.domain"\' switch to replace the domain'
 			);
 			expect( output ).toContain(
