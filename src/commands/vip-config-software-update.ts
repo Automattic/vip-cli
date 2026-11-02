@@ -126,7 +126,7 @@ export default cmd.argv< SoftwareUpdateOptions >( process.argv, async ( arg, opt
 			if ( updateResult.ok ) {
 				console.log( chalk.green( '✓' ) + ' Software update complete' );
 			} else {
-				throw Error( updateResult.errorMessage );
+				throw new Error( updateResult.errorMessage );
 			}
 		} else {
 			progressTracker.print();
