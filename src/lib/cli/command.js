@@ -30,10 +30,28 @@ import UserError from '../user-error';
  */
 function describeValue( value ) {
 	if ( typeof value === 'object' && value !== null ) {
-		return util.inspect( value, { depth: 0, breakLength: Infinity } );
+		try {
+			return util.inspect( value, { depth: 0, breakLength: Infinity } );
+		} catch {
+			return util.inspect( value, { depth: 0, breakLength: Infinity, customInspect: false } );
+		}
 	}
 
 	return String( value );
+}
+
+/**
+ * Inspects a value with a depth of 5, falling back to a safer inspection if necessary.
+ *
+ * @param {unknown} value The value to inspect.
+ * @returns {string} The inspected string.
+ */
+function inspect( value ) {
+	try {
+		return util.inspect( value, { depth: 5 } );
+	} catch {
+		return util.inspect( value, { depth: 5, customInspect: false } );
+	}
 }
 
 /**
@@ -51,9 +69,7 @@ function describeValue( value ) {
 export function formatFatalError( err ) {
 	if ( ! ( err instanceof Error ) ) {
 		// Plain objects would stringify to "[object Object]"; inspect them instead.
-		return typeof err === 'object' && err !== null
-			? util.inspect( err, { depth: 5 } )
-			: String( err );
+		return typeof err === 'object' && err !== null ? inspect( err ) : String( err );
 	}
 
 	const lines = [];
@@ -69,19 +85,19 @@ export function formatFatalError( err ) {
 	}
 
 	if ( err.cause !== undefined ) {
-		lines.push( `Cause: ${ util.inspect( err.cause, { depth: 5 } ) }` );
+		lines.push( `Cause: ${ inspect( err.cause ) }` );
 	}
 
 	// A stack with no frames beyond the message line tells us nothing, and extra
 	// own properties would be dropped by the stack/message print above. In either
 	// case, dump the full object so no detail is lost.
-	const stackHasFrames = Boolean( err.stack ) && /\n\s+at\s/.test( err.stack );
+	const stackHasFrames = Boolean( err.stack ) && /\n[ \t]+at\s/.test( err.stack );
 	const hasExtraOwnProps = Object.getOwnPropertyNames( err ).some(
 		prop => ! [ 'message', 'stack' ].includes( prop )
 	);
 
 	if ( ! stackHasFrames || hasExtraOwnProps ) {
-		lines.push( util.inspect( err, { depth: 5 } ) );
+		lines.push( inspect( err ) );
 	}
 
 	return lines.join( '\n' );
