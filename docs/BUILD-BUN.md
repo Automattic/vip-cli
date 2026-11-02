@@ -57,8 +57,10 @@ It does not contain a second CLI
 entrypoint or a `dist` tree. Bun bytecode compilation caches the compiled CLI
 code in the executable to reduce startup parsing time.
 
-Lodash, js-yaml, Bluebird, object-hash, and fast-glob are also compiled into
-bytecode. The launcher registers lazy module-cache entries at their extracted
+Lodash, js-yaml, Bluebird, object-hash, fast-glob, and Winston are also compiled into
+bytecode. Winston's logform, winston-transport, and triple-beam entrypoints share
+the compiled instances so plugins retain compatible format and transport exports.
+The launcher registers lazy module-cache entries at their extracted
 entrypoint paths, so filesystem-loaded Lando code and plugins reuse the compiled
 exports. Registration does not evaluate the dependencies. Their original files
 remain in the archive for filesystem-based tooling; Lando itself, plugin discovery,

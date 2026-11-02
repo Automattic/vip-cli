@@ -136,10 +136,43 @@ try {
 		'bluebird/js/release/bluebird.js',
 		'object-hash/index.js',
 		'fast-glob/out/index.js',
+		'winston/lib/winston.js',
+		'logform/index.js',
+		'winston-transport/index.js',
+		'triple-beam/index.js',
 	] ) {
 		const filename = path.join( extracted, 'node_modules', relative );
 		overwrite( filename, 'throw new Error("Uncompiled runtime dependency loaded");\n' );
 	}
+	// A filesystem-loaded plugin must share Winston's public companion exports.
+	const pluginRoot = path.join(
+		extracted,
+		'node_modules',
+		'lando',
+		'plugins',
+		'vip-bytecode-fixture'
+	);
+	fs.mkdirSync( pluginRoot );
+	fs.writeFileSync(
+		path.join( pluginRoot, 'index.js' ),
+		`module.exports = () => {
+			const assert = require('node:assert/strict');
+			const winston = require('winston');
+			const Transport = require('winston-transport');
+			assert.equal(winston.Transport, Transport);
+			assert(winston.transports.Console.prototype instanceof Transport);
+			assert.equal(winston.format, require('logform').format);
+			assert.equal(winston.config.npm, require('triple-beam').configs.npm);
+			for (const [name, descriptor] of Object.entries(Object.getOwnPropertyDescriptors(winston.format))) {
+				if (descriptor.get) assert.equal(typeof winston.format[name], 'function');
+			}
+			for (const name of Object.keys(winston.transports)) {
+				assert.equal(typeof winston.transports[name], 'function');
+			}
+			console.log('VIP compiled logging fixture verified');
+			return {};
+		};`
+	);
 	// Keep authentication reads isolated and audit analytics UUID access under opt-out.
 	// The real native addon was probed above without credential access.
 	const keytarFixture = `const audit = operation => require('node:fs').appendFileSync(
@@ -173,15 +206,14 @@ try {
 		JSON.stringify( { engine: '27.0.0', compose: '2.30.0', composePlugin: '2.30.0' } )
 	);
 	const keychainAudit = path.join( scope, 'keychain-access.log' );
-	assert.match(
-		run( binary, [ 'dev-env', 'list' ], {
-			...env,
-			VIP_KEYCHAIN_FIXTURE_AUDIT: keychainAudit,
-			DOCKER_HOST: 'tcp://127.0.0.1:1',
-			DEBUG: `${ env.DEBUG },@automattic/vip:bin:dev-environment`,
-		} ),
-		/Found 0 environments\./
-	);
+	const list = run( binary, [ 'dev-env', 'list' ], {
+		...env,
+		VIP_KEYCHAIN_FIXTURE_AUDIT: keychainAudit,
+		DOCKER_HOST: 'tcp://127.0.0.1:1',
+		DEBUG: `${ env.DEBUG },@automattic/vip:bin:dev-environment`,
+	} );
+	assert.match( list, /Found 0 environments\./ );
+	assert.match( list, /VIP compiled logging fixture verified/ );
 	assert.equal( fs.existsSync( keychainAudit ), false, 'Opt-out accessed analytics UUID storage' );
 	console.log( 'PASS compiled Lando dependencies with failing source entrypoints' );
 } finally {

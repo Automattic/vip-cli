@@ -19,6 +19,11 @@ const compiledRuntimePackages = new Set( [
 	'bluebird',
 	'object-hash',
 	'fast-glob',
+	'winston',
+	// Keep Winston's public format and transport exports shared with plugins.
+	'logform',
+	'winston-transport',
+	'triple-beam',
 ] );
 const supportedTargets = {
 	'bun-linux-x64': { platform: 'linux', go: 'linux/amd64', keytar: 'linux-x64' },
