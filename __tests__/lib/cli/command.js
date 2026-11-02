@@ -318,6 +318,26 @@ describe( 'utils/cli/command', () => {
 			}
 		} );
 
+		it( 'redacts all URL userinfo through the last at sign', () => {
+			const err = Object.assign( new Error( 'failed' ), {
+				url: 'http://proxy-user:p@ssword@example.test/path?ref=user@example.test',
+			} );
+			const result = formatFatalError( err );
+			expect( result ).toContain( 'http://[REDACTED]@example.test/path?ref=user@example.test' );
+			expect( result ).not.toContain( 'ssword' );
+		} );
+
+		it( 'redacts raw diagnostic bodies, including serialized credentials', () => {
+			const err = Object.assign( new Error( 'failed' ), {
+				bodyText: JSON.stringify( { password: 'sensitive-value' } ),
+				cause: { responseBody: 'password=sensitive-value', detail: 'available' },
+			} );
+			const result = formatFatalError( err );
+			expect( result ).not.toContain( 'sensitive-value' );
+			expect( result ).toContain( 'available' );
+			expect( result ).toContain( '[REDACTED]' );
+		} );
+
 		it( 'preserves circular diagnostics without retaining nested secrets', () => {
 			const detail = { password: 'circular-secret', reason: 'connection failed' };
 			detail.self = detail;

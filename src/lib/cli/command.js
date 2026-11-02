@@ -57,7 +57,7 @@ function isSecretProperty( key ) {
  */
 function redactDiagnosticText( value ) {
 	return value
-		.replace( /\b((?:https?|wss?|socks[45]h?|ftp):\/\/)[^/@\s]+@/gi, '$1[REDACTED]@' )
+		.replace( /\b((?:https?|wss?|socks[45]h?|ftp):\/\/)[^/?#\s]+@/gi, '$1[REDACTED]@' )
 		.replace( /([?&])([^?=&\s]+)=([^?&#\s]*)/g, ( match, separator, key ) => {
 			try {
 				return isSecretProperty( decodeURIComponent( key ) )
@@ -139,6 +139,7 @@ function copyDiagnosticProperties( value, copy, seen, depth ) {
 		const descriptor = Object.getOwnPropertyDescriptor( value, key );
 		const secret =
 			isSecretProperty( key ) ||
+			( typeof key === 'string' && /^(?:body|bodyText|requestBody|responseBody)$/i.test( key ) ) ||
 			( isError &&
 				key === 'input' &&
 				readDiagnosticProperty( value, 'code' ) === 'ERR_INVALID_URL' );
