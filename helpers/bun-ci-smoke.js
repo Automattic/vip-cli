@@ -175,8 +175,8 @@ try {
 	);
 	// Keep authentication reads isolated and audit analytics UUID access under opt-out.
 	// The real native addon was probed above without credential access.
-	const keytarFixture = `const audit = operation => require('node:fs').appendFileSync(
-		process.env.VIP_KEYCHAIN_FIXTURE_AUDIT, operation + '\\n'
+	const keytarFixture = String.raw`const audit = operation => require('node:fs').appendFileSync(
+		process.env.VIP_KEYCHAIN_FIXTURE_AUDIT, operation + '\n'
 	);
 	module.exports = {
 		getPassword: async service => {

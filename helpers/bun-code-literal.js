@@ -2,7 +2,7 @@
 function javascriptString( value ) {
 	return JSON.stringify( value ).replace(
 		/[<>\u2028\u2029]/g,
-		character => `\\u${ character.codePointAt( 0 ).toString( 16 ).padStart( 4, '0' ) }`
+		character => String.raw`\u${ character.codePointAt( 0 ).toString( 16 ).padStart( 4, '0' ) }`
 	);
 }
 
