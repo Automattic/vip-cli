@@ -19,28 +19,42 @@ import { trackEvent } from '../../lib/tracker';
 import { parseApiError } from '../../lib/utils';
 import UserError from '../user-error';
 
+const secretFragments = [
+	'password',
+	'passwd',
+	'passphrase',
+	'secret',
+	'token',
+	'credential',
+	'authorization',
+	'cookie',
+	'privatekey',
+	'apikey',
+	'signature',
+];
+
+/**
+ * Determines if a given property key is considered secret.
+ * Secret properties are typically sensitive information like passwords, tokens, and API keys.
+ *
+ * @param {string|symbol} key - The property key to check.
+ * @returns {boolean} True if the property is considered secret, false otherwise.
+ */
 function isSecretProperty( key ) {
 	const normalized = String( key )
 		.replace( /[^a-z0-9]/gi, '' )
 		.toLowerCase();
 	return (
-		normalized === 'key' ||
-		[
-			'password',
-			'passwd',
-			'passphrase',
-			'secret',
-			'token',
-			'credential',
-			'authorization',
-			'cookie',
-			'privatekey',
-			'apikey',
-			'signature',
-		].some( name => normalized.includes( name ) )
+		normalized === 'key' || secretFragments.some( fragment => normalized.includes( fragment ) )
 	);
 }
 
+/**
+ * Redacts sensitive information from a diagnostic text value.
+ *
+ * @param {string} value - The diagnostic text to redact.
+ * @returns {string} The redacted diagnostic text.
+ */
 function redactDiagnosticText( value ) {
 	return value
 		.replace( /\b((?:https?|wss?|socks[45]h?|ftp):\/\/)[^/@\s]+@/gi, '$1[REDACTED]@' )
@@ -56,22 +70,38 @@ function redactDiagnosticText( value ) {
 		.replace( /\b(Bearer|Basic)\s+\S+/gi, '$1 [REDACTED]' );
 }
 
+/**
+ * Reads a property from a diagnostic value safely.
+ * Returns '[Unreadable property]' if the property cannot be accessed.
+ *
+ * @param {Record<string, unknown>|Error|null|undefined} value - The diagnostic value to read from.
+ * @param {string} key - The property key to read.
+ * @returns {unknown} The property value or '[Unreadable property]' if inaccessible.
+ */
 function readDiagnosticProperty( value, key ) {
 	try {
-		return value?.[ key ];
+		return /** @type {Record<string, unknown>|null|undefined} */ ( value )?.[ key ];
 	} catch {
 		return '[Unreadable property]';
 	}
 }
 
+/**
+ * Creates a shallow copy of a diagnostic value, redacting sensitive information.
+ *
+ * @param {unknown} value - The diagnostic value to copy.
+ * @returns {unknown} The copied diagnostic value with sensitive information redacted.
+ */
 function createDiagnosticCopy( value ) {
 	if ( ! ( value instanceof Error ) ) {
-		return Array.isArray( value )
-			? []
-			: Object.create( Object.getPrototypeOf( value ) === null ? null : Object.prototype );
+		if ( Array.isArray( value ) ) {
+			return [];
+		}
+
+		return Object.create( Object.getPrototypeOf( value ) === null ? null : Object.prototype );
 	}
 
-	const copy = new Error();
+	const copy = new Error(); // NOSONAR
 	copy.stack = undefined;
 	for ( const key of [ 'message', 'stack', 'name' ] ) {
 		const text = readDiagnosticProperty( value, key );
@@ -82,31 +112,45 @@ function createDiagnosticCopy( value ) {
 			} );
 		}
 	}
+
 	return copy;
 }
 
+/**
+ * Copies diagnostic properties from a value to its shallow copy, redacting sensitive information.
+ *
+ * @param {object} value - The original diagnostic value.
+ * @param {unknown} copy - The shallow copy of the diagnostic value.
+ * @param {WeakMap<object, unknown>} seen - A WeakMap tracking already seen objects to handle circular references.
+ * @param {number} depth - The current depth of the recursive sanitization.
+ * @returns {void} This function does not return a value.
+ */
 function copyDiagnosticProperties( value, copy, seen, depth ) {
 	const isError = value instanceof Error;
 	for ( const key of Reflect.ownKeys( value ) ) {
 		if (
 			key === util.inspect.custom ||
-			( isError && [ 'message', 'stack', 'name' ].includes( key ) ) ||
+			( isError && [ 'message', 'stack', 'name' ].includes( /** @type {string} */ ( key ) ) ) ||
 			( Array.isArray( copy ) && key === 'length' )
 		) {
 			continue;
 		}
+
 		const descriptor = Object.getOwnPropertyDescriptor( value, key );
 		const secret =
 			isSecretProperty( key ) ||
 			( isError &&
 				key === 'input' &&
 				readDiagnosticProperty( value, 'code' ) === 'ERR_INVALID_URL' );
+
+		/** @type {unknown} */
 		let propertyValue = '[Accessor]';
 		if ( secret ) {
 			propertyValue = '[REDACTED]';
 		} else if ( descriptor && 'value' in descriptor ) {
 			propertyValue = sanitizeDiagnostic( descriptor.value, seen, depth + 1 );
 		}
+
 		Object.defineProperty( copy, key, {
 			value: propertyValue,
 			enumerable: descriptor?.enumerable ?? true,
@@ -118,21 +162,30 @@ function copyDiagnosticProperties( value, copy, seen, depth ) {
 /**
  * Copy own diagnostic data before inspection so nested secrets are redacted and
  * accessors and custom inspectors cannot run while the snapshot is rendered.
+ *
+ * @param {unknown} value - The diagnostic value to sanitize.
+ * @param {WeakMap<object, unknown>} [seen] - A WeakMap tracking already seen objects to handle circular references.
+ * @param {number} [depth] - The current depth of the recursive sanitization.
+ * @returns {unknown} The sanitized diagnostic value.
  */
 function sanitizeDiagnostic( value, seen = new WeakMap(), depth = 0 ) {
 	try {
 		if ( typeof value === 'string' || typeof value === 'symbol' ) {
 			return redactDiagnosticText( String( value ) );
 		}
+
 		if ( typeof value === 'function' ) {
 			return '[Function]';
 		}
+
 		if ( value === null || typeof value !== 'object' ) {
 			return value;
 		}
+
 		if ( seen.has( value ) ) {
 			return seen.get( value );
 		}
+
 		if ( depth > 5 ) {
 			return '[Object]';
 		}
