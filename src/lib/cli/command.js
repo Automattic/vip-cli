@@ -64,6 +64,57 @@ function readDiagnosticProperty( value, key ) {
 	}
 }
 
+function createDiagnosticCopy( value ) {
+	if ( ! ( value instanceof Error ) ) {
+		return Array.isArray( value )
+			? []
+			: Object.create( Object.getPrototypeOf( value ) === null ? null : Object.prototype );
+	}
+
+	const copy = new Error();
+	copy.stack = undefined;
+	for ( const key of [ 'message', 'stack', 'name' ] ) {
+		const text = readDiagnosticProperty( value, key );
+		if ( typeof text === 'string' && ( key !== 'name' || text !== 'Error' ) ) {
+			Object.defineProperty( copy, key, {
+				value: redactDiagnosticText( text ),
+				configurable: true,
+			} );
+		}
+	}
+	return copy;
+}
+
+function copyDiagnosticProperties( value, copy, seen, depth ) {
+	const isError = value instanceof Error;
+	for ( const key of Reflect.ownKeys( value ) ) {
+		if (
+			key === util.inspect.custom ||
+			( isError && [ 'message', 'stack', 'name' ].includes( key ) ) ||
+			( Array.isArray( copy ) && key === 'length' )
+		) {
+			continue;
+		}
+		const descriptor = Object.getOwnPropertyDescriptor( value, key );
+		const secret =
+			isSecretProperty( key ) ||
+			( isError &&
+				key === 'input' &&
+				readDiagnosticProperty( value, 'code' ) === 'ERR_INVALID_URL' );
+		let propertyValue = '[Accessor]';
+		if ( secret ) {
+			propertyValue = '[REDACTED]';
+		} else if ( descriptor && 'value' in descriptor ) {
+			propertyValue = sanitizeDiagnostic( descriptor.value, seen, depth + 1 );
+		}
+		Object.defineProperty( copy, key, {
+			value: propertyValue,
+			enumerable: descriptor?.enumerable ?? true,
+			configurable: true,
+		} );
+	}
+}
+
 /**
  * Copy own diagnostic data before inspection so nested secrets are redacted and
  * accessors and custom inspectors cannot run while the snapshot is rendered.
@@ -86,54 +137,9 @@ function sanitizeDiagnostic( value, seen = new WeakMap(), depth = 0 ) {
 			return '[Object]';
 		}
 
-		const isError = value instanceof Error;
-		let copy;
-		if ( isError ) {
-			copy = new Error();
-		} else if ( Array.isArray( value ) ) {
-			copy = [];
-		} else {
-			copy = Object.create( Object.getPrototypeOf( value ) === null ? null : Object.prototype );
-		}
+		const copy = createDiagnosticCopy( value );
 		seen.set( value, copy );
-		if ( isError ) {
-			copy.stack = undefined;
-			for ( const key of [ 'message', 'stack', 'name' ] ) {
-				const text = readDiagnosticProperty( value, key );
-				if ( typeof text === 'string' && ( key !== 'name' || text !== 'Error' ) ) {
-					Object.defineProperty( copy, key, {
-						value: redactDiagnosticText( text ),
-						configurable: true,
-					} );
-				}
-			}
-		}
-		for ( const key of Reflect.ownKeys( value ) ) {
-			if (
-				key === util.inspect.custom ||
-				( isError && [ 'message', 'stack', 'name' ].includes( key ) ) ||
-				( Array.isArray( copy ) && key === 'length' )
-			) {
-				continue;
-			}
-			const descriptor = Object.getOwnPropertyDescriptor( value, key );
-			const secret =
-				isSecretProperty( key ) ||
-				( isError &&
-					key === 'input' &&
-					readDiagnosticProperty( value, 'code' ) === 'ERR_INVALID_URL' );
-			let propertyValue = '[Accessor]';
-			if ( secret ) {
-				propertyValue = '[REDACTED]';
-			} else if ( descriptor && 'value' in descriptor ) {
-				propertyValue = sanitizeDiagnostic( descriptor.value, seen, depth + 1 );
-			}
-			Object.defineProperty( copy, key, {
-				value: propertyValue,
-				enumerable: descriptor?.enumerable ?? true,
-				configurable: true,
-			} );
-		}
+		copyDiagnosticProperties( value, copy, seen, depth );
 		return copy;
 	} catch {
 		return '[Uninspectable value]';
