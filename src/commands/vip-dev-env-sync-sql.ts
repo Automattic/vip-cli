@@ -104,8 +104,7 @@ export default command( {
 	)
 	.option(
 		'config-file',
-		'A local configuration file that specifies the data to include in the partial database sync. Accepts a relative or absolute path to the file.',
-		undefined
+		'A local configuration file that specifies the data to include in the partial database sync. Accepts a relative or absolute path to the file.'
 	)
 	.option( 'force', 'Skip validations.', undefined, processBooleanOption )
 	.examples( examples )
