@@ -290,6 +290,44 @@ describe( 'utils/cli/command', () => {
 	} );
 
 	describe( 'formatFatalError', () => {
+		it( 'redacts the input of a native invalid URL error', () => {
+			let err;
+			try {
+				new URL( 'http://proxy-user:proxy-password@%' );
+			} catch ( error ) {
+				err = error;
+			}
+
+			expect( err?.code ).toBe( 'ERR_INVALID_URL' );
+			const result = formatFatalError( err );
+			expect( result ).toContain( 'ERR_INVALID_URL' );
+			expect( result ).toContain( '[REDACTED]' );
+			expect( result ).not.toContain( 'proxy-password' );
+			expect( result ).not.toContain( 'proxy-user' );
+		} );
+
+		it( 'redacts URL credentials and sensitive query parameters in stacks', () => {
+			const err = new Error(
+				'http://proxy-user:proxy-password@example.test/?access_token=query-secret'
+			);
+
+			const result = formatFatalError( err );
+			expect( result ).toContain( 'example.test' );
+			for ( const secret of [ 'proxy-user', 'proxy-password', 'query-secret' ] ) {
+				expect( result ).not.toContain( secret );
+			}
+		} );
+
+		it( 'preserves circular diagnostics without retaining nested secrets', () => {
+			const detail = { password: 'circular-secret', reason: 'connection failed' };
+			detail.self = detail;
+
+			const result = formatFatalError( detail );
+			expect( result ).toContain( 'connection failed' );
+			expect( result ).toContain( '[Circular' );
+			expect( result ).not.toContain( 'circular-secret' );
+		} );
+
 		describe.each( [
 			[ 'an Error', value => Object.defineProperty( new Error( 'outer' ), 'detail', { value } ) ],
 			[ 'a plain object', value => Object.defineProperty( {}, 'detail', { value } ) ],
@@ -407,6 +445,97 @@ describe( 'utils/cli/command', () => {
 			expect( () => uncaughtError( new Error( 'boom' ) ) ).toThrow( 'exit.withError called' );
 			expect( withErrorSpy ).toHaveBeenCalledWith( 'Unexpected error: boom' );
 		} );
+
+		it.each( [ 'message', 'stack', 'cause', 'code' ] )(
+			'still exits when %s has a throwing getter',
+			key => {
+				const err = new Error( 'outer' );
+				Object.defineProperty( err, key, {
+					get() {
+						throw new Error( 'getter failed' );
+					},
+				} );
+
+				expect( () => uncaughtError( err ) ).toThrow( 'exit.withError called' );
+				expect( withErrorSpy ).toHaveBeenCalledTimes( 1 );
+				expect( console.log ).toHaveBeenCalledWith(
+					expect.stringContaining( 'DEBUG=@automattic/vip:*' )
+				);
+			}
+		);
+
+		it( 'still reports the outer error when a nested Error has a throwing message getter', () => {
+			const cause = new Error( 'inner' );
+			Object.defineProperty( cause, 'message', {
+				get() {
+					throw new Error( 'getter failed' );
+				},
+			} );
+			const err = new Error( 'outer', { cause } );
+
+			expect( () => uncaughtError( err ) ).toThrow( 'exit.withError called' );
+			expect( withErrorSpy ).toHaveBeenCalledWith( 'Unexpected error: outer' );
+			expect( console.log ).toHaveBeenCalledWith(
+				expect.stringContaining( 'DEBUG=@automattic/vip:*' )
+			);
+		} );
+
+		it( 'uses a placeholder if diagnostic properties cannot be read', () => {
+			const value = new Proxy(
+				{},
+				{
+					ownKeys() {
+						throw new Error( 'unreadable object' );
+					},
+				}
+			);
+
+			expect( () => uncaughtError( value ) ).toThrow( 'exit.withError called' );
+			expect( withErrorSpy ).toHaveBeenCalledWith( 'Unexpected error: [Uninspectable value]' );
+		} );
+
+		it( 'redacts credentials from string rejections', () => {
+			expect( () => uncaughtError( 'https://url-user:url-password@example.test/' ) ).toThrow(
+				'exit.withError called'
+			);
+			expect( withErrorSpy ).toHaveBeenCalledWith(
+				'Unexpected error: https://[REDACTED]@example.test/'
+			);
+			expect( console.log.mock.calls.flat().join( '\n' ) ).not.toContain( 'url-password' );
+		} );
+
+		it.each( [ 'an Error', 'a plain object' ] )(
+			'redacts nested secrets from %s and the final summary',
+			kind => {
+				const details = {
+					password: 'password-value',
+					cause: { headers: { Authorization: 'Bearer auth-value' }, privateKey: 'key-value' },
+					url: 'https://url-user:url-password@example.test/?token=query-value',
+				};
+				const value =
+					kind === 'an Error' ? Object.assign( new Error( details.url ), details ) : details;
+				const customInspector = jest.fn( () => 'custom-secret' );
+				value[ util.inspect.custom ] = customInspector;
+
+				expect( () => uncaughtError( value ) ).toThrow( 'exit.withError called' );
+				expect( customInspector ).not.toHaveBeenCalled();
+				const output = [ ...console.log.mock.calls.flat(), ...withErrorSpy.mock.calls.flat() ].join(
+					'\n'
+				);
+				expect( output ).toContain( '[REDACTED]' );
+				for ( const secret of [
+					'password-value',
+					'auth-value',
+					'key-value',
+					'url-user',
+					'url-password',
+					'query-value',
+					'custom-secret',
+				] ) {
+					expect( output ).not.toContain( secret );
+				}
+			}
+		);
 
 		it.each( [ false, true ] )(
 			'preserves hidden rejection details with a throwing inspector: %s',

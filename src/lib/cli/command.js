@@ -19,6 +19,127 @@ import { trackEvent } from '../../lib/tracker';
 import { parseApiError } from '../../lib/utils';
 import UserError from '../user-error';
 
+function isSecretProperty( key ) {
+	const normalized = String( key )
+		.replace( /[^a-z0-9]/gi, '' )
+		.toLowerCase();
+	return (
+		normalized === 'key' ||
+		[
+			'password',
+			'passwd',
+			'passphrase',
+			'secret',
+			'token',
+			'credential',
+			'authorization',
+			'cookie',
+			'privatekey',
+			'apikey',
+			'signature',
+		].some( name => normalized.includes( name ) )
+	);
+}
+
+function redactDiagnosticText( value ) {
+	return value
+		.replace( /\b((?:https?|wss?|socks[45]h?|ftp):\/\/)[^/@\s]+@/gi, '$1[REDACTED]@' )
+		.replace( /([?&])([^?=&\s]+)=([^?&#\s]*)/g, ( match, separator, key ) => {
+			try {
+				return isSecretProperty( decodeURIComponent( key ) )
+					? `${ separator }${ key }=[REDACTED]`
+					: match;
+			} catch {
+				return `${ separator }[REDACTED]`;
+			}
+		} )
+		.replace( /\b(Bearer|Basic)\s+\S+/gi, '$1 [REDACTED]' );
+}
+
+function readDiagnosticProperty( value, key ) {
+	try {
+		return value?.[ key ];
+	} catch {
+		return '[Unreadable property]';
+	}
+}
+
+/**
+ * Copy own diagnostic data before inspection so nested secrets are redacted and
+ * accessors and custom inspectors cannot run while the snapshot is rendered.
+ */
+function sanitizeDiagnostic( value, seen = new WeakMap(), depth = 0 ) {
+	try {
+		if ( typeof value === 'string' || typeof value === 'symbol' ) {
+			return redactDiagnosticText( String( value ) );
+		}
+		if ( typeof value === 'function' ) {
+			return '[Function]';
+		}
+		if ( value === null || typeof value !== 'object' ) {
+			return value;
+		}
+		if ( seen.has( value ) ) {
+			return seen.get( value );
+		}
+		if ( depth > 5 ) {
+			return '[Object]';
+		}
+
+		const isError = value instanceof Error;
+		let copy;
+		if ( isError ) {
+			copy = new Error();
+		} else if ( Array.isArray( value ) ) {
+			copy = [];
+		} else {
+			copy = Object.create( Object.getPrototypeOf( value ) === null ? null : Object.prototype );
+		}
+		seen.set( value, copy );
+		if ( isError ) {
+			copy.stack = undefined;
+			for ( const key of [ 'message', 'stack', 'name' ] ) {
+				const text = readDiagnosticProperty( value, key );
+				if ( typeof text === 'string' && ( key !== 'name' || text !== 'Error' ) ) {
+					Object.defineProperty( copy, key, {
+						value: redactDiagnosticText( text ),
+						configurable: true,
+					} );
+				}
+			}
+		}
+		for ( const key of Reflect.ownKeys( value ) ) {
+			if (
+				key === util.inspect.custom ||
+				( isError && [ 'message', 'stack', 'name' ].includes( key ) ) ||
+				( Array.isArray( copy ) && key === 'length' )
+			) {
+				continue;
+			}
+			const descriptor = Object.getOwnPropertyDescriptor( value, key );
+			const secret =
+				isSecretProperty( key ) ||
+				( isError &&
+					key === 'input' &&
+					readDiagnosticProperty( value, 'code' ) === 'ERR_INVALID_URL' );
+			let propertyValue = '[Accessor]';
+			if ( secret ) {
+				propertyValue = '[REDACTED]';
+			} else if ( descriptor && 'value' in descriptor ) {
+				propertyValue = sanitizeDiagnostic( descriptor.value, seen, depth + 1 );
+			}
+			Object.defineProperty( copy, key, {
+				value: propertyValue,
+				enumerable: descriptor?.enumerable ?? true,
+				configurable: true,
+			} );
+		}
+		return copy;
+	} catch {
+		return '[Uninspectable value]';
+	}
+}
+
 /**
  * Renders any thrown value as a single line without throwing.
  *
@@ -29,33 +150,36 @@ import UserError from '../user-error';
  * @returns {string} A one-line description of the value.
  */
 function describeValue( value ) {
-	if ( typeof value === 'object' && value !== null ) {
-		try {
-			return util.inspect( value, { depth: 0, breakLength: Infinity, showHidden: true } );
-		} catch {
-			return util.inspect( value, {
-				depth: 0,
-				breakLength: Infinity,
-				showHidden: true,
-				customInspect: false,
-			} );
-		}
+	try {
+		const safeValue = sanitizeDiagnostic( value );
+		return typeof safeValue === 'object' && safeValue !== null
+			? util.inspect( safeValue, {
+					depth: 0,
+					breakLength: Infinity,
+					showHidden: true,
+					customInspect: false,
+			  } )
+			: String( safeValue );
+	} catch {
+		return '[Uninspectable value]';
 	}
-
-	return String( value );
 }
 
 /**
- * Inspects a value with a depth of 5, falling back to a safer inspection if necessary.
+ * Inspects sanitized diagnostic data, returning a placeholder on failure.
  *
  * @param {unknown} value The value to inspect.
  * @returns {string} The inspected string.
  */
 function inspect( value ) {
 	try {
-		return util.inspect( value, { depth: 5, showHidden: true } );
+		return util.inspect( sanitizeDiagnostic( value ), {
+			depth: 5,
+			showHidden: true,
+			customInspect: false,
+		} );
 	} catch {
-		return util.inspect( value, { depth: 5, showHidden: true, customInspect: false } );
+		return '[Uninspectable value]';
 	}
 }
 
@@ -65,13 +189,14 @@ function inspect( value ) {
  * Bare native rejections (e.g. keytar's "An unknown error occurred.") arrive as
  * Errors whose stack is only the message line, so the usual stack print reveals
  * nothing. In those cases — and whenever the error carries extra own properties
- * that would otherwise be lost — we append a `util.inspect` dump so the details
- * survive.
+ * that would otherwise be lost — we append a sanitized `util.inspect` dump so
+ * diagnostic properties survive without printing credentials.
  *
  * @param {unknown} err The thrown value.
  * @returns {string} The formatted details to print.
  */
 export function formatFatalError( err ) {
+	err = sanitizeDiagnostic( err );
 	if ( ! ( err instanceof Error ) ) {
 		// Plain objects would stringify to "[object Object]"; inspect them instead.
 		return typeof err === 'object' && err !== null ? inspect( err ) : String( err );
@@ -95,7 +220,7 @@ export function formatFatalError( err ) {
 
 	// A stack with no frames beyond the message line tells us nothing, and extra
 	// own properties would be dropped by the stack/message print above. In either
-	// case, dump the full object so no detail is lost.
+	// case, dump the sanitized object to preserve diagnostic properties.
 	const stackHasFrames = Boolean( err.stack ) && /\n[ \t]+at\s/.test( err.stack );
 	const hasExtraOwnProps = Object.getOwnPropertyNames( err ).some(
 		prop => ! [ 'message', 'stack' ].includes( prop )
@@ -115,7 +240,7 @@ export function formatFatalError( err ) {
  */
 export function uncaughtError( err ) {
 	// Error raised when trying to write to an already closed stream
-	if ( err?.code === 'EPIPE' ) {
+	if ( readDiagnosticProperty( err, 'code' ) === 'EPIPE' ) {
 		return;
 	}
 	if ( err instanceof UserError ) {
@@ -130,7 +255,9 @@ export function uncaughtError( err ) {
 		)
 	);
 
-	const message = err instanceof Error ? err.message : describeValue( err );
+	const message = describeValue(
+		err instanceof Error ? readDiagnosticProperty( err, 'message' ) : err
+	);
 	exit.withError( `Unexpected error: ${ message }` );
 }
 process.on( 'uncaughtException', uncaughtError );
