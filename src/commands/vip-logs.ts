@@ -205,7 +205,7 @@ function printLogs( logs: { timestamp: string; message: string }[], format: LogF
 
 		const table = new CliTable3( options );
 		for ( const { timestamp, message } of logs ) {
-			const msg = message.trimRight().replace( /\t/g, '    ' );
+			const msg = message.trimRight().replaceAll( '\t', '    ' );
 			table.push( [ timestamp, msg ] );
 		}
 

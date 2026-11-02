@@ -75,7 +75,7 @@ const isStdinTty = process.stdin.isTTY;
 
 const normalizeNewlineStream = new Transform( {
 	transform( chunk: Buffer, _encoding: BufferEncoding, callback: TransformCallback ) {
-		callback( null, chunk.toString().replace( /\r/g, '\n' ) );
+		callback( null, chunk.toString().replaceAll( '\r', '\n' ) );
 	},
 } );
 
