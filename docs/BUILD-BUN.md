@@ -31,6 +31,11 @@ The result is `bin/vip` (`bin/vip.exe` on Windows). It can be copied out
 of the checkout and run without an installed Node, Bun, npm, or adjacent
 configuration directory. It embeds `config/config.publish.json`; local developer
 configuration is excluded.
+Runtime `package.json` loading is enabled so extracted CommonJS packages can
+resolve their `main` and `exports` entries, including nested dependencies. This
+can also read package metadata from the working directory. Dotenv, bunfig, and
+tsconfig autoloading remain disabled; CLI configuration still comes from the
+embedded publish file.
 
 On first use, the executable extracts runtime packages and resources into a
 private, content-addressed directory below the user's cache directory:

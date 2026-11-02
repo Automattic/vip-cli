@@ -279,7 +279,8 @@ async function main() {
 				autoloadDotenv: false,
 				autoloadBunfig: false,
 				autoloadTsconfig: false,
-				autoloadPackageJson: false,
+				// Extracted CommonJS packages need their main/exports metadata at runtime.
+				autoloadPackageJson: true,
 			},
 			target: 'bun',
 		} );

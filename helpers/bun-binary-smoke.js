@@ -332,6 +332,37 @@ async function main() {
 			assert.match( api.requests[ 2 ].body, /\bme\b/ );
 			assert.match( api.requests[ 2 ].headers.authorization || '', /Bearer /i );
 		} );
+		await check( 'dev-env list initializes Lando and lists an empty inventory', async () => {
+			const fixtureBin = path.join( scope, 'docker-fixture' );
+			fs.mkdirSync( fixtureBin );
+			const docker = path.join( fixtureBin, 'docker' );
+			const compose = path.join( fixtureBin, 'docker-compose' );
+			const script = [
+				'#!/bin/sh',
+				'case "$*" in',
+				String.raw`  'info --format json') printf '%s\n' '{"ServerVersion":"27.0.0","ClientInfo":{"Plugins":[{"Name":"compose","Version":"v2.30.0"}]}}';;`,
+				String.raw`  'version --short') printf '%s\n' '2.30.0';;`,
+				String.raw`  *) printf 'Unexpected Docker fixture command: %s\n' "$*" >&2; exit 99;;`,
+				'esac',
+				'',
+			].join( '\n' );
+			fs.writeFileSync( docker, script, { mode: 0o700 } );
+			fs.writeFileSync( compose, script, { mode: 0o700 } );
+			const config = path.join( base.env.XDG_DATA_HOME, 'vip', 'lando', 'config.yml' );
+			fs.mkdirSync( path.dirname( config ), { recursive: true } );
+			fs.writeFileSync(
+				config,
+				`dockerBin: ${ JSON.stringify( docker ) }\ncomposeBin: ${ JSON.stringify( compose ) }\n`
+			);
+			const result = await traced(
+				binary,
+				[ 'dev-env', 'list' ],
+				{ ...base, env: { ...base.env, PATH: fixtureBin, DOCKER_HOST: 'tcp://127.0.0.1:1' } },
+				path.join( scope, 'dev-env-list.trace' )
+			);
+			assertResult( result, 0, /Found 0 environments\./ );
+		} );
+
 		await check( 'edge worker project and worker templates', async () => {
 			const project = path.join( scope, 'edge-project' );
 			let result = await traced(
