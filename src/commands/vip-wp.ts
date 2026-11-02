@@ -161,7 +161,7 @@ const bindStreamEvents = ( {
 	const job = activeJob();
 	const isCurrentStream = () =>
 		job === currentJob && ! job.finished && stdoutStream === job.stdoutStream;
-	const criticalErrors = [
+	const criticalErrors = new Set( [
 		'ECONNRESET',
 		'ETIMEDOUT',
 		'EHOSTUNREACH',
@@ -169,7 +169,7 @@ const bindStreamEvents = ( {
 		'EACCES',
 		'EMFILE',
 		'ENOMEM',
-	];
+	] );
 
 	stdoutStream.on( 'error', ( err: NodeJS.ErrnoException ) => {
 		if ( ! isCurrentStream() ) {
@@ -177,7 +177,7 @@ const bindStreamEvents = ( {
 		}
 		commandRunning = false;
 
-		if ( err.code && criticalErrors.includes( err.code ) ) {
+		if ( err.code && criticalErrors.has( err.code ) ) {
 			console.error( `Error: ${ err.message }` );
 		} else {
 			// TODO handle this better

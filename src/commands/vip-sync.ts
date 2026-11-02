@@ -19,8 +19,8 @@ type SelectedEnvironment = AppEnvironment & {
 };
 
 // The API reports the current step as the overall status while a sync is in progress.
-const SYNC_RUNNING_STATUSES = [ 'running', 'started', 'importing', 'cleanup' ];
-const SYNC_SUCCESS_STATUSES = [ 'success', 'complete' ];
+const SYNC_RUNNING_STATUSES = new Set( [ 'running', 'started', 'importing', 'cleanup' ] );
+const SYNC_SUCCESS_STATUSES = new Set( [ 'success', 'complete' ] );
 
 const appQuery = `id,name,environments{
 	id,appId,type,name,defaultDomain,branch,datacenter,syncProgress{
@@ -112,7 +112,7 @@ export default command( {
 			) as SelectedEnvironment;
 
 			if ( syncing ) {
-				if ( SYNC_RUNNING_STATUSES.includes( environment.syncProgress.status as string ) ) {
+				if ( SYNC_RUNNING_STATUSES.has( environment.syncProgress.status as string ) ) {
 					console.log( chalk.yellow( 'Note:' ), 'A data sync is already running.' );
 				} else {
 					console.log( chalk.yellow( 'Note:' ), 'Someone recently ran a data sync on this site.' );
@@ -233,7 +233,7 @@ export default command( {
 						out.push( `${ chalk.yellow( 'Error:' ) } ${ syncError }` );
 					}
 					out.push( '' );
-				} else if ( SYNC_SUCCESS_STATUSES.includes( status as string ) ) {
+				} else if ( SYNC_SUCCESS_STATUSES.has( status as string ) ) {
 					clearInterval( progress );
 
 					await trackEvent( 'sync_command_success' );
