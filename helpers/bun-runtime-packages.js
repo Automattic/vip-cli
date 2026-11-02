@@ -40,7 +40,11 @@ function runtimePackagePaths( root, installed ) {
 	}
 
 	for ( const name of runtimePackages ) visit( name, root );
-	return [ ...selected ].sort();
+	return [ ...selected ].sort( ( left, right ) => {
+		if ( left < right ) return -1;
+		if ( left > right ) return 1;
+		return 0;
+	} );
 }
 
 module.exports = { runtimePackagePaths };
