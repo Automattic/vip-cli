@@ -76,8 +76,6 @@ export default command( {
 						}
 					}
 
-					// TODO: Log e
-
 					if ( bail ) {
 						return;
 					}

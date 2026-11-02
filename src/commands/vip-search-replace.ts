@@ -61,7 +61,6 @@ export default command( {
 				output?: string | boolean;
 			}
 		) => {
-			// TODO: tracks event for usage of this command stand alone
 			const { searchReplace, inPlace, output } = opt;
 
 			debug( 'Args: ', arg, 'searchReplace: ', searchReplace );

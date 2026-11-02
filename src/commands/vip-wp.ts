@@ -255,7 +255,6 @@ const launchCommandAndGetStreams = ( {
 		}
 	} );
 
-	// TODO handle all arguments
 	// TODO handle disconnect - does IOStream correctly buffer stdin?
 	// TODO stderr - currently server doesn't support it, so errors don't terminate process
 

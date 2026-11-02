@@ -149,8 +149,6 @@ export default command( {
 			trackerFn,
 			liveBackupCopyCLIOptions
 		);
-		// TODO: There's a function called handleCLIException for dev-env that handles exceptions but DevEnvSyncSQLCommand has its own implementation.
-		// We should probably use handleCLIException instead?
 		const didCommandRun = await cmd.run();
 		if ( ! didCommandRun ) {
 			console.log( 'Command canceled by user.' );
