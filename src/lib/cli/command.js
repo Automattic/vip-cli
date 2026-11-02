@@ -282,7 +282,7 @@ export function formatFatalError( err ) {
 	// case, dump the sanitized object to preserve diagnostic properties.
 	const stackHasFrames = Boolean( err.stack ) && /\n[ \t]+at\s/.test( err.stack );
 	const hasExtraOwnProps = Object.getOwnPropertyNames( err ).some(
-		prop => ! [ 'message', 'stack' ].includes( prop )
+		prop => ! [ 'message', 'stack', 'name' ].includes( prop )
 	);
 
 	if ( ! stackHasFrames || hasExtraOwnProps ) {

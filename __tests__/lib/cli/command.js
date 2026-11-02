@@ -371,6 +371,16 @@ describe( 'utils/cli/command', () => {
 			expect( result ).not.toContain( '[Error: boom]' );
 		} );
 
+		it.each( [ TypeError, RangeError ] )( 'does not duplicate a %s stack', ErrorType => {
+			const err = new ErrorType( 'boom' );
+			expect( formatFatalError( err ) ).toBe( err.stack );
+		} );
+
+		it( 'still includes extra properties on error subclasses', () => {
+			const err = Object.assign( new TypeError( 'boom' ), { detail: 'diagnostic detail' } );
+			expect( formatFatalError( err ) ).toContain( 'diagnostic detail' );
+		} );
+
 		it( 'appends an inspect dump for a stack-less bare native-style error', () => {
 			// keytar-style rejection: an Error whose stack is only the message line.
 			const err = new Error( 'An unknown error occurred.' );

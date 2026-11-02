@@ -72,7 +72,7 @@ jobs:
         node-version:
           - 'lts/*'
           - 'lts/-1'
-          - 'current'
+          - current
     steps:
       - name: Check out the source code
         uses: actions/checkout@v7
@@ -81,7 +81,6 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node-version }}
-          check-latest: true
           cache: npm
           cache-dependency-path: package-lock.json
 
