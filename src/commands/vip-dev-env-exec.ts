@@ -92,7 +92,7 @@ export default command( {
 
 		try {
 			// to avoid confusion let's enforce -- as a splitter for arguments for this command and wp itself
-			const argSplitterIx = process.argv.findIndex( argument => '--' === argument );
+			const argSplitterIx = process.argv.indexOf( '--' );
 			const argSplitterFound = argSplitterIx > -1;
 			if ( unmatchedArgs.length > 0 && ! argSplitterFound ) {
 				throw new Error(

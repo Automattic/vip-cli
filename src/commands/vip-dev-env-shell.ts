@@ -54,7 +54,7 @@ const examples = [
 ];
 
 function getCommand( args: string[] ): string[] {
-	const splitterIdx = process.argv.findIndex( argument => '--' === argument );
+	const splitterIdx = process.argv.indexOf( '--' );
 	if ( args.length > 0 && splitterIdx === -1 ) {
 		throw new Error(
 			'A double dash ("--") must separate the arguments of "vip" from those of the command to be executed. Run "vip dev-env shell --help" for examples.'
