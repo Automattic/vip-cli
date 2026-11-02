@@ -57,6 +57,15 @@ It does not contain a second CLI
 entrypoint or a `dist` tree. Bun bytecode compilation caches the compiled CLI
 code in the executable to reduce startup parsing time.
 
+Lodash, js-yaml, Bluebird, object-hash, and fast-glob are also compiled into
+bytecode. The launcher registers lazy module-cache entries at their extracted
+entrypoint paths, so filesystem-loaded Lando code and plugins reuse the compiled
+exports. Registration does not evaluate the dependencies. Their original files
+remain in the archive for filesystem-based tooling; Lando itself, plugin discovery,
+scripts, and assets retain their real paths. The portable smoke check replaces
+these extracted entrypoints with throwing files and verifies that the executable
+still bootstraps Lando without contacting Docker.
+
 Later runs reuse that directory using the archive digest embedded at build time,
 without reading or hashing the archive again, or loading the archive extractor. A cache miss verifies the embedded
 archive bytes against that digest before extracting them. Cache ownership and

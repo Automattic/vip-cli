@@ -1,14 +1,25 @@
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { c as createTar } from 'tar';
 
+import { javascriptString } from './bun-code-literal.js';
 import { runtimePackagePaths } from './bun-runtime-packages.js';
 
 const root = path.resolve( path.dirname( fileURLToPath( import.meta.url ) ), '..' );
+// These dependencies have no runtime files relative to their module location.
+// Lando itself, its plugins, native addons, and shell helpers stay on disk.
+const compiledRuntimePackages = new Set( [
+	'lodash',
+	'js-yaml',
+	'bluebird',
+	'object-hash',
+	'fast-glob',
+] );
 const supportedTargets = {
 	'bun-linux-x64': { platform: 'linux', go: 'linux/amd64', keytar: 'linux-x64' },
 	'bun-linux-arm64': { platform: 'linux', go: 'linux/arm64', keytar: 'linux-arm64' },
@@ -71,6 +82,8 @@ function productionPackagePaths() {
 
 function stagePackages( payload, targetDetails ) {
 	const installed = runtimePackagePaths( root, productionPackagePaths() );
+	const compiledModules = [];
+	const requireFromRoot = createRequire( path.join( root, 'package.json' ) );
 	for ( const source of installed ) {
 		const relative = path.relative( root, source );
 		if ( relative.startsWith( '..' ) || ! relative.startsWith( `node_modules${ path.sep }` ) ) {
@@ -79,6 +92,10 @@ function stagePackages( payload, targetDetails ) {
 		const packageName = JSON.parse(
 			fs.readFileSync( path.join( source, 'package.json' ), 'utf8' )
 		).name;
+		if ( compiledRuntimePackages.has( packageName ) ) {
+			const filename = requireFromRoot.resolve( source );
+			compiledModules.push( { filename, relative: path.relative( root, filename ) } );
+		}
 		const target = path.join( payload, relative );
 		fs.cpSync( source, target, {
 			recursive: true,
@@ -153,6 +170,7 @@ function stagePackages( payload, targetDetails ) {
 	fs.copyFileSync( keytarSource, keytarTarget );
 	console.log( `Staged ${ installed.length } production packages.` );
 	console.log( `Staged keytar addon for ${ targetDetails.keytar }.` );
+	return compiledModules;
 }
 
 function stageAssets( payload ) {
@@ -215,7 +233,7 @@ function stageCli( payload ) {
 	);
 }
 
-function launcherSource( archiveDigest ) {
+function launcherSource( archiveDigest, compiledModules ) {
 	const helper = path.join( root, 'src/lib/cli/standalone-resources.ts' );
 	const commands = fs
 		.readdirSync( path.join( root, 'dist', 'commands' ) )
@@ -226,26 +244,41 @@ function launcherSource( archiveDigest ) {
 	}
 	const loaders = commands.map( name => {
 		const filename = path.join( root, 'dist', 'commands', name );
-		return `${ JSON.stringify( name ) }: () => require(${ JSON.stringify( filename ) }),`;
+		return `${ javascriptString( name ) }: () => require(${ javascriptString( filename ) }),`;
 	} );
 	const entry = path.join( root, 'dist', 'bin', 'vip.js' );
 	return [
 		"import archivePath from './resources.tar.gz' with { type: 'file' };",
-		`import { getBundledResourceRoot } from ${ JSON.stringify( helper ) };`,
+		"import { createRequire } from 'node:module';",
+		"import fs from 'node:fs';",
+		"import path from 'node:path';",
+		`import { getBundledResourceRoot } from ${ javascriptString( helper ) };`,
 		String.raw`const debugEnabled = (process.env.DEBUG || '').split(/[,\s]+/).includes('@automattic/vip:bun-launcher');`,
 		String.raw`const trace = message => { if (debugEnabled) process.stderr.write('@automattic/vip:bun-launcher ' + message + '\n'); };`,
 		'globalThis.__VIP_BUNDLED_ARCHIVE_PATH__ = archivePath;',
-		`globalThis.__VIP_BUNDLED_ARCHIVE_SHA256__ = ${ JSON.stringify( archiveDigest ) };`,
+		`globalThis.__VIP_BUNDLED_ARCHIVE_SHA256__ = ${ javascriptString( archiveDigest ) };`,
 		"trace('extract:start');",
 		'const resourceRoot = getBundledResourceRoot();',
 		"trace('extract:ready');",
 		"if (!resourceRoot) throw new Error('Standalone VIP resources were not extracted.');",
 		'globalThis.__VIP_BUNDLED_RESOURCE_ROOT__ = resourceRoot;',
+		// Disk-loaded plugins resolve the same entrypoints as Lando. Populate their
+		// cache slots lazily so both consumers share the compiled module instance.
+		'const moduleRoot = fs.realpathSync(resourceRoot);',
+		"const runtimeCache = createRequire(path.join(moduleRoot, '__vip_loader__.cjs')).cache;",
+		...compiledModules.flatMap( ( { filename, relative } ) => [
+			'{',
+			`const filename = path.join(moduleRoot, ${ javascriptString( relative ) });`,
+			`runtimeCache[filename] = { id: filename, filename, loaded: true, get exports() { return require(${ javascriptString(
+				filename
+			) }); } };`,
+			'}',
+		] ),
 		'globalThis.__VIP_BUNDLED_COMMANDS__ = {',
 		...loaders,
 		'};',
-		`process.argv[1] = ${ JSON.stringify( entry ) };`,
-		`require(${ JSON.stringify( entry ) });`,
+		`process.argv[1] = ${ javascriptString( entry ) };`,
+		`require(${ javascriptString( entry ) });`,
 		'',
 	].join( '\n' );
 }
@@ -258,7 +291,7 @@ async function main() {
 		const payload = path.join( temporary, 'payload' );
 		fs.mkdirSync( payload );
 		stageCli( payload );
-		stagePackages( payload, target );
+		const compiledModules = stagePackages( payload, target );
 		stageAssets( payload );
 		stageSearchReplace( payload, target );
 		const archive = path.join( temporary, 'resources.tar.gz' );
@@ -270,7 +303,7 @@ async function main() {
 		const archiveDigest = createHash( 'sha256' )
 			.update( fs.readFileSync( archive ) )
 			.digest( 'hex' );
-		fs.writeFileSync( entry, launcherSource( archiveDigest ) );
+		fs.writeFileSync( entry, launcherSource( archiveDigest, compiledModules ) );
 		fs.mkdirSync( path.dirname( output ), { recursive: true } );
 		const result = await globalThis.Bun.build( {
 			entrypoints: [ entry ],

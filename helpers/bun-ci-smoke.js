@@ -10,6 +10,16 @@ const path = require( 'node:path' );
 const sourceRoot = path.resolve( __dirname, '..' );
 const scope = fs.mkdtempSync( path.join( os.tmpdir(), 'vip-bun-ci-' ) );
 
+function overwrite( filename, contents ) {
+	const descriptor = fs.openSync( filename, 'r+' );
+	try {
+		fs.ftruncateSync( descriptor );
+		fs.writeFileSync( descriptor, contents );
+	} finally {
+		fs.closeSync( descriptor );
+	}
+}
+
 function run( executable, args, env, cwd = scope, timeout = 60000 ) {
 	const result = spawnSync( executable, args, {
 		cwd,
@@ -118,6 +128,53 @@ try {
 		)
 	);
 	console.log( 'PASS relocated help, version, native addon, Lando, and offline companion' );
+	// Only mutate our disposable cache, after probing its disk-based resources.
+	// Lando must use the compiled entrypoints even when their disk copies fail.
+	for ( const relative of [
+		'lodash/lodash.js',
+		'js-yaml/dist/js-yaml.cjs.js',
+		'bluebird/js/release/bluebird.js',
+		'object-hash/index.js',
+		'fast-glob/out/index.js',
+	] ) {
+		const filename = path.join( extracted, 'node_modules', relative );
+		overwrite( filename, 'throw new Error("Uncompiled runtime dependency loaded");\n' );
+	}
+	// Analytics initialization reads/writes the OS keychain even with DO_NOT_TRACK.
+	// Keep this full-command fixture isolated; the real native addon was probed above.
+	const keytarFixture = `module.exports = {
+		getPassword: async service => service.endsWith('-uuid') ? 'fixture-uuid' : null,
+		setPassword: async () => { throw new Error('Unexpected credential write'); },
+		deletePassword: async () => { throw new Error('Unexpected credential deletion'); }
+	};`;
+	const keytarEntry = path.join(
+		extracted,
+		'node_modules',
+		'@github',
+		'keytar',
+		'lib',
+		'keytar.js'
+	);
+	overwrite( keytarEntry, keytarFixture );
+	const landoState = path.join( env.XDG_DATA_HOME, 'vip', 'lando' );
+	fs.mkdirSync( path.join( landoState, 'cache' ), { recursive: true } );
+	fs.writeFileSync(
+		path.join( landoState, 'config.yml' ),
+		'dockerBin: false\ncomposeBin: false\nversions:\n  engine: "27.0.0"\n  compose: "2.30.0"\n  composePlugin: "2.30.0"\n'
+	);
+	fs.writeFileSync(
+		path.join( landoState, 'cache', 'docker-version' ),
+		JSON.stringify( { engine: '27.0.0', compose: '2.30.0', composePlugin: '2.30.0' } )
+	);
+	assert.match(
+		run( binary, [ 'dev-env', 'list' ], {
+			...env,
+			DOCKER_HOST: 'tcp://127.0.0.1:1',
+			DEBUG: `${ env.DEBUG },@automattic/vip:bin:dev-environment`,
+		} ),
+		/Found 0 environments\./
+	);
+	console.log( 'PASS compiled Lando dependencies with failing source entrypoints' );
 } finally {
 	fs.rmSync( scope, { recursive: true, force: true } );
 }
