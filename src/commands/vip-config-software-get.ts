@@ -126,7 +126,7 @@ export default command( {
 		}
 
 		const preFormatted = chosenSettings
-			.filter( softwareSetting => Boolean( softwareSetting ) )
+			.filter( Boolean )
 			.map(
 				softwareSetting =>
 					formatSoftwareSettings(
