@@ -56,6 +56,27 @@ describe( 'utils/cli/config', () => {
 		expect( actualReads ).toEqual( reads );
 	} );
 
+	it( 'loads only publish configuration from the standalone resource root', () => {
+		const originalRoot = globalThis.__VIP_BUNDLED_RESOURCE_ROOT__;
+		const resourceRoot = path.join( process.cwd(), 'isolated-runtime' );
+		const read = jest.spyOn( fs, 'readFileSync' ).mockReturnValue( '{"environment":"production"}' );
+		globalThis.__VIP_BUNDLED_RESOURCE_ROOT__ = resourceRoot;
+		try {
+			expect( loadConfigFile() ).toEqual( { environment: 'production' } );
+			expect( read ).toHaveBeenCalledTimes( 1 );
+			expect( read ).toHaveBeenCalledWith(
+				path.join( resourceRoot, 'config/config.publish.json' ),
+				'utf-8'
+			);
+		} finally {
+			if ( originalRoot === undefined ) {
+				delete globalThis.__VIP_BUNDLED_RESOURCE_ROOT__;
+			} else {
+				globalThis.__VIP_BUNDLED_RESOURCE_ROOT__ = originalRoot;
+			}
+		}
+	} );
+
 	it( 'should return null when both config files are missing with ENOENT', () => {
 		const origReadFileSync = fs.readFileSync;
 		jest.spyOn( fs, 'readFileSync' ).mockImplementation( ( filePath, ...params ) => {

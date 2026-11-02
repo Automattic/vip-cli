@@ -205,32 +205,30 @@ function stageCli( payload ) {
 	if ( ! fs.statSync( path.join( compiled, 'bin/vip.js' ), { throwIfNoEntry: false } )?.isFile() ) {
 		throw new Error( 'Build the Node.js CLI before creating the Bun executable.' );
 	}
-	fs.cpSync( compiled, path.join( payload, 'dist' ), { recursive: true } );
 	fs.copyFileSync( path.join( root, 'package.json' ), path.join( payload, 'package.json' ) );
 	fs.mkdirSync( path.join( payload, 'config' ) );
 	fs.copyFileSync(
 		path.join( root, 'config/config.publish.json' ),
 		path.join( payload, 'config/config.publish.json' )
 	);
-	fs.writeFileSync(
-		path.join( payload, 'entry.cjs' ),
-		[
-			"const path = require('node:path');",
-			'globalThis.__VIP_BUNDLED_RESOURCE_ROOT__ = __dirname;',
-			"const filename = path.join(__dirname, 'dist/bin/vip.js');",
-			'process.argv[1] = filename;',
-			'require(filename);',
-			'',
-		].join( '\n' )
-	);
 }
 
 function launcherSource() {
 	const helper = path.join( root, 'src/lib/cli/standalone-resources.ts' );
+	const commands = fs
+		.readdirSync( path.join( root, 'dist', 'commands' ) )
+		.filter( name => /^vip-[a-z0-9-]+\.js$/.test( name ) )
+		.sort();
+	if ( commands.length === 0 ) {
+		throw new Error( 'No compiled CLI commands were found.' );
+	}
+	const loaders = commands.map( name => {
+		const filename = path.join( root, 'dist', 'commands', name );
+		return `${ JSON.stringify( name ) }: () => require(${ JSON.stringify( filename ) }),`;
+	} );
+	const entry = path.join( root, 'dist', 'bin', 'vip.js' );
 	return [
 		"import archivePath from './resources.tar.gz' with { type: 'file' };",
-		"import { spawn } from 'node:child_process';",
-		"import path from 'node:path';",
 		`import { getBundledResourceRoot } from ${ JSON.stringify( helper ) };`,
 		String.raw`const debugEnabled = (process.env.DEBUG || '').split(/[,\s]+/).includes('@automattic/vip:bun-launcher');`,
 		String.raw`const trace = message => { if (debugEnabled) process.stderr.write('@automattic/vip:bun-launcher ' + message + '\n'); };`,
@@ -239,27 +237,12 @@ function launcherSource() {
 		'const resourceRoot = getBundledResourceRoot();',
 		"trace('extract:ready');",
 		"if (!resourceRoot) throw new Error('Standalone VIP resources were not extracted.');",
-		"const script = path.join(resourceRoot, 'entry.cjs');",
-		"trace('spawn:before');",
-		"const child = spawn(process.execPath, ['--no-env-file', script, ...process.argv.slice(2)], {",
-		"  stdio: 'inherit',",
-		"  env: { ...process.env, BUN_BE_BUN: '1' },",
-		'});',
-		"child.once('spawn', () => trace('child:spawn'));",
-		"child.once('exit', (code, signal) => trace('child:exit code=' + code + ' signal=' + signal));",
-		"const signals = process.platform === 'win32' ? ['SIGINT', 'SIGTERM'] : ['SIGINT', 'SIGTERM', 'SIGHUP'];",
-		'const handlers = signals.map(signal => {',
-		'  const handler = () => child.kill(signal);',
-		'  process.on(signal, handler);',
-		'  return [signal, handler];',
-		'});',
-		'const { code, signal } = await new Promise((resolve, reject) => {',
-		"  child.once('error', error => { trace('child:error code=' + (error.code || 'unknown')); reject(error); });",
-		"  child.once('close', (code, signal) => { trace('child:close code=' + code + ' signal=' + signal); resolve({ code, signal }); });",
-		'});',
-		'for (const [signalName, handler] of handlers) process.off(signalName, handler);',
-		"if (signal && process.platform !== 'win32') process.kill(process.pid, signal);",
-		"process.exitCode = code ?? (signal ? 128 + (require('node:os').constants.signals[signal] || 1) : 1);",
+		'globalThis.__VIP_BUNDLED_RESOURCE_ROOT__ = resourceRoot;',
+		'globalThis.__VIP_BUNDLED_COMMANDS__ = {',
+		...loaders,
+		'};',
+		`process.argv[1] = ${ JSON.stringify( entry ) };`,
+		`require(${ JSON.stringify( entry ) });`,
 		'',
 	].join( '\n' );
 }
@@ -278,13 +261,14 @@ async function main() {
 		const archive = path.join( temporary, 'resources.tar.gz' );
 		await createTar(
 			{ cwd: payload, file: archive, gzip: true, portable: true, mtime: new Date( 0 ) },
-			[ 'entry.cjs', 'dist', 'package.json', 'config', 'node_modules', 'assets', 'bin' ]
+			[ 'package.json', 'config', 'node_modules', 'assets', 'bin' ]
 		);
 		const entry = path.join( temporary, 'launcher.ts' );
 		fs.writeFileSync( entry, launcherSource() );
 		fs.mkdirSync( path.dirname( output ), { recursive: true } );
 		const result = await globalThis.Bun.build( {
 			entrypoints: [ entry ],
+			bytecode: true,
 			compile: {
 				outfile: output,
 				...( target.explicit ? { target: target.name } : {} ),

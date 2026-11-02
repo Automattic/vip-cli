@@ -20,10 +20,10 @@ describe( 'standalone runtime resources', () => {
 		const previousBun = globalThis.Bun;
 
 		try {
-			fs.mkdirSync( path.join( root, 'dist', 'bin' ), { recursive: true } );
+			fs.mkdirSync( path.join( root, 'config' ), { recursive: true } );
 			fs.mkdirSync( packageDir, { recursive: true } );
 			fs.mkdirSync( path.join( root, 'bin' ), { recursive: true } );
-			fs.writeFileSync( path.join( root, 'dist', 'bin', 'vip.js' ), '// physical entry\n' );
+			fs.writeFileSync( path.join( root, 'config', 'config.publish.json' ), '{}' );
 			fs.writeFileSync( path.join( packageDir, 'index.js' ), 'module.exports = "child";\n' );
 			fs.writeFileSync( path.join( root, 'bin', binaryName ), 'fixture binary\n' );
 			globalThis.__VIP_BUNDLED_RESOURCE_ROOT__ = root;

@@ -5,7 +5,7 @@ import { CombinedGraphQLErrors } from '@apollo/client/core';
 import chalk from 'chalk';
 import debugLib from 'debug';
 import gql from 'graphql-tag';
-import * as ssh2 from 'ssh2';
+import { createRequire } from 'node:module';
 
 /**
  * Internal dependencies
@@ -13,6 +13,7 @@ import * as ssh2 from 'ssh2';
 import pkg from '../../package.json';
 import { App, AppEnvironment } from '../graphqlTypes';
 import API from '../lib/api';
+import { getBundledResourceRoot, loadBundledPackage } from '../lib/cli/standalone-resources';
 import { CommandTracker, makeCommandTracker } from '../lib/tracker';
 
 const debug = debugLib( '@automattic/vip:wp/ssh' );
@@ -185,6 +186,9 @@ export class WPCliCommandOverSSH {
 		inputToken: string;
 	} ) {
 		return new Promise< void >( ( resolve, reject ) => {
+			const ssh2: typeof import('ssh2') = getBundledResourceRoot()
+				? loadBundledPackage< typeof import('ssh2') >( 'ssh2' )
+				: ( createRequire( __filename )( 'ssh2' ) as typeof import('ssh2') );
 			const conn = new ssh2.Client();
 
 			const columns = process.stdout.columns || NON_TTY_COLUMNS;

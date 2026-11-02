@@ -153,17 +153,26 @@ async function mockApi() {
 		for await ( const chunk of request ) body += chunk;
 		requests.push( { method: request.method, url: request.url, headers: request.headers, body } );
 		response.writeHead( 200, { 'content-type': 'application/json' } );
+		const isAppList = /query Apps\b/.test( JSON.parse( body ).query || '' );
 		response.end(
 			JSON.stringify( {
-				data: {
-					me: {
-						id: 42,
-						displayName: 'Binary Fixture',
-						trackingUserId: 'fixture',
-						isVIP: false,
-						organizationRoles: { nodes: [] },
-					},
-				},
+				data: isAppList
+					? {
+							apps: {
+								total: 1,
+								nextCursor: null,
+								edges: [ { id: 1, name: 'Fixture App', repo: 'fixture/repo' } ],
+							},
+					  }
+					: {
+							me: {
+								id: 42,
+								displayName: 'Binary Fixture',
+								trackingUserId: 'fixture',
+								isVIP: false,
+								organizationRoles: { nodes: [] },
+							},
+					  },
 			} )
 		);
 	} );
@@ -244,11 +253,14 @@ async function main() {
 				...base.env,
 				DEBUG: '@automattic/vip:lib:cli:config,@automattic/vip:keychain,@automattic/vip:bin:vip',
 			};
-			const result = await run( binary, [ '--help' ], { ...base, env } );
+			const traceFile = path.join( scope, 'root-help.trace' );
+			const result = await traced( binary, [ '--help' ], { ...base, env }, traceFile );
 			assertResult( result, 0, /Usage:/ );
 			assert.doesNotMatch( result.stderr, /Could not find a valid configuration file/ );
 			assert.match( result.stderr, /falling back to Insecure keychain/ );
 			assert.doesNotMatch( result.stderr, /RUNNING DEV VERSION/ );
+			const executions = fs.readFileSync( traceFile, 'utf8' ).match( /execve\(/g ) || [];
+			assert.equal( executions.length, 1, 'CLI help must run in the compiled executable process' );
 		} );
 
 		for ( const args of routes ) {
@@ -270,6 +282,7 @@ async function main() {
 		await check( 'unknown command error', async () => {
 			const result = await run( binary, [ 'no-such-command' ], base );
 			assertResult( result, 1, /not a valid subcommand/ );
+			assert.match( result.stdout + result.stderr, /Runtime bun-standalone/ );
 		} );
 		await check( 'nested -- boundary', async () => {
 			const result = await run( binary, [ 'wp', '--help', '--', 'option', 'get', 'home' ], base );
@@ -296,14 +309,28 @@ async function main() {
 		} );
 
 		assert.equal( api.requests.length, 0, 'Non-API checks contacted the mock API' );
+		for ( const format of [ 'table', 'csv' ] ) {
+			// eslint-disable-next-line no-await-in-loop
+			await check( `mocked GraphQL app list with ${ format } renderer`, async () => {
+				const result = await traced(
+					binary,
+					[ 'app', 'list', `--format=${ format }` ],
+					base,
+					path.join( scope, `app-list-${ format }.trace` )
+				);
+				assertResult( result, 0, /Fixture App/ );
+				if ( format === 'csv' ) assert.match( result.stdout, /"id","name","repo"/ );
+			} );
+		}
+
 		await check( 'mocked GraphQL whoami with real auth', async () => {
 			const result = await traced( binary, [ 'whoami' ], base, path.join( scope, 'api.trace' ) );
 			assertResult( result, 0, /Howdy Binary Fixture/ );
-			assert.equal( api.requests.length, 1 );
-			assert.equal( api.requests[ 0 ].method, 'POST' );
-			assert.match( api.requests[ 0 ].url, /^\/graphql/ );
-			assert.match( api.requests[ 0 ].body, /\bme\b/ );
-			assert.match( api.requests[ 0 ].headers.authorization || '', /Bearer /i );
+			assert.equal( api.requests.length, 3 );
+			assert.equal( api.requests[ 2 ].method, 'POST' );
+			assert.match( api.requests[ 2 ].url, /^\/graphql/ );
+			assert.match( api.requests[ 2 ].body, /\bme\b/ );
+			assert.match( api.requests[ 2 ].headers.authorization || '', /Bearer /i );
 		} );
 		await check( 'edge worker project and worker templates', async () => {
 			const project = path.join( scope, 'edge-project' );
@@ -333,7 +360,7 @@ async function main() {
 				/onClientResponse/
 			);
 		} );
-		assert.equal( api.requests.length, 1, 'Local commands contacted the mock API' );
+		assert.equal( api.requests.length, 3, 'Local commands contacted the mock API' );
 		console.log(
 			`Native executable smoke: ${ passed } checks passed (${
 				routes.length - 1

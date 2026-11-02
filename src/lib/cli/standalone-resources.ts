@@ -56,8 +56,8 @@ function validCache( root: string, digest: string ): boolean {
 
 /**
  * A Bun executable embeds one archive of runtime files that must retain their
- * package layout (Lando plugins, native addons, and templates). Dynamic CommonJS
- * loading and child-process execution require real, writable filesystem paths.
+ * package layout (Lando plugins, native addons, and templates). These resources
+ * require real filesystem paths even though the CLI code runs inside Bun.
  */
 export function getBundledResourceRoot(): string | null {
 	if ( resourceRoot !== undefined ) {
@@ -70,7 +70,9 @@ export function getBundledResourceRoot(): string | null {
 		if (
 			! fs.statSync( root ).isDirectory() ||
 			! fs
-				.statSync( path.join( root, 'dist', 'bin', 'vip.js' ), { throwIfNoEntry: false } )
+				.statSync( path.join( root, 'config', 'config.publish.json' ), {
+					throwIfNoEntry: false,
+				} )
 				?.isFile()
 		) {
 			throw new Error( 'Standalone VIP resource root is incomplete.' );

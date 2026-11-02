@@ -99,10 +99,21 @@ try {
 	const cache = path.join( env.XDG_CACHE_HOME, 'vip-cli', 'standalone-resources' );
 	const roots = fs.readdirSync( cache ).filter( entry => /^[a-f0-9]{64}$/.test( entry ) );
 	assert.equal( roots.length, 1, 'Expected one extracted runtime payload' );
+	const extracted = path.join( cache, roots[ 0 ] );
+	assert.equal(
+		fs.existsSync( path.join( extracted, 'dist' ) ),
+		false,
+		'CLI code must be compiled into the executable'
+	);
+	assert.equal(
+		fs.existsSync( path.join( extracted, 'entry.cjs' ) ),
+		false,
+		'Extracted CLI entrypoint must not exist'
+	);
 	process.stdout.write(
 		run(
 			process.execPath,
-			[ path.join( __dirname, 'bun-resource-smoke.js' ), binary, path.join( cache, roots[ 0 ] ) ],
+			[ path.join( __dirname, 'bun-resource-smoke.js' ), binary, extracted ],
 			env
 		)
 	);

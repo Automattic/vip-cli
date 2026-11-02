@@ -1,6 +1,9 @@
 import { createRequire } from 'node:module';
+import path from 'node:path';
 
 const loadCommand = createRequire( __filename );
+type CommandModule = { default?: Promise< unknown > };
+type BundledCommands = Record< string, () => CommandModule >;
 
 /** Load the selected command in this process, with its historical argv shape. */
 export async function runCommand( filename: string, argv: string[] ): Promise< unknown > {
@@ -9,7 +12,15 @@ export async function runCommand( filename: string, argv: string[] ): Promise< u
 	try {
 		// Commands export their execution promise so nested dispatch waits for all
 		// middleware and handler work before restoring the caller's argv.
-		const commandModule = loadCommand( filename ) as { default?: Promise< unknown > };
+		const bundledCommands = (
+			globalThis as typeof globalThis & { __VIP_BUNDLED_COMMANDS__?: BundledCommands }
+		 ).__VIP_BUNDLED_COMMANDS__;
+		const commandModule = bundledCommands
+			? bundledCommands[ path.basename( filename ) ]?.()
+			: ( loadCommand( filename ) as CommandModule );
+		if ( ! commandModule ) {
+			throw new Error( `Bundled command is unavailable: ${ filename }` );
+		}
 		if (
 			commandModule.default === undefined ||
 			commandModule.default === null ||
