@@ -140,12 +140,18 @@ try {
 		const filename = path.join( extracted, 'node_modules', relative );
 		overwrite( filename, 'throw new Error("Uncompiled runtime dependency loaded");\n' );
 	}
-	// Analytics initialization reads/writes the OS keychain even with DO_NOT_TRACK.
-	// Keep this full-command fixture isolated; the real native addon was probed above.
-	const keytarFixture = `module.exports = {
-		getPassword: async service => service.endsWith('-uuid') ? 'fixture-uuid' : null,
-		setPassword: async () => { throw new Error('Unexpected credential write'); },
-		deletePassword: async () => { throw new Error('Unexpected credential deletion'); }
+	// Keep authentication reads isolated and audit analytics UUID access under opt-out.
+	// The real native addon was probed above without credential access.
+	const keytarFixture = `const audit = operation => require('node:fs').appendFileSync(
+		process.env.VIP_KEYCHAIN_FIXTURE_AUDIT, operation + '\\n'
+	);
+	module.exports = {
+		getPassword: async service => {
+			if (service.endsWith('-uuid')) { audit('uuid read'); return 'fixture-uuid'; }
+			return null;
+		},
+		setPassword: async () => { audit('write'); throw new Error('Unexpected credential write'); },
+		deletePassword: async () => { audit('delete'); throw new Error('Unexpected credential deletion'); }
 	};`;
 	const keytarEntry = path.join(
 		extracted,
@@ -166,14 +172,17 @@ try {
 		path.join( landoState, 'cache', 'docker-version' ),
 		JSON.stringify( { engine: '27.0.0', compose: '2.30.0', composePlugin: '2.30.0' } )
 	);
+	const keychainAudit = path.join( scope, 'keychain-access.log' );
 	assert.match(
 		run( binary, [ 'dev-env', 'list' ], {
 			...env,
+			VIP_KEYCHAIN_FIXTURE_AUDIT: keychainAudit,
 			DOCKER_HOST: 'tcp://127.0.0.1:1',
 			DEBUG: `${ env.DEBUG },@automattic/vip:bin:dev-environment`,
 		} ),
 		/Found 0 environments\./
 	);
+	assert.equal( fs.existsSync( keychainAudit ), false, 'Opt-out accessed analytics UUID storage' );
 	console.log( 'PASS compiled Lando dependencies with failing source entrypoints' );
 } finally {
 	fs.rmSync( scope, { recursive: true, force: true } );

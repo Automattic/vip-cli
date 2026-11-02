@@ -59,6 +59,10 @@ export async function trackEvent(
 	name: string,
 	props: Record< string, unknown > = {}
 ): Promise< ( false | Response )[] > {
+	if ( process.env.DO_NOT_TRACK ) {
+		debug( `trackEvent() for ${ name } => skipping per DO_NOT_TRACK variable` );
+		return [];
+	}
 	try {
 		await Token.uuid();
 		const client = await getInstance();
@@ -70,7 +74,7 @@ export async function trackEvent(
 }
 
 export async function aliasUser( vipUserId: number ): Promise< void > {
-	if ( vipUserId ) {
+	if ( vipUserId && ! process.env.DO_NOT_TRACK ) {
 		try {
 			await trackEvent( '_alias_user', {
 				ui: vipUserId,
