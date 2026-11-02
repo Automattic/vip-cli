@@ -207,8 +207,7 @@ export default command( {
 				} = environment.syncProgress;
 
 				if ( progressText ) {
-					out.push( ` ${ progressText }` );
-					out.push( '' );
+					out.push( ` ${ progressText }`, '' );
 				}
 
 				if ( status === 'failed' ) {
@@ -238,8 +237,7 @@ export default command( {
 
 					await trackEvent( 'sync_command_success' );
 
-					out.push( `${ marks.success } Data Sync is finished for ${ opts.app.name }.` );
-					out.push( '' );
+					out.push( `${ marks.success } Data Sync is finished for ${ opts.app.name }.`, '' );
 				} else {
 					// Running, or not_syncing until the job shows up: keep polling.
 					out.push( 'Press ^C to hide progress. Data sync will continue in the background.' );
