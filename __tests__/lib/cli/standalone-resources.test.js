@@ -177,12 +177,16 @@ describe( 'standalone runtime resources', () => {
 					throw new Error( 'Archive must not be read on a cache hit' );
 				return read( filename, ...args );
 			} );
+			jest.doMock( 'tar', () => {
+				throw new Error( 'Archive extractor must not load on a cache hit' );
+			} );
 			try {
 				jest.isolateModules( () => {
 					const resources = require( '../../../src/lib/cli/standalone-resources' );
 					expect( resources.getBundledResourceRoot() ).toBe( root );
 				} );
 			} finally {
+				jest.dontMock( 'tar' );
 				spy.mockRestore();
 			}
 		} finally {

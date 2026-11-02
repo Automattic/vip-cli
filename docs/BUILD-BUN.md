@@ -49,7 +49,7 @@ entrypoint or a `dist` tree. Bun bytecode compilation caches the compiled CLI
 code in the executable to reduce startup parsing time.
 
 Later runs reuse that directory using the archive digest embedded at build time,
-without reading or hashing the archive again. A cache miss verifies the embedded
+without reading or hashing the archive again, or loading the archive extractor. A cache miss verifies the embedded
 archive bytes against that digest before extracting them. Cache ownership and
 completion-marker checks still apply. The cache must be writable on first use
 and allow execution of the search-replace companion and loading of native addons.

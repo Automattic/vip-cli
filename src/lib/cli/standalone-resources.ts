@@ -3,7 +3,6 @@ import fs from 'node:fs';
 import { createRequire } from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
-import { x as extractTar } from 'tar';
 
 type StandaloneGlobal = typeof globalThis & {
 	Bun?: { isStandaloneExecutable?: boolean };
@@ -122,6 +121,9 @@ export function getBundledResourceRoot(): string | null {
 		const trace = process.env.DEBUG?.split( ',' ).includes( '@automattic/vip:bun-launcher' );
 		const started = Date.now();
 		let entries = 0;
+		// Cache hits never need the archive parser or its dependencies.
+		// eslint-disable-next-line @typescript-eslint/no-require-imports
+		const { x: extractTar } = require( 'tar' ) as typeof import('tar');
 		extractTar( {
 			cwd: staging,
 			file: physicalArchive,
