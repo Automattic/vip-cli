@@ -12,11 +12,18 @@ interface Config {
 const debug = debugLib( '@automattic/vip:lib:cli:config' );
 
 export function loadConfigFile(): Config | null {
-	const paths = [
-		// Get `local` config first; this will only exist in dev as it's npmignore-d.
-		path.join( __dirname, '../../../config/config.local.json' ),
-		path.join( __dirname, '../../../config/config.publish.json' ),
-	];
+	const resourceRoot = (
+		globalThis as typeof globalThis & {
+			__VIP_BUNDLED_RESOURCE_ROOT__?: string;
+		}
+	 ).__VIP_BUNDLED_RESOURCE_ROOT__;
+	const paths = resourceRoot
+		? [ path.join( resourceRoot, 'config/config.publish.json' ) ]
+		: [
+				// Get `local` config first; this will only exist in dev as it's npmignore-d.
+				path.join( __dirname, '../../../config/config.local.json' ),
+				path.join( __dirname, '../../../config/config.publish.json' ),
+		  ];
 	for ( const filePath of paths ) {
 		try {
 			const data = fs.readFileSync( filePath, 'utf-8' );

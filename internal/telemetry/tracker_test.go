@@ -3,6 +3,8 @@ package telemetry
 import (
 	"sync"
 	"testing"
+
+	"github.com/Automattic/vip/internal/keychain"
 )
 
 type fakeClient struct {
@@ -34,6 +36,50 @@ func TestTrackerDoNotTrackDisables(t *testing.T) {
 	tr.TrackEvent("foo", nil)
 	if len(c.events) != 0 {
 		t.Error("expected no events when Disabled")
+	}
+}
+
+type countingUUIDBackend struct {
+	gets int
+	sets int
+}
+
+func (b *countingUUIDBackend) Get(string, string) (string, error) {
+	b.gets++
+	return "anonymous-id", nil
+}
+
+func (b *countingUUIDBackend) Set(string, string, string) error {
+	b.sets++
+	return nil
+}
+
+func (b *countingUUIDBackend) Delete(string, string) error { return nil }
+
+func TestNonemptyDoNotTrackSkipsUUIDAndClients(t *testing.T) {
+	for _, value := range []string{"1", "0", "false", " "} {
+		t.Run(value, func(t *testing.T) {
+			t.Setenv("GO_ENV", "")
+			t.Setenv("NODE_ENV", "")
+			t.Setenv("DO_NOT_TRACK", value)
+
+			defaultTracker := NewDefault()
+			if defaultTracker == nil || !defaultTracker.Disabled || defaultTracker.UUIDStore != nil || len(defaultTracker.Clients) != 0 {
+				t.Fatalf("NewDefault initialized telemetry under DO_NOT_TRACK=%q: %+v", value, defaultTracker)
+			}
+
+			backend := &countingUUIDBackend{}
+			client := &fakeClient{}
+			tr := &Tracker{
+				Clients:   []Client{client},
+				UUIDStore: &UUIDStore{Keychain: &keychain.Keychain{Backend: backend, Service: "vip-next-cli"}},
+			}
+			tr.TrackEvent("test", nil)
+			tr.AliasUser(99)
+			if backend.gets != 0 || backend.sets != 0 || len(client.events) != 0 {
+				t.Fatalf("opt-out accessed UUID store or client: gets=%d sets=%d events=%v", backend.gets, backend.sets, client.events)
+			}
+		})
 	}
 }
 

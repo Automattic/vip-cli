@@ -6,7 +6,7 @@ export interface InstanceOptions {
 	wordpress?: string;
 	muPlugins?: string;
 	appCode?: string;
-	elasticsearch?: boolean;
+	elasticsearch?: string | boolean;
 	mariadb?: string; // Legacy
 	php?: string;
 	mediaRedirectDomain?: string;
@@ -66,9 +66,9 @@ export interface WordPressConfig {
 }
 
 export interface EnvironmentNameOptions {
-	slug: string;
-	app: string;
-	env: string;
+	slug?: string;
+	app?: string;
+	env?: string;
 	allowAppEnv?: boolean;
 }
 

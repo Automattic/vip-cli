@@ -3,7 +3,7 @@ import { Confirm, prompt } from 'enquirer';
 
 import { isAppNodejs } from '../app';
 
-export function cancel(): void {
+export function cancel(): never {
 	console.log( chalk.yellow( 'Command cancelled by user.' ) );
 	process.exit();
 }

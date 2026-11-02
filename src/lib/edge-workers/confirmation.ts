@@ -6,7 +6,7 @@ export interface ProductionMutationConfirmationRequest {
 	appName: string;
 	envType: string;
 	workerNames: readonly string[];
-	enableAfterDeploy: boolean;
+	enableAfterDeploy?: boolean;
 	skipConfirmation: boolean;
 	nonInteractive: boolean;
 }

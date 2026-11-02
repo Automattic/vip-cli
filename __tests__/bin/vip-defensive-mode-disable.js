@@ -1,6 +1,6 @@
 import { describe, expect, it, jest, beforeEach } from '@jest/globals';
 
-import { defensiveModeDisableCommand } from '../../src/bin/vip-defensive-mode-disable';
+import { defensiveModeDisableCommand } from '../../src/commands/vip-defensive-mode-disable';
 import command from '../../src/lib/cli/command';
 import { updateDefensiveModeStatus } from '../../src/lib/defensive-mode/api';
 import { trackEvent } from '../../src/lib/tracker';

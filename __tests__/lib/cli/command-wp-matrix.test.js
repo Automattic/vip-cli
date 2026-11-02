@@ -1,11 +1,11 @@
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
-import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 
 import command from '../../../src/lib/cli/command';
+import { runCommand } from '../../../src/lib/cli/run-command';
 
-jest.mock( 'node:child_process', () => ( {
-	spawnSync: jest.fn( () => ( { status: 0 } ) ),
+jest.mock( '../../../src/lib/cli/run-command', () => ( {
+	runCommand: jest.fn( async () => {} ),
 } ) );
 
 jest.mock( '../../../src/lib/tracker', () => ( {
@@ -14,7 +14,7 @@ jest.mock( '../../../src/lib/tracker', () => ( {
 
 describe( 'cli parser invocation matrix: wp/alias/separator/options', () => {
 	const parentScript = path.join( process.cwd(), 'src/bin/vip.js' );
-	const childScript = path.join( process.cwd(), 'src/bin/vip-wp.js' );
+	const childScript = path.join( process.cwd(), 'src/commands/vip-wp.js' );
 
 	beforeEach( () => {
 		jest.clearAllMocks();
@@ -38,25 +38,21 @@ describe( 'cli parser invocation matrix: wp/alias/separator/options', () => {
 			desc: 'option-only: wp --help',
 			argv: [ process.execPath, parentScript, 'wp', '--help' ],
 			expectedChildArgs: [ '--help' ],
-			expectExit: 0,
 		},
 		{
 			desc: 'option-only: wp --path /tmp/wp',
 			argv: [ process.execPath, parentScript, 'wp', '--path', '/tmp/wp' ],
 			expectedChildArgs: [ '--path', '/tmp/wp' ],
-			expectExit: 0,
 		},
 		{
 			desc: 'alias before separator: @app -- wp --help',
 			argv: [ process.execPath, parentScript, '@myapp', '--', 'wp', '--help' ],
 			expectedChildArgs: [ '@myapp', '--', '--help' ],
-			expectExit: 0,
 		},
 		{
 			desc: 'wp payload: -- wp post list --posts_per_page=10',
 			argv: [ process.execPath, parentScript, '--', 'wp', 'post', 'list', '--posts_per_page=10' ],
 			expectedChildArgs: [ '--', 'post', 'list', '--posts_per_page=10' ],
-			expectExit: 0,
 		},
 		{
 			desc: 'alias + payload: @app -- wp post list --posts_per_page=10',
@@ -71,35 +67,44 @@ describe( 'cli parser invocation matrix: wp/alias/separator/options', () => {
 				'--posts_per_page=10',
 			],
 			expectedChildArgs: [ '@myapp', '--', 'post', 'list', '--posts_per_page=10' ],
-			expectExit: 0,
 		},
 		{
 			desc: 'option before separator: --yes -- wp post list',
 			argv: [ process.execPath, parentScript, '--yes', '--', 'wp', 'post', 'list' ],
 			expectedChildArgs: [ '--yes', '--', 'post', 'list' ],
-			expectExit: 0,
+		},
+		{
+			desc: 'alias-shaped payload after separator stays in the payload',
+			argv: [ process.execPath, parentScript, 'wp', '--', 'option', 'get', '@literal' ],
+			expectedChildArgs: [ '--', 'option', 'get', '@literal' ],
+		},
+		{
+			desc: 'target alias before separator and alias-shaped payload remain distinct',
+			argv: [ process.execPath, parentScript, '@myapp', 'wp', '--', 'option', 'get', '@literal' ],
+			expectedChildArgs: [ '@myapp', '--', 'option', 'get', '@literal' ],
 		},
 		{
 			desc: 'alias before wp: @app wp --help (should dispatch)',
 			argv: [ process.execPath, parentScript, '@myapp', 'wp', '--help' ],
 			expectedChildArgs: [ '@myapp', '--help' ],
-			expectExit: 0,
 		},
 		{
 			desc: 'alias + explicit --app conflict (should dispatch)',
 			argv: [ process.execPath, parentScript, '@myapp', '--app', 'other', '--', 'wp', '--help' ],
 			expectedChildArgs: [ '@myapp', '--app', 'other', '--', '--help' ],
-			expectExit: 0,
 		},
-	] )( '$desc', async ( { argv, expectedChildArgs, expectExit } ) => {
-		const cmd = command( { requiredArgs: 0 } ).command( 'wp', 'Run WP-CLI commands.' );
+	] )( '$desc', async ( { argv, expectedChildArgs } ) => {
+		const cmd = command( {
+			requiredArgs: 0,
+			commandDirectory: path.join( process.cwd(), 'src/commands' ),
+		} ).command( 'wp', 'Run WP-CLI commands.' );
 		await cmd.argv( argv, undefined );
-		expect( spawnSync ).toHaveBeenCalledWith(
+		expect( runCommand ).toHaveBeenCalledWith( childScript, [
 			process.execPath,
-			[ childScript, ...expectedChildArgs ],
-			expect.objectContaining( { stdio: 'inherit', env: process.env } )
-		);
-		expect( process.exit ).toHaveBeenCalledWith( expectExit );
+			childScript,
+			...expectedChildArgs,
+		] );
+		expect( process.exit ).not.toHaveBeenCalled();
 	} );
 
 	it.each( [
@@ -110,9 +115,12 @@ describe( 'cli parser invocation matrix: wp/alias/separator/options', () => {
 			expectExit: 1,
 		},
 	] )( '$desc', async ( { argv, expectError, expectExit } ) => {
-		const cmd = command( { requiredArgs: 0 } ).command( 'wp', 'Run WP-CLI commands.' );
+		const cmd = command( {
+			requiredArgs: 0,
+			commandDirectory: path.join( process.cwd(), 'src/commands' ),
+		} ).command( 'wp', 'Run WP-CLI commands.' );
 		await expect( cmd.argv( argv, undefined ) ).rejects.toThrow( 'process.exit: ' + expectExit );
 		expect( console.error ).toHaveBeenCalledWith( expect.stringMatching( expectError ) );
-		expect( spawnSync ).not.toHaveBeenCalled();
+		expect( runCommand ).not.toHaveBeenCalled();
 	} );
 } );

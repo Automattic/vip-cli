@@ -2,21 +2,18 @@ import chalk from 'chalk';
 import { Command } from 'commander';
 import debugLib from 'debug';
 import { prompt } from 'enquirer';
-import gql from 'graphql-tag';
-import { spawnSync } from 'node:child_process';
-import fs from 'node:fs';
 import path from 'node:path';
 
 import { isAlias, parseEnvAliasFromArgv } from './envAlias';
 import * as exit from './exit';
-import { formatData, formatSearchReplaceValues } from './format';
-import { confirm } from './prompt';
+import { runCommand } from './run-command';
 import pkg from '../../../package.json';
-import API from '../../lib/api';
-import app from '../../lib/api/app';
-import { trackEvent } from '../../lib/tracker';
-import { parseApiError } from '../../lib/utils';
 import UserError from '../user-error';
+
+async function trackEvent( ...args ) {
+	const { trackEvent: track } = require( '../../lib/tracker' );
+	return track( ...args );
+}
 
 function uncaughtError( err ) {
 	// Error raised when trying to write to an already closed stream
@@ -34,8 +31,6 @@ function uncaughtError( err ) {
 }
 process.on( 'uncaughtException', uncaughtError );
 process.on( 'unhandledRejection', uncaughtError );
-
-let _opts = {};
 
 let alreadyConfirmedDebugAttachment = false;
 const RESERVED_AUTO_SHORT_ALIASES = new Set( [ 'h', 'v', 'd' ] );
@@ -444,10 +439,14 @@ class CommanderArgsCompat {
 		const subcommandName = subcommand.name;
 		const extension = path.extname( currentScript );
 		const baseScriptPath = extension ? currentScript.slice( 0, -extension.length ) : currentScript;
-		const childScriptPath = extension
-			? `${ baseScriptPath }-${ subcommandName }${ extension }`
-			: `${ baseScriptPath }-${ subcommandName }`;
-		const aliasFromRawArgv = argv.slice( 2 ).find( arg => isAlias( arg ) );
+		const childScriptPath = path.join(
+			this._opts.commandDirectory ?? path.dirname( currentScript ),
+			`${ path.basename( baseScriptPath ) }-${ subcommandName }.js`
+		);
+		const separatorIndex = argv.indexOf( '--', 2 );
+		const aliasFromRawArgv = argv
+			.slice( 2, separatorIndex === -1 ? undefined : separatorIndex )
+			.find( arg => isAlias( arg ) );
 		const rawArgsBeforeSubcommand = parsedAlias.argv.slice( 2, subcommand.index );
 		const hasSeparatorBeforeSubcommand = rawArgsBeforeSubcommand.includes( '--' );
 		const argsBeforeSubcommand = rawArgsBeforeSubcommand.filter( arg => arg !== '--' );
@@ -470,26 +469,7 @@ class CommanderArgsCompat {
 			childArgs = [ aliasFromRawArgv, ...childArgs ];
 		}
 
-		let runResult;
-		if ( fs.existsSync( childScriptPath ) ) {
-			runResult = spawnSync( process.execPath, [ childScriptPath, ...childArgs ], {
-				stdio: 'inherit',
-				env: process.env,
-			} );
-		} else {
-			const fallbackCommand = `${ path.basename( baseScriptPath ) }-${ subcommandName }`;
-			runResult = spawnSync( fallbackCommand, childArgs, {
-				stdio: 'inherit',
-				env: process.env,
-				shell: process.platform === 'win32',
-			} );
-		}
-
-		if ( runResult.error ) {
-			throw runResult.error;
-		}
-
-		process.exit( runResult.status ?? 1 );
+		await runCommand( childScriptPath, [ argv[ 0 ], childScriptPath, ...childArgs ] );
 	}
 }
 
@@ -498,6 +478,7 @@ class CommanderArgsCompat {
  */
 // eslint-disable-next-line complexity
 CommanderArgsCompat.prototype.argv = async function ( argv, cb ) {
+	const _opts = this._opts;
 	if ( process.execArgv.includes( '--inspect' ) && ! alreadyConfirmedDebugAttachment ) {
 		await prompt( {
 			type: 'confirm',
@@ -613,6 +594,10 @@ CommanderArgsCompat.prototype.argv = async function ( argv, cb ) {
 	// Set the site in options.app
 	let res;
 	if ( _opts.appContext ) {
+		const { default: API } = require( '../../lib/api' );
+		const { default: app } = require( '../../lib/api/app' );
+		const { default: gql } = require( 'graphql-tag' );
+		const { parseApiError } = require( '../../lib/utils' );
 		// If --app is not set, try to infer the app context
 		if ( ! options.app ) {
 			const api = API();
@@ -826,6 +811,8 @@ CommanderArgsCompat.prototype.argv = async function ( argv, cb ) {
 
 	// Prompt for confirmation if necessary
 	if ( _opts.requireConfirm && ! options.force ) {
+		const { formatData, formatSearchReplaceValues } = require( './format' );
+		const { confirm } = require( './prompt' );
 		/** @type {import('./format').Tuple[]} */
 		const info = [];
 
@@ -984,6 +971,7 @@ CommanderArgsCompat.prototype.argv = async function ( argv, cb ) {
 	if ( cb ) {
 		res = await cb( this.sub, options );
 		if ( _opts.format && res ) {
+			const { formatData } = require( './format' );
 			if ( res.header ) {
 				if ( options.format !== 'json' ) {
 					console.log( formatData( res.header, 'keyValue' ) );
@@ -1046,7 +1034,7 @@ function validateOpts( opts ) {
  * @returns {CommanderArgsCompat}
  */
 export default function ( opts ) {
-	_opts = {
+	const _opts = {
 		appContext: false,
 		appQuery: 'id,name',
 		childEnvContext: false,

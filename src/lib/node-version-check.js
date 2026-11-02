@@ -6,7 +6,10 @@ const boldRed = process.stdout.isTTY ? '\x1b[1;31m' : '';
 const reset = process.stdout.isTTY ? '\x1b[0m' : '';
 
 try {
-	const json = readFileSync( join( __dirname, '..', '..', 'package.json' ), 'utf8' );
+	const packagePath = globalThis.__VIP_BUNDLED_RESOURCE_ROOT__
+		? join( globalThis.__VIP_BUNDLED_RESOURCE_ROOT__, 'package.json' )
+		: join( __dirname, '..', '..', 'package.json' );
+	const json = readFileSync( packagePath, 'utf8' );
 	const { name, engines } = JSON.parse( json );
 
 	const version = engines.node;

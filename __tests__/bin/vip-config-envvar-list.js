@@ -1,4 +1,4 @@
-import { listEnvVarsCommand } from '../../src/bin/vip-config-envvar-list';
+import { listEnvVarsCommand } from '../../src/commands/vip-config-envvar-list';
 import command from '../../src/lib/cli/command';
 import { formatData } from '../../src/lib/cli/format';
 import { listEnvVars } from '../../src/lib/envvar/api';

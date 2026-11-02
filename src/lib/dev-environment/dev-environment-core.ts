@@ -10,15 +10,10 @@ import path from 'node:path';
 import semver from 'semver';
 import { fetch } from 'undici';
 
-import {
-	handleCLIException,
-	printTable,
-	promptForWordPress,
-	resolvePath,
-} from './dev-environment-cli';
+import { handleCLIException, promptForWordPress, resolvePath } from './dev-environment-cli';
+import { printEnvironmentInfo } from './dev-environment-info';
 import {
 	landoDestroy,
-	landoInfo,
 	landoExec,
 	landoStart,
 	landoStop,
@@ -31,9 +26,15 @@ import {
 	removeProxyCache,
 	getLandoApplication,
 } from './dev-environment-lando';
+import {
+	doesEnvironmentExist,
+	getEnvironmentPath,
+	readEnvironmentData,
+} from './dev-environment-state';
 import { loadLandoModule } from './lando-loader';
 import { AppEnvironment } from '../../graphqlTypes';
 import app from '../api/app';
+import { getBundledResourceRoot } from '../cli/standalone-resources';
 import { appQueryFragments as softwareQueryFragment } from '../config/software';
 import {
 	DEV_ENVIRONMENT_NOT_FOUND,
@@ -50,33 +51,26 @@ import { searchAndReplace } from '../search-and-replace';
 import UserError from '../user-error';
 import { xdgData } from '../xdg-data';
 
-import type {
-	AppInfo,
-	ComponentConfig,
-	InstanceData,
-	IntegrationConfig,
-	WordPressConfig,
-} from './types';
+import type { AppInfo, InstanceData, IntegrationConfig, WordPressConfig } from './types';
 import type Lando from 'lando';
+
+export {
+	doesEnvironmentExist,
+	getAllEnvironmentNames,
+	getEnvironmentPath,
+	readEnvironmentData,
+	writeEnvironmentData,
+} from './dev-environment-state';
+export { printAllEnvironmentsInfo, printEnvironmentInfo } from './dev-environment-info';
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
-const landoFileTemplatePath = path.join(
-	__dirname,
-	'..',
-	'..',
-	'..',
-	'assets',
-	'dev-env.lando.template.yml.ejs'
-);
-const nginxFileTemplatePath = path.join(
-	__dirname,
-	'..',
-	'..',
-	'..',
-	'assets',
-	'dev-env.nginx.template.conf.ejs'
-);
+const templatePath = ( name: string ): string => {
+	const resources = getBundledResourceRoot();
+	return resources
+		? path.join( resources, 'assets', name )
+		: path.join( __dirname, '..', '..', '..', 'assets', name );
+};
 const landoFileName = '.lando.yml';
 const landoOverridesFileName = '.lando.local.yml';
 const landoBackupFileName = '.lando.backup.yml';
@@ -350,53 +344,6 @@ export async function destroyEnvironment(
 	}
 }
 
-interface PrintOptions {
-	extended?: boolean;
-	suppressWarnings?: boolean;
-}
-
-export async function printAllEnvironmentsInfo(
-	lando: Lando,
-	options: PrintOptions
-): Promise< void > {
-	const allEnvNames = getAllEnvironmentNames();
-
-	debug( 'Will print info for all environments. Names found: ', allEnvNames );
-
-	console.log(
-		'Found ' +
-			chalk.bold( allEnvNames.length ) +
-			' environments' +
-			( allEnvNames.length ? ':' : '.' )
-	);
-	for ( const envName of allEnvNames ) {
-		try {
-			console.log( '\n' );
-			// eslint-disable-next-line no-await-in-loop
-			await printEnvironmentInfo( lando, envName, options );
-		} catch ( error ) {
-			if ( error instanceof UserError ) {
-				console.warn( '\nWARNING: "%s" is not a valid environment\n', envName );
-			} else {
-				throw error;
-			}
-		}
-	}
-}
-
-function parseComponentForInfo( component: ComponentConfig | WordPressConfig ): string {
-	if ( component.mode === 'local' ) {
-		return component.dir ?? '';
-	}
-
-	// Environments created by the old code will have `component.tag` set to `demo` instead of `undefined`.
-	if ( component.tag === 'demo' || component.tag === 'latest' ) {
-		component.tag = undefined;
-	}
-
-	return component.tag ?? '[demo-image]';
-}
-
 export async function showLogs(
 	lando: Lando,
 	slug: string,
@@ -421,50 +368,6 @@ export async function showLogs(
 	return landoLogs( lando, instancePath, options );
 }
 
-export async function printEnvironmentInfo(
-	lando: Lando,
-	slug: string,
-	options: PrintOptions
-): Promise< void > {
-	debug( 'Will get info for an environment', slug );
-
-	const instancePath = getEnvironmentPath( slug );
-
-	debug( 'Instance path for', slug, 'is:', instancePath );
-
-	const environmentExists = await doesEnvironmentExist( instancePath );
-	if ( ! environmentExists ) {
-		throw new UserError( DEV_ENVIRONMENT_NOT_FOUND );
-	}
-
-	const environmentData = readEnvironmentData( slug );
-	const appInfo = await landoInfo( lando, instancePath, {
-		suppressWarnings: Boolean( options.suppressWarnings ),
-		autologinKey: environmentData.autologinKey,
-	} );
-
-	if ( options.extended ) {
-		appInfo.title = environmentData.wpTitle;
-		appInfo.multisite = Boolean( environmentData.multisite );
-		appInfo.php = environmentData.php.split( ':' )[ 1 ];
-		let xdebug = environmentData.xdebug ? 'enabled' : 'disabled';
-		if ( environmentData.xdebug && environmentData.xdebugConfig ) {
-			xdebug += ' (with additional configuration)';
-		}
-		appInfo.xdebug = xdebug;
-		appInfo.cron = environmentData.cron ? 'enabled' : 'disabled';
-
-		appInfo.wordpress = parseComponentForInfo( environmentData.wordpress );
-		appInfo[ 'Mu plugins' ] = parseComponentForInfo( environmentData.muPlugins );
-		appInfo[ 'App Code' ] = parseComponentForInfo( environmentData.appCode );
-		if ( environmentData.mediaRedirectDomain ) {
-			appInfo[ 'Media Redirect' ] = environmentData.mediaRedirectDomain;
-		}
-	}
-
-	printTable( appInfo );
-}
-
 export function exec(
 	lando: Lando,
 	slug: string,
@@ -479,83 +382,6 @@ export function exec(
 
 	const [ command, ...commandArgs ] = args;
 	return landoExec( lando, instancePath, command, commandArgs, options );
-}
-
-export async function doesEnvironmentExist( instancePath: string ): Promise< boolean > {
-	debug( 'Will check for environment at %s', instancePath );
-	const file = path.join( instancePath, instanceDataFileName );
-	try {
-		const stats = await fs.promises.stat( file );
-		return stats.isFile();
-	} catch {
-		return false;
-	}
-}
-
-export function readEnvironmentData( slug: string ): InstanceData {
-	debug( 'Will try to get instance data for environment', slug );
-
-	const instancePath = getEnvironmentPath( slug );
-
-	const instanceDataTargetPath = path.join( instancePath, instanceDataFileName );
-
-	let instanceDataString;
-	let instanceData: InstanceData;
-	try {
-		instanceDataString = fs.readFileSync( instanceDataTargetPath, 'utf8' );
-	} catch ( error: unknown ) {
-		const err = error as Error;
-		throw new UserError(
-			`There was an error reading file "${ instanceDataTargetPath }": ${ err.message }.`,
-			{ cause: error }
-		);
-	}
-
-	try {
-		instanceData = JSON.parse( instanceDataString ) as InstanceData;
-	} catch ( error: unknown ) {
-		const err = error as Error;
-		throw new UserError(
-			`There was an error parsing file "${ instanceDataTargetPath }": ${ err.message }. You may need to recreate the environment.`,
-			{ cause: error }
-		);
-	}
-
-	/**
-	 ***********************************
-	 * BACKWARDS COMPATIBILITY SECTION
-	 **********************************
-	 */
-
-	// REMOVEME after the wheel of time spins around few times
-	if ( instanceData.enterpriseSearchEnabled || instanceData.elasticsearchEnabled ) {
-		// enterpriseSearchEnabled and elasticsearchEnabled was renamed to elasticsearch
-		instanceData.elasticsearch = ( instanceData.enterpriseSearchEnabled ||
-			instanceData.elasticsearchEnabled ) as boolean;
-	}
-
-	// REMOVEME after the wheel of time spins around few times
-	if ( instanceData.clientCode ) {
-		// clientCode was renamed to appCode
-		instanceData.appCode = instanceData.clientCode as ComponentConfig;
-	}
-
-	return instanceData;
-}
-
-/**
- * Writes the instance data.
- *
- * @param {string}       slug Env slug
- * @param {InstanceData} data instance data
- * @return {Promise<void>} Promise
- */
-export function writeEnvironmentData( slug: string, data: InstanceData ): Promise< void > {
-	debug( 'Will try to write instance data for environment', slug );
-	const instancePath = getEnvironmentPath( slug );
-	const instanceDataTargetPath = path.join( instancePath, instanceDataFileName );
-
-	return fs.promises.writeFile( instanceDataTargetPath, JSON.stringify( data, null, 2 ) );
 }
 
 async function writeIntegrationsConfig(
@@ -605,8 +431,14 @@ async function prepareLandoEnv(
 		domain: lando.config.domain,
 	};
 
-	const landoFile = await renderTemplateFile( landoFileTemplatePath, templateData );
-	const nginxFile = await renderTemplateFile( nginxFileTemplatePath, templateData );
+	const landoFile = await renderTemplateFile(
+		templatePath( 'dev-env.lando.template.yml.ejs' ),
+		templateData
+	);
+	const nginxFile = await renderTemplateFile(
+		templatePath( 'dev-env.nginx.template.conf.ejs' ),
+		templateData
+	);
 	const instanceDataFile = JSON.stringify( instanceData );
 
 	const landoFileTargetPath = path.join( instancePath, landoFileName );
@@ -660,39 +492,9 @@ async function prepareLandoEnv(
 	}
 }
 
-export function getAllEnvironmentNames(): string[] {
-	const mainEnvironmentPath = xdgData();
-
-	const baseDir = path.join( mainEnvironmentPath, 'vip', 'dev-environment' );
-
-	const doWeHaveAnyEnvironment = fs.existsSync( baseDir );
-
-	let envNames: string[] = [];
-	if ( doWeHaveAnyEnvironment ) {
-		const files = fs.readdirSync( baseDir );
-
-		envNames = files.filter( file => {
-			const fullPath = path.join( baseDir, file );
-			return fs.lstatSync( fullPath ).isDirectory();
-		} );
-	}
-
-	return envNames;
-}
-
-export function getEnvironmentPath( name: string ): string {
-	if ( ! name ) {
-		throw new Error( 'Name was not provided' );
-	}
-
-	const mainEnvironmentPath = xdgData();
-
-	return path.join( mainEnvironmentPath, 'vip', 'dev-environment', String( name ) );
-}
-
 export async function getApplicationInformation(
-	appId: number,
-	envType: string | null
+	appId: string | number,
+	envType: string | null | undefined
 ): Promise< AppInfo > {
 	// $FlowFixMe: gql template is not supported by flow
 	const fieldsQuery = `

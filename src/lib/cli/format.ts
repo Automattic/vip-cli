@@ -1,8 +1,6 @@
-import { Parser } from '@json2csv/plainjs';
 import chalk from 'chalk';
-import Table from 'cli-table3';
 
-import { StepStatus } from './progress';
+import type { StepStatus } from './progress';
 
 export interface Tuple {
 	key: string;
@@ -14,11 +12,7 @@ type Stringable = string | { toString: () => string };
 export type OutputFormat = 'keyValue' | 'ids' | 'json' | 'csv' | 'table';
 
 export function formatData( data: Tuple[], format: 'keyValue' ): string;
-export function formatData(
-	data: Record< string, unknown >[],
-	format: 'ids' | 'json' | 'csv'
-): string;
-export function formatData( data: Record< string, Stringable >[], format: OutputFormat ): string;
+export function formatData( data: Record< string, unknown >[], format: OutputFormat ): string;
 export function formatData(
 	data: Record< string, unknown >[] | Tuple[],
 	format: OutputFormat
@@ -81,6 +75,9 @@ function ids( data: Record< string, unknown >[] ): string {
 }
 
 function csv( data: Record< string, unknown >[] ): string {
+	// Keep CSV dependencies out of parser and non-CSV startup paths.
+	// eslint-disable-next-line @typescript-eslint/no-require-imports
+	const { Parser } = require( '@json2csv/plainjs' ) as typeof import('@json2csv/plainjs');
 	const fields = Object.keys( data[ 0 ] );
 
 	const parser = new Parser( {
@@ -99,6 +96,9 @@ function csv( data: Record< string, unknown >[] ): string {
 }
 
 export function table( data: Record< string, Stringable >[] ): string {
+	// This synchronous formatter loads its renderer only when producing a table.
+	// eslint-disable-next-line @typescript-eslint/no-require-imports
+	const Table = require( 'cli-table3' ) as typeof import('cli-table3');
 	const fields = Object.keys( data[ 0 ] );
 	const dataTable = new Table( {
 		head: formatFields( fields ),

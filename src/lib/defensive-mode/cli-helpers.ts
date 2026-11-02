@@ -32,7 +32,7 @@ export async function guardProductionMutation(
 	action: 'enable' | 'disable' | 'configure',
 	trackingParams: Record< string, unknown >,
 	confirmFn: ( message: string ) => Promise< boolean >,
-	trackEventFn: ( event: string, props: Record< string, unknown > ) => Promise< void >,
+	trackEventFn: ( event: string, props: Record< string, unknown > ) => Promise< unknown >,
 	formatEnvironment: ( type: string ) => string
 ): Promise< void > {
 	if ( opt.skipConfirmation || opt.env.type !== 'production' ) {
@@ -76,7 +76,7 @@ export async function reportMutationResult(
 	envType: string,
 	successVerb: string,
 	failureVerb: string,
-	trackEventFn: ( event: string, props: Record< string, unknown > ) => Promise< void >
+	trackEventFn: ( event: string, props: Record< string, unknown > ) => Promise< unknown >
 ): Promise< void > {
 	if ( ! result.success ) {
 		await trackEventFn( `defensive_mode_${ action }_command_error`, {

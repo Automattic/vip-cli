@@ -20,6 +20,7 @@ import {
 } from '../../../src/lib/dev-environment/dev-environment-cli';
 import * as devEnvConfiguration from '../../../src/lib/dev-environment/dev-environment-configuration-file';
 import * as devEnvCore from '../../../src/lib/dev-environment/dev-environment-core';
+import * as devEnvState from '../../../src/lib/dev-environment/dev-environment-state';
 
 jest.spyOn( console, 'log' ).mockImplementation( () => {} );
 
@@ -89,7 +90,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 	} );
 	it( 'keeps local login credentials out of environment tracking properties', () => {
 		const readEnvironmentDataMock = jest
-			.spyOn( devEnvCore, 'readEnvironmentData' )
+			.spyOn( devEnvState, 'readEnvironmentData' )
 			.mockReturnValue( {
 				siteSlug: 'example-site',
 				wpTitle: 'Example Site',
@@ -113,7 +114,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 	} );
 	describe( 'getEnvironmentName with no environments present', () => {
 		beforeEach( () => {
-			const getAllEnvironmentNamesMock = jest.spyOn( devEnvCore, 'getAllEnvironmentNames' );
+			const getAllEnvironmentNamesMock = jest.spyOn( devEnvState, 'getAllEnvironmentNames' );
 			getAllEnvironmentNamesMock.mockReturnValue( [] );
 		} );
 
@@ -176,7 +177,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 	} );
 	describe( 'getEnvironmentName with 1 environment present', () => {
 		beforeEach( () => {
-			const getAllEnvironmentNamesMock = jest.spyOn( devEnvCore, 'getAllEnvironmentNames' );
+			const getAllEnvironmentNamesMock = jest.spyOn( devEnvState, 'getAllEnvironmentNames' );
 			getAllEnvironmentNamesMock.mockReturnValue( [ 'single-site' ] );
 		} );
 
@@ -185,7 +186,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 	} );
 	describe( 'getEnvironmentName with multiple environments present', () => {
 		beforeEach( () => {
-			const getAllEnvironmentNamesMock = jest.spyOn( devEnvCore, 'getAllEnvironmentNames' );
+			const getAllEnvironmentNamesMock = jest.spyOn( devEnvState, 'getAllEnvironmentNames' );
 			getAllEnvironmentNamesMock.mockReturnValue( [ 'single-site', 'ms-site' ] );
 		} );
 
@@ -631,7 +632,7 @@ describe( 'lib/dev-environment/dev-environment-cli', () => {
 
 	describe( 'getEnvTrackingInfo', () => {
 		it( 'should snake_case instance data and omit credentials', () => {
-			jest.spyOn( devEnvCore, 'readEnvironmentData' ).mockReturnValue( {
+			jest.spyOn( devEnvState, 'readEnvironmentData' ).mockReturnValue( {
 				siteSlug: 'example-site',
 				wordpress: { tag: '6.8' },
 				php: 'ghcr.io/automattic/vip-container-images/php-fpm:8.4',

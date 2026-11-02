@@ -14,6 +14,12 @@ const MUTATION = gql`
 	}
 `;
 
+const QUERY = gql`
+	query TestGlobalErrorHandling {
+		world
+	}
+`;
+
 const httpResponse = ( status, body ) => {
 	return Promise.resolve( {
 		ok: status >= 200 && status < 300,
@@ -113,5 +119,32 @@ describe( 'API rechallenge integration', () => {
 		const secondCallInit = http.mock.calls[ 1 ][ 1 ];
 		expect( secondCallInit.headers[ 'x-elevated-token' ] ).toBe( 'manual-elevated-token' );
 		expect( result.data.updateDefensiveModeStatus.success ).toBe( true );
+	} );
+
+	it( 'applies global GraphQL error handling changes to an existing client', async () => {
+		const {
+			disableGlobalGraphQLErrorHandling,
+			enableGlobalGraphQLErrorHandling,
+		} = require( '../../src/lib/api' );
+		const errorSpy = jest.spyOn( console, 'error' ).mockImplementation( () => {} );
+		const api = API( { exitOnError: false } );
+		const graphqlError = httpResponse( 200, {
+			data: null,
+			errors: [ { message: 'Test GraphQL error' } ],
+		} );
+
+		try {
+			http.mockReturnValue( graphqlError );
+			disableGlobalGraphQLErrorHandling();
+			await expect( api.query( { query: QUERY, fetchPolicy: 'no-cache' } ) ).rejects.toThrow();
+			expect( errorSpy ).not.toHaveBeenCalled();
+
+			enableGlobalGraphQLErrorHandling();
+			await expect( api.query( { query: QUERY, fetchPolicy: 'no-cache' } ) ).rejects.toThrow();
+			expect( errorSpy ).toHaveBeenCalledWith( expect.anything(), 'Test GraphQL error' );
+		} finally {
+			enableGlobalGraphQLErrorHandling();
+			errorSpy.mockRestore();
+		}
 	} );
 } );

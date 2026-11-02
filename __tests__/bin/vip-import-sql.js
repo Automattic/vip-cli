@@ -6,7 +6,7 @@ import {
 	gates,
 	promptToContinue,
 	parseHeaders,
-} from '../../src/bin/vip-import-sql';
+} from '../../src/commands/vip-import-sql';
 import * as exit from '../../src/lib/cli/exit';
 
 jest.mock( '../../src/lib/tracker' );

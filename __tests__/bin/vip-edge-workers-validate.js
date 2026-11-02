@@ -1,4 +1,4 @@
-import { edgeWorkersValidateCommand } from '../../src/bin/vip-edge-workers-validate';
+import { edgeWorkersValidateCommand } from '../../src/commands/vip-edge-workers-validate';
 import * as api from '../../src/lib/api/edge-workers';
 import * as exit from '../../src/lib/cli/exit';
 import * as lib from '../../src/lib/edge-workers';

@@ -1,7 +1,10 @@
 export function isStandaloneExecutableRuntime(): boolean {
-	return false;
+	return Boolean(
+		( globalThis as typeof globalThis & { Bun?: { isStandaloneExecutable?: boolean } } ).Bun
+			?.isStandaloneExecutable
+	);
 }
 
 export function getRuntimeModeLabel(): string {
-	return 'node-script';
+	return isStandaloneExecutableRuntime() ? 'bun-standalone' : 'node-script';
 }

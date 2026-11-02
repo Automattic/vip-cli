@@ -1,4 +1,5 @@
 import chalk = require('chalk');
+import type { DocumentNode } from 'graphql';
 
 interface CommandOptions {
 	appContext: boolean;
@@ -6,18 +7,26 @@ interface CommandOptions {
 	childEnvContext: boolean;
 	envContext: boolean;
 	format: boolean;
-	requireConfirm: boolean;
+	requireConfirm: boolean | string;
 	requiredArgs: number;
 	wildcardCommand: boolean;
 	usage?: string;
-	appQueryFragments?: string;
+	appQueryFragments?: string | DocumentNode;
 	module?: string;
 	skipConfirmPrompt?: boolean;
+	commandDirectory?: string;
 }
 
-export default function _default( opts: Partial< CommandOptions > ): Args;
+export default function _default( opts?: Partial< CommandOptions > ): Args;
 
-export function getEnvIdentifier( env: string ): string;
+export function getEnvIdentifier( env: {
+	type: string;
+	name?: string | null;
+	appId?: number | null;
+	id: number;
+} ): string;
+
+export function containsAppEnvArgument( argv: string[] ): boolean;
 
 interface Example {
 	usage: string;
@@ -86,11 +95,11 @@ declare class Args {
 
 	constructor();
 
-	option(
+	option< Value = unknown >(
 		name: string | [ string, string ],
 		description: string,
 		defaultValue?: unknown,
-		init?: OptionInitFunction
+		init?: ( value: Value ) => unknown
 	): Args;
 	options( list: Option[] ): Args;
 	command(
@@ -105,7 +114,10 @@ declare class Args {
 	showHelp(): void;
 	showVersion(): void;
 
-	argv: ( argv: string[], cb: unknown ) => Promise< unknown >;
+	argv< Options = Record< string, unknown > >(
+		argv: string[],
+		cb?: ( args: string[], options: Options ) => unknown
+	): Promise< unknown >;
 
 	// utils.js
 	handleType( value: unknown ): [ string, ( ( v: unknown ) => unknown )? ];

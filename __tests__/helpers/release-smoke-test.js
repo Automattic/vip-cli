@@ -55,11 +55,13 @@ describe( 'release-smoke-test', () => {
 	const makeRootWpTestCase = ( overrides = {} ) =>
 		makeTestCase( {
 			bin: 'vip.js',
-			requiredChildBins: [ 'vip-wp.js' ],
+			requiredCommandModules: [ 'vip-wp.js' ],
 			args: [ 'wp', '--help' ],
 			...overrides,
 		} );
-	const isDistBinPath = entryPath => String( entryPath ).endsWith( distBinSuffix );
+	const isDistBinPath = entryPath =>
+		String( entryPath ).endsWith( distBinSuffix ) ||
+		String( entryPath ).endsWith( path.join( 'dist', 'commands' ) );
 	const mockBuiltDist = () => {
 		existsSync.mockReturnValue( true );
 		lstatSync.mockImplementation( entryPath =>
@@ -95,7 +97,7 @@ describe( 'release-smoke-test', () => {
 			);
 
 			expect( rootWpTestCase ).toBeDefined();
-			expect( rootWpTestCase.requiredChildBins ).toEqual( [ 'vip-wp.js' ] );
+			expect( rootWpTestCase.requiredCommandModules ).toEqual( [ 'vip-wp.js' ] );
 		} );
 
 		it( 'should have non-empty rationale in all test cases', () => {
@@ -203,27 +205,29 @@ describe( 'release-smoke-test', () => {
 				expect( result.detail ).toMatch( /Invalid test case: all args must be strings/ );
 			} );
 
-			it( 'should reject non-array requiredChildBins', () => {
-				const result = runTestCase( makeTestCase( { requiredChildBins: 'vip-wp.js' } ) );
+			it( 'should reject non-array requiredCommandModules', () => {
+				const result = runTestCase( makeTestCase( { requiredCommandModules: 'vip-wp.js' } ) );
 				expect( result.passed ).toBe( false );
 				expect( result.detail ).toMatch(
-					/Invalid test case: requiredChildBins must be an array if specified/
+					/Invalid test case: requiredCommandModules must be an array if specified/
 				);
 			} );
 
-			it( 'should reject non-string requiredChildBins element', () => {
-				const result = runTestCase( makeTestCase( { requiredChildBins: [ 'vip-wp.js', 123 ] } ) );
+			it( 'should reject non-string requiredCommandModules element', () => {
+				const result = runTestCase(
+					makeTestCase( { requiredCommandModules: [ 'vip-wp.js', 123 ] } )
+				);
 				expect( result.passed ).toBe( false );
 				expect( result.detail ).toMatch(
-					/Invalid test case: all requiredChildBins must be non-empty strings/
+					/Invalid test case: all requiredCommandModules must be non-empty strings/
 				);
 			} );
 
-			it( 'should reject empty requiredChildBins element', () => {
-				const result = runTestCase( makeTestCase( { requiredChildBins: [ '' ] } ) );
+			it( 'should reject empty requiredCommandModules element', () => {
+				const result = runTestCase( makeTestCase( { requiredCommandModules: [ '' ] } ) );
 				expect( result.passed ).toBe( false );
 				expect( result.detail ).toMatch(
-					/Invalid test case: all requiredChildBins must be non-empty strings/
+					/Invalid test case: all requiredCommandModules must be non-empty strings/
 				);
 			} );
 		} );
@@ -470,7 +474,7 @@ describe( 'release-smoke-test', () => {
 				expect( result.detail ).toMatch( /Failed to stat binary: Permission denied/ );
 			} );
 
-			it( 'should reject non-existent required child binary before spawning', () => {
+			it( 'should reject non-existent required command module before spawning', () => {
 				existsSync.mockImplementation( binPath => ! String( binPath ).endsWith( 'vip-wp.js' ) );
 				lstatSync.mockImplementation( entryPath =>
 					isDistBinPath( entryPath ) ? distBinStats : binaryStats
@@ -478,42 +482,44 @@ describe( 'release-smoke-test', () => {
 
 				const result = runTestCase( makeRootWpTestCase() );
 				expect( result.passed ).toBe( false );
-				expect( result.detail ).toMatch( /Required child binary not found.*vip-wp\.js/ );
+				expect( result.detail ).toMatch( /Required command module not found.*vip-wp\.js/ );
 				expect( spawnSync ).not.toHaveBeenCalled();
 			} );
 
-			it( 'should reject required child binary with forward slash', () => {
+			it( 'should reject required command module with forward slash', () => {
 				const result = runTestCase(
-					makeRootWpTestCase( { requiredChildBins: [ '../vip-wp.js' ] } )
+					makeRootWpTestCase( { requiredCommandModules: [ '../vip-wp.js' ] } )
 				);
 				expect( result.passed ).toBe( false );
 				expect( result.detail ).toMatch(
-					/Invalid test case: required child bin must be a basename-only file/
+					/Invalid test case: required command module must be a basename-only file/
 				);
 				expect( spawnSync ).not.toHaveBeenCalled();
 			} );
 
-			it( 'should reject required child binary with backslash', () => {
+			it( 'should reject required command module with backslash', () => {
 				const result = runTestCase(
-					makeRootWpTestCase( { requiredChildBins: [ '..\\vip-wp.js' ] } )
+					makeRootWpTestCase( { requiredCommandModules: [ '..\\vip-wp.js' ] } )
 				);
 				expect( result.passed ).toBe( false );
 				expect( result.detail ).toMatch(
-					/Invalid test case: required child bin must be a basename-only file/
+					/Invalid test case: required command module must be a basename-only file/
 				);
 				expect( spawnSync ).not.toHaveBeenCalled();
 			} );
 
-			it( 'should reject required child binary without .js extension', () => {
-				const result = runTestCase( makeRootWpTestCase( { requiredChildBins: [ 'vip-wp.txt' ] } ) );
+			it( 'should reject required command module without .js extension', () => {
+				const result = runTestCase(
+					makeRootWpTestCase( { requiredCommandModules: [ 'vip-wp.txt' ] } )
+				);
 				expect( result.passed ).toBe( false );
 				expect( result.detail ).toMatch(
-					/Invalid test case: required child bin must end with \.js/
+					/Invalid test case: required command module must end with \.js/
 				);
 				expect( spawnSync ).not.toHaveBeenCalled();
 			} );
 
-			it( 'should reject required child binary that is a symlink', () => {
+			it( 'should reject required command module that is a symlink', () => {
 				lstatSync.mockImplementation( binPath => ( {
 					isDirectory: () => isDistBinPath( binPath ),
 					isSymbolicLink: () => String( binPath ).endsWith( 'vip-wp.js' ),
@@ -522,11 +528,11 @@ describe( 'release-smoke-test', () => {
 
 				const result = runTestCase( makeRootWpTestCase() );
 				expect( result.passed ).toBe( false );
-				expect( result.detail ).toMatch( /Required child binary path is a symlink/ );
+				expect( result.detail ).toMatch( /Required command module path is a symlink/ );
 				expect( spawnSync ).not.toHaveBeenCalled();
 			} );
 
-			it( 'should reject required child binary that is not a regular file', () => {
+			it( 'should reject required command module that is not a regular file', () => {
 				lstatSync.mockImplementation( binPath => ( {
 					isDirectory: () => isDistBinPath( binPath ),
 					isSymbolicLink: () => false,
@@ -536,12 +542,12 @@ describe( 'release-smoke-test', () => {
 				const result = runTestCase( makeRootWpTestCase() );
 				expect( result.passed ).toBe( false );
 				expect( result.detail ).toMatch(
-					/Required child binary path exists but is not a regular file/
+					/Required command module path exists but is not a regular file/
 				);
 				expect( spawnSync ).not.toHaveBeenCalled();
 			} );
 
-			it( 'should handle required child binary lstatSync errors', () => {
+			it( 'should handle required command module lstatSync errors', () => {
 				lstatSync.mockImplementation( binPath => {
 					if ( isDistBinPath( binPath ) ) {
 						return distBinStats;
@@ -557,7 +563,7 @@ describe( 'release-smoke-test', () => {
 				const result = runTestCase( makeRootWpTestCase() );
 				expect( result.passed ).toBe( false );
 				expect( result.detail ).toMatch(
-					/Failed to stat required child binary: Permission denied/
+					/Failed to stat required command module: Permission denied/
 				);
 				expect( spawnSync ).not.toHaveBeenCalled();
 			} );

@@ -41,7 +41,7 @@ export async function getRecentLogs(
 	envId: number,
 	type: AppEnvironmentLogType,
 	limit: number,
-	after?: string
+	after?: string | null
 ): Promise< GetRecentLogsResponse > {
 	const api = API( { exitOnError: false } );
 
