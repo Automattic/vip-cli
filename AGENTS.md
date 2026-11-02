@@ -42,7 +42,7 @@ Guide for future agents working on this codebase. Focus on traps, cross-cutting 
 
 ## Build, Test, Tooling
 
-- Node.js requires `>=22.23.2` (`package.json#engines.node`); follow `.nvmrc` for development and check `node -v`. Postinstall runs `helpers/check-version.js` and rejects unsupported versions.
+- Node.js requires `>=22.23.2` (`package.json#engines.node`); follow `.nvmrc` for development and check `node -v`. The runtime check in `src/lib/node-version-check.js` warns on unsupported versions, including prereleases below the minimum.
 - TypeScript emits `dist` using `tsconfig.build.json`; Jest uses `ts-jest` with `tsconfig.jest.json`. The syntax target does not polyfill newer Node APIs or lower the supported runtime minimum. Run `npm run check-types` as well as builds when changing Node.js code, and preserve paths relative to the compiled layout.
 - Go requires 1.27 (`go.mod`); the tree uses standard-library `encoding/json/v2`. Do not add the obsolete `GOEXPERIMENT=jsonv2` setting.
 - `npm test` runs lint, type-checking, and Jest, excluding dev-env E2E. Use `npm run jest -- --runTestsByPath <test-path>` while iterating; still run relevant lint and type checks before completing code changes.
