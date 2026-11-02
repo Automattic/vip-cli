@@ -4,14 +4,11 @@ import '../lib/node-version-check';
 
 import chalk from 'chalk';
 import debugLib from 'debug';
-import { prompt } from 'enquirer';
 import path from 'node:path';
 
 import command, { containsAppEnvArgument } from '../lib/cli/command';
 import config from '../lib/cli/config';
-import tokenCache from '../lib/rechallenge/token-cache';
 import Token from '../lib/token';
-import { aliasUser, trackEvent } from '../lib/tracker';
 
 const debug = debugLib( '@automattic/vip:bin:vip' );
 
@@ -61,6 +58,15 @@ function doesArgvHaveAtLeastOneParam( argv: string[], params: string[] ): boolea
 }
 
 async function runLoginFlow() {
+	// Login dependencies are loaded only when authentication is requested.
+	// eslint-disable-next-line @typescript-eslint/no-require-imports
+	const { prompt } = require( 'enquirer' ) as typeof import('enquirer');
+	// eslint-disable-next-line @typescript-eslint/no-require-imports
+	const { aliasUser, trackEvent } = require( '../lib/tracker' ) as typeof import('../lib/tracker');
+	const { default: tokenCache } =
+		// eslint-disable-next-line @typescript-eslint/no-require-imports
+		require( '../lib/rechallenge/token-cache' ) as typeof import('../lib/rechallenge/token-cache');
+
 	console.log();
 	console.log( '   _    __ ________         ________    ____' );
 	console.log( '  | |  / //  _/ __        / ____/ /   /  _/' );

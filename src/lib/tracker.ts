@@ -1,13 +1,11 @@
 import debugLib from 'debug';
 
-import Pendo from './analytics/clients/pendo';
-import Tracks from './analytics/clients/tracks';
-import Analytics from './analytics/index';
 import env from './env';
 import config from '../lib/cli/config';
 import Token from '../lib/token';
 
 import type { AnalyticsClient } from './analytics/clients/client';
+import type Analytics from './analytics/index';
 import type { Response } from 'undici';
 
 const debug = debugLib( '@automattic/vip:analytics' );
@@ -16,6 +14,16 @@ let analytics: Analytics | null = null;
 
 async function init(): Promise< Analytics > {
 	const uuid = await Token.uuid();
+	// Literal requires keep client construction lazy in Node and bundleable in Bun.
+	const { default: Analytics } =
+		// eslint-disable-next-line @typescript-eslint/no-require-imports
+		require( './analytics/index' ) as typeof import('./analytics/index');
+	const { default: Tracks } =
+		// eslint-disable-next-line @typescript-eslint/no-require-imports
+		require( './analytics/clients/tracks' ) as typeof import('./analytics/clients/tracks');
+	const { default: Pendo } =
+		// eslint-disable-next-line @typescript-eslint/no-require-imports
+		require( './analytics/clients/pendo' ) as typeof import('./analytics/clients/pendo');
 
 	const clients: AnalyticsClient[] = [];
 

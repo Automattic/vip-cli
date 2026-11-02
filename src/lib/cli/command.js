@@ -2,20 +2,18 @@ import chalk from 'chalk';
 import { Command } from 'commander';
 import debugLib from 'debug';
 import { prompt } from 'enquirer';
-import gql from 'graphql-tag';
 import path from 'node:path';
 
 import { isAlias, parseEnvAliasFromArgv } from './envAlias';
 import * as exit from './exit';
-import { formatData, formatSearchReplaceValues } from './format';
-import { confirm } from './prompt';
 import { runCommand } from './run-command';
 import pkg from '../../../package.json';
-import API from '../../lib/api';
-import app from '../../lib/api/app';
-import { trackEvent } from '../../lib/tracker';
-import { parseApiError } from '../../lib/utils';
 import UserError from '../user-error';
+
+async function trackEvent( ...args ) {
+	const { trackEvent: track } = require( '../../lib/tracker' );
+	return track( ...args );
+}
 
 function uncaughtError( err ) {
 	// Error raised when trying to write to an already closed stream
@@ -596,6 +594,10 @@ CommanderArgsCompat.prototype.argv = async function ( argv, cb ) {
 	// Set the site in options.app
 	let res;
 	if ( _opts.appContext ) {
+		const { default: API } = require( '../../lib/api' );
+		const { default: app } = require( '../../lib/api/app' );
+		const { default: gql } = require( 'graphql-tag' );
+		const { parseApiError } = require( '../../lib/utils' );
 		// If --app is not set, try to infer the app context
 		if ( ! options.app ) {
 			const api = API();
@@ -809,6 +811,8 @@ CommanderArgsCompat.prototype.argv = async function ( argv, cb ) {
 
 	// Prompt for confirmation if necessary
 	if ( _opts.requireConfirm && ! options.force ) {
+		const { formatData, formatSearchReplaceValues } = require( './format' );
+		const { confirm } = require( './prompt' );
 		/** @type {import('./format').Tuple[]} */
 		const info = [];
 
@@ -967,6 +971,7 @@ CommanderArgsCompat.prototype.argv = async function ( argv, cb ) {
 	if ( cb ) {
 		res = await cb( this.sub, options );
 		if ( _opts.format && res ) {
+			const { formatData } = require( './format' );
 			if ( res.header ) {
 				if ( options.format !== 'json' ) {
 					console.log( formatData( res.header, 'keyValue' ) );

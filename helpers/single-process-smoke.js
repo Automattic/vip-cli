@@ -17,10 +17,10 @@ const root = path.resolve( __dirname, '..' );
 const preload = path.join( root, '__fixtures__/cli/single-process/preload.cjs' );
 const commandPath = path.join( root, 'dist/lib/cli/command.js' );
 
-function isolatedRun( args ) {
+function isolatedRun( args, preloader = preload ) {
 	const scope = mkdtempSync( path.join( tmpdir(), 'vip-single-process-' ) );
 	try {
-		return spawnSync( process.execPath, [ '--require', preload, ...args ], {
+		return spawnSync( process.execPath, [ '--require', preloader, ...args ], {
 			cwd: root,
 			encoding: 'utf8',
 			timeout: 15000,
@@ -58,6 +58,19 @@ for ( const { args } of routes ) {
 		assert.match( result.stdout, /Usage:/ );
 	} );
 }
+
+test( 'help and version do not initialize execution dependencies', () => {
+	const startupPreload = path.join( root, '__fixtures__/cli/single-process/startup-preload.cjs' );
+	for ( const args of [
+		[ '--help' ],
+		[ '--version' ],
+		[ 'config', 'envvar', 'list', '--help' ],
+	] ) {
+		const result = isolatedRun( [ 'dist/bin/vip.js', ...args ], startupPreload );
+		assert.equal( result.status, 0, result.stderr + result.stdout );
+		assert.ok( result.stdout.trim(), 'Expected help or version output' );
+	}
+} );
 
 test( 'the package exposes one executable and routes to every internal command', () => {
 	assert.deepEqual( require( '../package.json' ).bin, { vip: 'dist/bin/vip.js' } );
