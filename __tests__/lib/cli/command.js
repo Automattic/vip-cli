@@ -1,6 +1,7 @@
 import { describe, expect, it, jest, beforeEach, afterEach } from '@jest/globals';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
+import util from 'node:util';
 
 import command, {
 	containsAppEnvArgument,
@@ -289,6 +290,37 @@ describe( 'utils/cli/command', () => {
 	} );
 
 	describe( 'formatFatalError', () => {
+		describe.each( [
+			[ 'an Error', value => Object.defineProperty( new Error( 'outer' ), 'detail', { value } ) ],
+			[ 'a plain object', value => Object.defineProperty( {}, 'detail', { value } ) ],
+			[
+				'an error cause',
+				value => new Error( 'outer', { cause: Object.defineProperty( {}, 'detail', { value } ) } ),
+			],
+			[
+				'an error code',
+				value =>
+					Object.assign( new Error( 'outer' ), {
+						code: Object.defineProperty( {}, 'detail', { value } ),
+					} ),
+			],
+		] )( 'non-enumerable diagnostics on %s', ( _label, makeValue ) => {
+			it.each( [ false, true ] )(
+				'includes hidden details with a throwing inspector: %s',
+				throwing => {
+					const value = makeValue( 'diagnostic details' );
+					if ( throwing ) {
+						const target = value.cause ?? value.code ?? value;
+						target[ util.inspect.custom ] = () => {
+							throw new Error( 'inspection failed' );
+						};
+					}
+
+					expect( formatFatalError( value ) ).toContain( 'diagnostic details' );
+				}
+			);
+		} );
+
 		it( 'includes the message and stack of a plain Error', () => {
 			const err = new Error( 'boom' );
 
@@ -375,6 +407,26 @@ describe( 'utils/cli/command', () => {
 			expect( () => uncaughtError( new Error( 'boom' ) ) ).toThrow( 'exit.withError called' );
 			expect( withErrorSpy ).toHaveBeenCalledWith( 'Unexpected error: boom' );
 		} );
+
+		it.each( [ false, true ] )(
+			'preserves hidden rejection details with a throwing inspector: %s',
+			throwing => {
+				const value = Object.defineProperty( {}, 'detail', { value: 'diagnostic details' } );
+				if ( throwing ) {
+					value[ util.inspect.custom ] = () => {
+						throw new Error( 'inspection failed' );
+					};
+				}
+
+				expect( () => uncaughtError( value ) ).toThrow( 'exit.withError called' );
+				expect( withErrorSpy ).toHaveBeenCalledWith(
+					expect.stringContaining( 'diagnostic details' )
+				);
+				expect( console.log ).toHaveBeenCalledWith(
+					expect.stringContaining( 'DEBUG=@automattic/vip:*' )
+				);
+			}
+		);
 
 		it.each( [
 			[ 'undefined', undefined, 'Unexpected error: undefined' ],

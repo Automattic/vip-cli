@@ -31,9 +31,14 @@ import UserError from '../user-error';
 function describeValue( value ) {
 	if ( typeof value === 'object' && value !== null ) {
 		try {
-			return util.inspect( value, { depth: 0, breakLength: Infinity } );
+			return util.inspect( value, { depth: 0, breakLength: Infinity, showHidden: true } );
 		} catch {
-			return util.inspect( value, { depth: 0, breakLength: Infinity, customInspect: false } );
+			return util.inspect( value, {
+				depth: 0,
+				breakLength: Infinity,
+				showHidden: true,
+				customInspect: false,
+			} );
 		}
 	}
 
@@ -48,9 +53,9 @@ function describeValue( value ) {
  */
 function inspect( value ) {
 	try {
-		return util.inspect( value, { depth: 5 } );
+		return util.inspect( value, { depth: 5, showHidden: true } );
 	} catch {
-		return util.inspect( value, { depth: 5, customInspect: false } );
+		return util.inspect( value, { depth: 5, showHidden: true, customInspect: false } );
 	}
 }
 
