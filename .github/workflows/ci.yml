@@ -72,8 +72,7 @@ jobs:
         node-version:
           - 'lts/*'
           - 'lts/-1'
-          # SemVer excludes prereleases; setup-node's current alias does not.
-          - '*'
+          - 'current'
     steps:
       - name: Check out the source code
         uses: actions/checkout@v7
