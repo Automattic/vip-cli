@@ -1,7 +1,7 @@
 # Bun executable (experimental)
 
 The Node CLI can be packaged as a native executable containing the Bun runtime,
-compiled CLI code, its production dependencies, templates, and the pinned
+compiled CLI code, filesystem-dependent packages, templates, and the pinned
 search-replace companion. [Bun supports cross-compiling executables](https://bun.com/docs/bundler/executables#cross-compile-to-other-platforms).
 The build script selects the matching keytar addon from the package's shipped
 prebuilds and the matching pinned search-replace companion. An optional `--target`
@@ -49,7 +49,11 @@ The CLI runs in the executable's Bun process. The build generates lazy loaders
 for each command module, so command code is compiled into the binary while only
 the selected command is evaluated. The extracted archive holds packages that
 need real filesystem paths, the native keytar addon, the publish configuration,
-templates, and the search-replace companion. It does not contain a second CLI
+templates, and the search-replace companion. Package staging starts with Lando,
+keytar, and SSH2 and includes their installed transitive, optional, and peer
+dependencies. Packages used only by compiled CLI code are not duplicated in the
+archive. A missing required runtime dependency fails the build.
+It does not contain a second CLI
 entrypoint or a `dist` tree. Bun bytecode compilation caches the compiled CLI
 code in the executable to reduce startup parsing time.
 

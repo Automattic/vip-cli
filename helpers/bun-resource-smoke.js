@@ -58,6 +58,11 @@ async function probe( root, scratch ) {
 	assert.equal( typeof keytar.setPassword, 'function' );
 	assert.equal( typeof keytar.deletePassword, 'function' );
 
+	// eslint-disable-next-line security/detect-non-literal-require
+	const ssh = require( path.join( root, 'node_modules', 'ssh2' ) );
+	assert.equal( typeof ssh.Client, 'function' );
+	assert.equal( typeof ssh.Server, 'function' );
+
 	const companion = path.join(
 		root,
 		'bin',
@@ -82,6 +87,7 @@ async function probe( root, scratch ) {
 			tasks: tasks.length,
 			builders: builders.length,
 			keytar: 'loaded without credential access',
+			ssh: 'loaded without a connection',
 			companion: 'replaced SQL offline',
 		} )
 	);

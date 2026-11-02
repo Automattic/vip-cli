@@ -6,6 +6,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { c as createTar } from 'tar';
 
+import { runtimePackagePaths } from './bun-runtime-packages.js';
+
 const root = path.resolve( path.dirname( fileURLToPath( import.meta.url ) ), '..' );
 const supportedTargets = {
 	'bun-linux-x64': { platform: 'linux', go: 'linux/amd64', keytar: 'linux-x64' },
@@ -68,7 +70,7 @@ function productionPackagePaths() {
 }
 
 function stagePackages( payload, targetDetails ) {
-	const installed = productionPackagePaths();
+	const installed = runtimePackagePaths( root, productionPackagePaths() );
 	for ( const source of installed ) {
 		const relative = path.relative( root, source );
 		if ( relative.startsWith( '..' ) || ! relative.startsWith( `node_modules${ path.sep }` ) ) {
