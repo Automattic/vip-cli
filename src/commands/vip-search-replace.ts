@@ -71,7 +71,7 @@ export default command( {
 				exit.withError( 'You must pass in a filename' );
 			}
 
-			if ( ! searchReplace || ! searchReplace.length ) {
+			if ( ! searchReplace?.length ) {
 				exit.withError(
 					'You must provide a pair of strings (separated by comma) such as original,replacement'
 				);

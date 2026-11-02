@@ -728,7 +728,7 @@ Processing the SQL import for your environment...
 			progressTracker.startPrinting( setProgressTrackerPrefixAndSuffix );
 
 			// Run Search and Replace if the --search-replace flag was provided (local files only)
-			if ( ! isUrl && searchReplace && searchReplace.length ) {
+			if ( ! isUrl && searchReplace?.length ) {
 				progressTracker.stepRunning( 'replace' );
 
 				const { outputFileName } = await searchAndReplace( fileNameOrURL, searchReplace, {

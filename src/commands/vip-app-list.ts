@@ -62,13 +62,7 @@ export default command( { format: true, usage: baseUsage } )
 			return;
 		}
 
-		if (
-			! response ||
-			! response.data ||
-			! response.data.apps ||
-			! response.data.apps.edges ||
-			! response.data.apps.edges.length
-		) {
+		if ( ! response?.data?.apps?.edges?.length ) {
 			const message = 'No apps found';
 
 			await trackEvent( 'app_list_command_fetch_error', {

@@ -68,7 +68,7 @@ export async function vipImportValidateFilesCmd( arg: string[] = [] ) {
 	 * - Filename validation
 	 * - Intermediate image validation
 	 */
-	if ( ! files || ! files.length || files.length <= 0 ) {
+	if ( ! files?.length ) {
 		console.error( chalk.red( '✕ Error:' ), 'The media files directory cannot be empty.' );
 	}
 

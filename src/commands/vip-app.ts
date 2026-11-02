@@ -74,7 +74,7 @@ export default command( { requiredArgs: 1, format: true } )
 			return;
 		}
 
-		if ( ! res || ! res.environments ) {
+		if ( ! res?.environments ) {
 			await trackEvent( 'app_command_fetch_error', {
 				error: `App ${ arg[ 0 ] } does not exist`,
 			} );
