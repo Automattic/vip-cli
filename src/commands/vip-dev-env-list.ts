@@ -6,7 +6,7 @@ import {
 	validateDependencies,
 	getDevEnvLogFile,
 } from '../lib/dev-environment/dev-environment-cli';
-import { printAllEnvironmentsInfo } from '../lib/dev-environment/dev-environment-core';
+import { printAllEnvironmentsInfo } from '../lib/dev-environment/dev-environment-info';
 import { bootstrapLando } from '../lib/dev-environment/dev-environment-lando';
 import { trackEvent } from '../lib/tracker';
 

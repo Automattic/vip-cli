@@ -8,15 +8,12 @@ import path from 'path';
 import { which } from 'shelljs';
 
 import { getConfigurationFileOptions } from './dev-environment-configuration-file';
+import { validateDockerInstalled } from './dev-environment-lando';
 import {
-	generateVSCodeWorkspace,
 	getAllEnvironmentNames,
 	getEnvironmentPath,
-	getVersionList,
 	readEnvironmentData,
-	generatePHPStormWorkspace,
-} from './dev-environment-core';
-import { validateDockerInstalled } from './dev-environment-lando';
+} from './dev-environment-state';
 import { loadLandoModule } from './lando-loader';
 import { getCurrentUserInfo } from '../api/user';
 import { Args } from '../cli/command';
@@ -44,6 +41,12 @@ import type {
 	MultisiteKind,
 } from './types';
 import type Lando from 'lando';
+
+// Lifecycle and template helpers are only needed by commands that use them.
+const getDevEnvironmentCore = (): typeof import('./dev-environment-core') => {
+	// eslint-disable-next-line @typescript-eslint/no-require-imports
+	return require( './dev-environment-core' ) as typeof import('./dev-environment-core');
+};
 
 const debug = debugLib( '@automattic/vip:bin:dev-environment' );
 
@@ -458,7 +461,7 @@ async function processWordPress(
 		result = await promptForWordPress( defaultObject );
 	}
 
-	const versions = await getVersionList();
+	const versions = await getDevEnvironmentCore().getVersionList();
 	if ( versions.length ) {
 		versions.sort( ( before, after ) => ( before.tag < after.tag ? 1 : -1 ) );
 		const match = versions.find( ( { prerelease, tag } ) =>
@@ -1094,7 +1097,7 @@ export function addDevEnvConfigurationOptions( command: Args ): Args {
 export async function getTagChoices(): Promise<
 	{ name: string; message: string; value: string }[]
 > {
-	let versions = await getVersionList();
+	let versions = await getDevEnvironmentCore().getVersionList();
 	if ( versions.length < 1 ) {
 		versions = [
 			{
@@ -1216,7 +1219,7 @@ const SUPPORTED_EDITORS: Record< EditorType, EditorConfig > = {
 		candidates: [ 'code', 'code-insiders', 'codium' ],
 		workspace: {
 			extension: 'code-workspace',
-			generator: generateVSCodeWorkspace,
+			generator: slug => getDevEnvironmentCore().generateVSCodeWorkspace( slug ),
 		},
 	},
 	cursor: {
@@ -1224,7 +1227,7 @@ const SUPPORTED_EDITORS: Record< EditorType, EditorConfig > = {
 		candidates: [ 'cursor' ],
 		workspace: {
 			extension: 'code-workspace',
-			generator: generateVSCodeWorkspace,
+			generator: slug => getDevEnvironmentCore().generateVSCodeWorkspace( slug ),
 		},
 	},
 	phpstorm: {
@@ -1235,7 +1238,7 @@ const SUPPORTED_EDITORS: Record< EditorType, EditorConfig > = {
 		},
 		workspace: {
 			extension: 'iml',
-			generator: generatePHPStormWorkspace,
+			generator: slug => getDevEnvironmentCore().generatePHPStormWorkspace( slug ),
 		},
 	},
 	windsurf: {
@@ -1243,7 +1246,7 @@ const SUPPORTED_EDITORS: Record< EditorType, EditorConfig > = {
 		candidates: [ 'windsurf' ],
 		workspace: {
 			extension: 'code-workspace',
-			generator: generateVSCodeWorkspace,
+			generator: slug => getDevEnvironmentCore().generateVSCodeWorkspace( slug ),
 		},
 	},
 };

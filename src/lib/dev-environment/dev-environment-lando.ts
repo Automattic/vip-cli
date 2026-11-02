@@ -13,9 +13,8 @@ import {
 	doesEnvironmentExist,
 	getEnvironmentPath,
 	readEnvironmentData,
-	updateEnvironment,
 	writeEnvironmentData,
-} from './dev-environment-core';
+} from './dev-environment-state';
 import { getDockerSocket, getEngineConfig } from './docker-utils';
 import { loadLandoModule, resolveLandoModule } from './lando-loader';
 import { getRuntimeModeLabel } from '../cli/runtime-mode';
@@ -380,6 +379,11 @@ async function regenerateLandofile( lando: Lando, instancePath: string ): Promis
 	const slug = path.basename( instancePath );
 	const currentInstanceData = readEnvironmentData( slug );
 	currentInstanceData.pullAfter = 0;
+
+	// Load lifecycle code only when an update is needed.
+	// eslint-disable-next-line @typescript-eslint/no-require-imports
+	const core = require( './dev-environment-core' ) as typeof import('./dev-environment-core');
+	const { updateEnvironment } = core;
 	await updateEnvironment( lando, currentInstanceData );
 }
 
