@@ -2,10 +2,10 @@ import { CombinedGraphQLErrors } from '@apollo/client/core';
 import chalk from 'chalk';
 import debugLib from 'debug';
 import gql from 'graphql-tag';
-import readline from 'readline';
+import readline from 'node:readline';
+import { Duplex, Transform, Writable, type TransformCallback } from 'node:stream';
 import SocketIO from 'socket.io-client';
 import IOStream from 'socket.io-stream';
-import { Duplex, Transform, Writable, type TransformCallback } from 'stream';
 
 import { WPCliCommandOverSSH } from '../commands/wp-ssh';
 import API, { API_HOST, disableGlobalGraphQLErrorHandling } from '../lib/api';

@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import CliTable3 from 'cli-table3';
-import { setTimeout } from 'timers/promises';
+import { setTimeout } from 'node:timers/promises';
 
 import * as logsLib from '../lib/app-logs/app-logs';
 import command from '../lib/cli/command';
