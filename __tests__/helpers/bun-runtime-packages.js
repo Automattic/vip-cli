@@ -18,7 +18,10 @@ describe( 'Bun runtime package selection', () => {
 		return directory;
 	}
 	beforeEach( () => {
-		root = fs.mkdtempSync( path.join( os.tmpdir(), 'vip-runtime-packages-' ) );
+		// Jest resolves module search paths through realpath, including Windows short paths.
+		root = fs.realpathSync.native(
+			fs.mkdtempSync( path.join( os.tmpdir(), 'vip-runtime-packages-' ) )
+		);
 		installed = [];
 		add( '@github/keytar' );
 		add( 'lando' );
