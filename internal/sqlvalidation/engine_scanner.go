@@ -1,0 +1,272 @@
+package sqlvalidation
+
+import "strings"
+
+// engineScanner recognizes table engine options without retaining row data.
+type engineScanner struct {
+	phase, alterStage, createStage string
+	quote                          byte
+	quotedValue                    string
+	block, executable              bool
+	depth                          int
+	sawCreateBody, alterCanEngine  bool
+	engineLine                     int
+	engineEquals                   bool
+}
+
+func (s *engineScanner) reset() {
+	s.phase, s.alterStage, s.createStage = "", "", ""
+	s.depth, s.engineLine = 0, 0
+	s.sawCreateBody, s.alterCanEngine, s.engineEquals = false, false, false
+}
+
+func (s *engineScanner) token(text string, line int, findings *[]int, quoted bool) {
+	upper := strings.ToUpper(text)
+	if s.engineLine != 0 {
+		if text == "=" && !s.engineEquals {
+			s.engineEquals = true
+			return
+		}
+		valid := text != ""
+		for i := 0; i < len(text) && !quoted; i++ {
+			if !isIdent(text[i]) {
+				valid = false
+				break
+			}
+		}
+		if valid && upper != "INNODB" {
+			*findings = append(*findings, s.engineLine)
+		}
+		s.engineLine, s.engineEquals = 0, false
+	}
+	if text == ";" && !quoted {
+		s.reset()
+		return
+	}
+	switch s.phase {
+	case "":
+		if !quoted && upper == "CREATE" {
+			s.phase = "create"
+		} else if !quoted && upper == "ALTER" {
+			s.phase = "alter"
+		} else {
+			s.phase = "other"
+		}
+		return
+	case "create":
+		if !quoted && upper == "TEMPORARY" {
+			s.phase = "temporary"
+		} else if !quoted && upper == "TABLE" {
+			s.phase = "create-table"
+		} else {
+			s.phase = "other"
+		}
+		return
+	case "temporary", "alter":
+		if !quoted && upper == "TABLE" {
+			if s.phase == "alter" {
+				s.phase = "alter-table"
+			} else {
+				s.phase = "create-table"
+			}
+		} else {
+			s.phase = "other"
+		}
+		return
+	case "create-table", "alter-table":
+	default:
+		return
+	}
+	if s.phase == "create-table" && s.createStage != "options" {
+		if s.createStage == "" && !quoted && upper == "IF" {
+			s.createStage = "if-not"
+			return
+		}
+		if s.createStage == "if-not" || s.createStage == "if-exists" {
+			if !quoted && s.createStage == "if-not" && upper == "NOT" {
+				s.createStage = "if-exists"
+			} else if !quoted && s.createStage == "if-exists" && upper == "EXISTS" {
+				s.createStage = ""
+			} else {
+				s.phase = "other"
+			}
+			return
+		}
+		if s.createStage == "" || s.createStage == "qualified" {
+			s.createStage = "after-name"
+			return
+		}
+		if !quoted && text == "." {
+			s.createStage = "qualified"
+			return
+		}
+		s.createStage = "options"
+		if text != "(" || quoted {
+			s.sawCreateBody = true
+		}
+	}
+	if !quoted && text == "(" {
+		s.depth++
+		s.sawCreateBody = true
+		return
+	}
+	if !quoted && text == ")" {
+		if s.depth > 0 {
+			s.depth--
+		}
+		return
+	}
+	if s.depth > 0 {
+		return
+	}
+	if s.phase == "alter-table" {
+		if s.alterStage == "" && !quoted && upper == "IF" {
+			s.alterStage = "if-exists"
+			return
+		}
+		if s.alterStage == "if-exists" {
+			if !quoted && upper == "EXISTS" {
+				s.alterStage = ""
+			} else {
+				s.alterStage = "actions"
+			}
+			return
+		}
+		if s.alterStage == "" || s.alterStage == "qualified" {
+			s.alterStage = "after-name"
+			return
+		}
+		if s.alterStage == "after-name" {
+			if text == "." {
+				s.alterStage = "qualified"
+				return
+			}
+			s.alterStage, s.alterCanEngine = "actions", true
+		}
+		if text == "," && !quoted {
+			s.alterCanEngine = true
+			return
+		}
+		if s.alterCanEngine && !quoted && upper == "ENGINE" {
+			s.engineLine = line
+		}
+		s.alterCanEngine = false
+		return
+	}
+	if s.sawCreateBody && !quoted && upper == "ENGINE" {
+		s.engineLine = line
+	} else if s.sawCreateBody && !quoted && (upper == "AS" || upper == "SELECT") {
+		s.phase = "other"
+	}
+}
+
+func (s *engineScanner) scan(line string, lineNumber int) []int {
+	var findings []int
+	for i := 0; i < len(line); {
+		if s.block {
+			end := strings.Index(line[i:], "*/")
+			if end < 0 {
+				break
+			}
+			s.block = false
+			i += end + 2
+			continue
+		}
+		if s.quote != 0 {
+			end := strings.IndexByte(line[i:], s.quote)
+			if end < 0 {
+				if s.engineLine != 0 {
+					s.quotedValue += line[i:min(len(line), i+128)] + "\n"
+					if len(s.quotedValue) > 128 {
+						s.quotedValue = s.quotedValue[:128]
+					}
+				}
+				break
+			}
+			end += i
+			if s.engineLine != 0 {
+				s.quotedValue += line[i:min(end, i+128)]
+				if len(s.quotedValue) > 128 {
+					s.quotedValue = s.quotedValue[:128]
+				}
+			}
+			escaped := s.quote != '`' && escapedQuote(line, end)
+			if escaped || end+1 < len(line) && line[end+1] == s.quote {
+				i = end + 1
+				if !escaped && i < len(line) {
+					i++
+				}
+				continue
+			}
+			i = end + 1
+			s.quote = 0
+			s.token(s.quotedValue, lineNumber, &findings, true)
+			s.quotedValue = ""
+			continue
+		}
+		if s.executable && strings.HasPrefix(line[i:], "*/") {
+			s.executable = false
+			i += 2
+			continue
+		}
+		if strings.HasPrefix(line[i:], "/*") {
+			if strings.HasPrefix(line[i:], "/*!") || strings.HasPrefix(strings.ToUpper(line[i:min(len(line), i+4)]), "/*M!") {
+				s.executable = true
+				i += 3
+				if line[i-1] != '!' {
+					i++
+				}
+				start := i
+				for i < len(line) && line[i] >= '0' && line[i] <= '9' && i-start < 6 {
+					i++
+				}
+				if i-start < 5 {
+					i = start
+				}
+			} else {
+				s.block = true
+				i += 2
+			}
+			continue
+		}
+		if line[i] == '#' || strings.HasPrefix(line[i:], "--") && (i+2 == len(line) || strings.ContainsRune(" \t\r\n", rune(line[i+2]))) {
+			break
+		}
+		if strings.ContainsRune("'\"`", rune(line[i])) {
+			s.quote = line[i]
+			s.quotedValue = ""
+			i++
+			continue
+		}
+		if s.phase == "other" && line[i] != ';' {
+			next := strings.IndexAny(line[i+1:], "'\"`;#/-")
+			if next < 0 {
+				break
+			}
+			i += next + 1
+			continue
+		}
+		if isIdent(line[i]) {
+			end := i + 1
+			for end < len(line) && isIdent(line[end]) {
+				end++
+			}
+			s.token(line[i:end], lineNumber, &findings, false)
+			i = end
+			continue
+		}
+		if strings.ContainsRune("();,.=", rune(line[i])) {
+			s.token(line[i:i+1], lineNumber, &findings, false)
+		}
+		i++
+	}
+	unique := make([]int, 0, len(findings))
+	seen := make(map[int]bool)
+	for _, n := range findings {
+		if !seen[n] {
+			seen[n] = true
+			unique = append(unique, n)
+		}
+	}
+	return unique
+}

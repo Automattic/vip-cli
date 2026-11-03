@@ -1,0 +1,22 @@
+[
+  {"name":"insert data", "lines":["INSERT INTO wp_posts VALUES (1, 'engine = MyISAM');", ",('ENGINE=bad');"], "want":[]},
+  {"name":"multiline value contains SQL", "lines":["INSERT INTO wp_posts VALUES (\"hello;", "CREATE TABLE fake (id INT) ENGINE=MyISAM;", "world\");", "CREATE TABLE real (id INT) ENGINE=InnoDB;"], "want":[]},
+  {"name":"column default and identifiers", "lines":["CREATE TABLE `a ENGINE=bad` (", " `description` TEXT DEFAULT ' ENGINE=MyISAM',", " `x` INT", ") ENGINE=InnoDB;"], "want":[]},
+  {"name":"comments are not DDL", "lines":["-- CREATE TABLE t (id INT) ENGINE=MyISAM;", "/* CREATE TABLE x (id INT) ENGINE=Aria; */", "CREATE TABLE y (id INT) ENGINE=InnoDB;"], "want":[]},
+  {"name":"non innodb create", "lines":["CREATE TABLE x (id INT, PRIMARY KEY (id))", ") ENGINE = MyISAM;"], "want":[2]},
+  {"name":"multiple statements", "lines":["CREATE TABLE a (id INT) ENGINE=InnoDB; CREATE TABLE b (id INT) ENGINE=Aria;"], "want":[1]},
+  {"name":"alter continuation", "lines":["ALTER TABLE `db`.`wp_posts` ADD COLUMN x INT", ", ENGINE = MyISAM;"], "want":[2]},
+  {"name":"engine after newline", "lines":["CREATE TEMPORARY TABLE t (id INT)", "ENGINE", "=", "`Aria`;"], "want":[2]},
+  {"name":"exact engine name", "lines":["CREATE TABLE t (id INT) ENGINE=InnoDB_extra;"], "want":[1]},
+  {"name":"string and identifier escapes", "lines":["CREATE TABLE `a``;x` (id INT, note TEXT DEFAULT 'it\\'s ENGINE=Aria') ENGINE=InnoDB;"], "want":[]},
+  {"name":"executable option comment", "lines":["CREATE TABLE t (id INT) /*!50100 ENGINE=MyISAM */;"], "want":[1]},
+  {"name":"mariadb executable option comment", "lines":["CREATE TABLE t (id INT) /*M!100301 ENGINE=Aria */;"], "want":[1]},
+  {"name":"ignore engine column in alter", "lines":["ALTER TABLE t ADD COLUMN `ENGINE` VARCHAR(20) DEFAULT 'MyISAM';"], "want":[]},
+  {"name":"comment between tokens", "lines":["CREATE/**/TABLE t (id INT) ENGINE/**/=/**/MyISAM;"], "want":[1]},
+  {"name":"quoted engine", "lines":["CREATE TABLE t (id INT) ENGINE='InnoDB';", "ALTER TABLE t ENGINE = `Aria`;"], "want":[2]},
+  {"name":"alter if exists", "lines":["ALTER TABLE IF EXISTS db.t ENGINE=MyISAM;"], "want":[1]},
+  {"name":"create select is not an engine option", "lines":["CREATE TABLE t (id INT) AS SELECT engine = 4 FROM source;"], "want":[]},
+  {"name":"create select without definitions", "lines":["CREATE TABLE IF NOT EXISTS db.t ENGINE=MyISAM AS SELECT 1;"], "want":[1]},
+  {"name":"quoted engine with punctuation", "lines":["CREATE TABLE t (id INT) ENGINE='my-engine';"], "want":[1]},
+  {"name":"multiline quoted engine", "lines":["CREATE TABLE t (id INT) ENGINE='Inno", "DB';"], "want":[1]}
+]

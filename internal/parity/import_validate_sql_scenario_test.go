@@ -91,3 +91,28 @@ func TestImportValidateSQLOptionsRowsDifferential(t *testing.T) {
 		}
 	}
 }
+
+func TestImportValidateSQLEngineDifferential(t *testing.T) {
+	rig, skip := differentialAvailable(t)
+	if skip != "" {
+		t.Skip(LoudSkip("SQL engine differential", skip))
+	}
+	for _, tc := range []struct {
+		name, diagnostic string
+		exit             int
+	}{
+		{"clean", "ENGINE != InnoDB was found 0 times.", 0},
+		{"bad", "ENGINE != InnoDB on line(s) 5.", 1},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			scenario := &Scenario{Name: "sql-engine-" + tc.name, Argv: []string{"import", "validate-sql", "../../testdata/parity/recordings/sql-engine-validation/" + tc.name + ".sql"}, Env: map[string]string{"DO_NOT_TRACK": "1", "NODE_ENV": "test"}}
+			scenario.Env = rig.scenarioEnv(scenario)
+			for _, side := range []struct{ name, binary string }{{"node", rig.nodeBin}, {"go", rig.goBin}} {
+				result, _ := rig.runSide(t, scenario, side.binary, nullMux)
+				if result.ExitCode != tc.exit || !strings.Contains(result.Stdout+result.Stderr, tc.diagnostic) {
+					t.Errorf("%s: exit=%d stdout=%q stderr=%q", side.name, result.ExitCode, result.Stdout, result.Stderr)
+				}
+			}
+		})
+	}
+}

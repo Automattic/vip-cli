@@ -1,0 +1,5 @@
+DROP TABLE IF EXISTS `wp_posts`;
+CREATE TABLE `wp_posts` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM;
