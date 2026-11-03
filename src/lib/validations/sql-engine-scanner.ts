@@ -42,7 +42,7 @@ export class SqlEngineScanner {
 				this.engineEquals = true;
 				return;
 			}
-			if ( ( quoted ? Boolean( text ) : /^[A-Z0-9_$]+$/i.test( text ) ) && 'INNODB' !== upper ) {
+			if ( ( quoted || /^[A-Z0-9_$]+$/i.test( text ) ) && 'INNODB' !== upper ) {
 				findings.push( this.engineLine );
 			}
 			this.engineLine = 0;

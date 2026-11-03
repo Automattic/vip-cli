@@ -18,5 +18,6 @@
   {"name":"create select is not an engine option", "lines":["CREATE TABLE t (id INT) AS SELECT engine = 4 FROM source;"], "want":[]},
   {"name":"create select without definitions", "lines":["CREATE TABLE IF NOT EXISTS db.t ENGINE=MyISAM AS SELECT 1;"], "want":[1]},
   {"name":"quoted engine with punctuation", "lines":["CREATE TABLE t (id INT) ENGINE='my-engine';"], "want":[1]},
-  {"name":"multiline quoted engine", "lines":["CREATE TABLE t (id INT) ENGINE='Inno", "DB';"], "want":[1]}
+  {"name":"multiline quoted engine", "lines":["CREATE TABLE t (id INT) ENGINE='Inno", "DB';"], "want":[1]},
+  {"name":"empty engine", "lines":["CREATE TABLE t (id INT) ENGINE='';"], "want":[1]}
 ]

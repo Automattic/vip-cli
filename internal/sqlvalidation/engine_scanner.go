@@ -27,7 +27,7 @@ func (s *engineScanner) token(text string, line int, findings *[]int, quoted boo
 			s.engineEquals = true
 			return
 		}
-		valid := text != ""
+		valid := quoted || text != ""
 		for i := 0; i < len(text) && !quoted; i++ {
 			if !isIdent(text[i]) {
 				valid = false
