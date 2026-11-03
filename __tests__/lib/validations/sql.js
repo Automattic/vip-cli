@@ -208,6 +208,10 @@ describe( 'lib/validations/sql', () => {
 		} );
 		it( 'should suggest replacements for option rows inserted with supported statement variants', () => {
 			expect( output ).toContain(
+				'Use \'--search-replace="after-unrelated-multiline.example,test.domain"\' switch to replace the domain'
+			);
+			expect( output ).not.toContain( 'embedded-multiline.example' );
+			expect( output ).toContain(
 				'Use \'--search-replace="after-multiline-quote.example/#fragment,test.domain"\' switch to replace the domain'
 			);
 			expect( output ).not.toContain( 'trailing-clause.example' );

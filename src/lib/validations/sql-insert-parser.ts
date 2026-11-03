@@ -345,7 +345,13 @@ export const stripSqlCommentsOutsideQuotedStrings = (
 			const quote = state.quote;
 			const start = index;
 			while ( index < line.length ) {
-				if ( line[ index ] === quote && ! isEscapedByBackslash( line, index ) ) {
+				const nextQuote = line.indexOf( quote, index );
+				if ( -1 === nextQuote ) {
+					index = line.length;
+					break;
+				}
+				index = nextQuote;
+				if ( ! isEscapedByBackslash( line, index ) ) {
 					if ( line[ index + 1 ] === quote ) {
 						index += 2;
 						continue;
@@ -385,8 +391,12 @@ export const stripSqlCommentsOutsideQuotedStrings = (
 			continue;
 		}
 
-		uncommentedLine += line[ index ];
-		index += 1;
+		const nextSpecial = /['"#/-]/g;
+		nextSpecial.lastIndex = index + 1;
+		const match = nextSpecial.exec( line );
+		const end = match?.index ?? line.length;
+		uncommentedLine += line.slice( index, end );
+		index = end;
 	}
 
 	if ( inBlockComment ) {

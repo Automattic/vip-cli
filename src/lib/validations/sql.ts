@@ -629,6 +629,7 @@ const resetFinishedInsertStatement = ( uncommentedLine: string ): void => {
 	if (
 		currentInsertStatementTableName &&
 		! currentInsertStatementRowBuffer &&
+		! currentSqlCommentStripState.quote &&
 		uncommentedLine.length > 0 &&
 		uncommentedLine.trimEnd().endsWith( ';' )
 	) {
@@ -655,9 +656,10 @@ const perLineValidations = (
 	const rawInsertInfo = wasInQuotedValue ? undefined : getInsertStatementInfo( line );
 	const shouldStripComments =
 		currentSqlCommentStripState.inBlockComment ||
+		Boolean( currentSqlCommentStripState.quote ) ||
 		line.includes( '/*' ) ||
-		isWordPressOptionsTable( currentInsertStatementTableName ) ||
-		isWordPressOptionsTable( rawInsertInfo?.tableName );
+		Boolean( currentInsertStatementTableName ) ||
+		Boolean( rawInsertInfo );
 	const uncommentedLine = shouldStripComments
 		? stripSqlCommentsOutsideQuotedStrings( line, currentSqlCommentStripState )
 		: line;

@@ -7,3 +7,8 @@ INSERT INTO wp_options (option_name, option_value) VALUES ('blogdescription','fi
 INSERT INTO wp_posts is text'), ('home', 'https://multiline.example/#part');
 INSERT INTO wp_options (option_name, option_value) VALUES ('blogdescription','ok') ON DUPLICATE KEY UPDATE
 option_value = CONCAT('home','https://clause.example');
+INSERT INTO wp_postmeta (meta_value) VALUES
+("text ends with semicolon;
+INSERT INTO wp_options (option_name, option_value) VALUES ('home', 'https://embedded-multiline.example');
+more text");
+INSERT INTO wp_options (option_name, option_value) VALUES ('home','https://after-unrelated.example');

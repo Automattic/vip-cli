@@ -82,7 +82,9 @@ func TestImportValidateSQLOptionsRowsDifferential(t *testing.T) {
 		result, _ := rig.runSide(t, scenario, side.binary, nullMux)
 		if result.ExitCode != 0 || !strings.Contains(result.Stdout, "home https://real.example/#part") ||
 			!strings.Contains(result.Stdout, "home https://multiline.example/#part") ||
-			strings.Contains(result.Stdout, "unrelated.example") || strings.Contains(result.Stdout, "clause.example") {
+			!strings.Contains(result.Stdout, "home https://after-unrelated.example") ||
+			strings.Contains(result.Stdout, "https://unrelated.example") || strings.Contains(result.Stdout, "clause.example") ||
+			strings.Contains(result.Stdout, "embedded-multiline.example") {
 			t.Errorf("%s: exit=%d stdout=%q stderr=%q", side.name, result.ExitCode, result.Stdout, result.Stderr)
 		}
 	}

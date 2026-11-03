@@ -99,6 +99,11 @@ INSERT INTO wp_options (option_name, option_value) VALUES ('blogdescription', 'f
 INSERT INTO wp_posts is also text'), ('home', 'https://after-multiline-quote.example/#fragment');
 INSERT INTO wp_options (option_name, option_value) VALUES ('blogdescription', 'ok') ON DUPLICATE KEY UPDATE
 option_value = CONCAT('home', 'https://trailing-clause.example');
+INSERT INTO wp_postmeta (meta_value) VALUES
+("text ends in a semicolon;
+INSERT INTO wp_options (option_name, option_value) VALUES ('home', 'https://embedded-multiline.example');
+more text");
+INSERT INTO wp_options (option_name, option_value) VALUES ('home', 'https://after-unrelated-multiline.example');
 INSERT INTO wp_options (option_name, option_value) VALUES ('blogdescription', 'end\''), ('home', 'https://escaped-quote.example/#fragment');
 INSERT INTO wp_options (option_name, option_value) VALUES ('blogdescription', 'first line;
 second line'),

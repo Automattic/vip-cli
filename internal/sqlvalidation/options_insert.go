@@ -64,9 +64,15 @@ func (s *optionsInsertScanner) uncomment(line string) string {
 			continue
 		}
 		if s.quote != 0 {
-			c := line[i]
-			out.WriteByte(c)
-			if c == s.quote && !escapedQuote(line, i) {
+			next := strings.IndexByte(line[i:], s.quote)
+			if next < 0 {
+				out.WriteString(line[i:])
+				break
+			}
+			next += i
+			out.WriteString(line[i : next+1])
+			i = next
+			if !escapedQuote(line, i) {
 				if i+1 < len(line) && line[i+1] == s.quote {
 					i++
 					out.WriteByte(line[i])
@@ -91,8 +97,14 @@ func (s *optionsInsertScanner) uncomment(line string) string {
 			i += 2
 			continue
 		}
-		out.WriteByte(line[i])
-		i++
+		next := strings.IndexAny(line[i+1:], "'\"#/-")
+		if next < 0 {
+			out.WriteString(line[i:])
+			break
+		}
+		next += i + 1
+		out.WriteString(line[i:next])
+		i = next
 	}
 	if s.blockComment {
 		return strings.TrimRight(out.String(), " \t\r\n")
@@ -210,15 +222,7 @@ func unquoteSQL(value string) string {
 func (s *optionsInsertScanner) scan(line string) [][]string {
 	// A block opener can appear after unrelated SQL and hide a later INSERT.
 	wasInQuotedValue := s.quote != 0
-	header := insertHeader.FindStringSubmatch(line)
-	headerTable := ""
-	if len(header) > 1 {
-		headerTable = header[1]
-		if header[2] != "" {
-			headerTable = header[2]
-		}
-	}
-	if s.blockComment || s.quote != 0 || strings.Contains(line, "/*") || optionsTable.MatchString(s.table) || optionsTable.MatchString(strings.Trim(headerTable, "`")) {
+	if s.blockComment || s.quote != 0 || strings.Contains(line, "/*") || s.table != "" || insertHeader.MatchString(line) {
 		line = s.uncomment(line)
 	}
 	if match := insertHeader.FindStringSubmatchIndex(line); match != nil && !wasInQuotedValue {
@@ -232,7 +236,7 @@ func (s *optionsInsertScanner) scan(line string) [][]string {
 		line = line[match[1]:]
 	}
 	if !optionsTable.MatchString(s.table) {
-		if strings.HasSuffix(strings.TrimSpace(line), ";") {
+		if s.quote == 0 && strings.HasSuffix(strings.TrimSpace(line), ";") {
 			s.table = ""
 		}
 		return nil
