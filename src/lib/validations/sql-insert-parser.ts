@@ -49,11 +49,21 @@ export const readSqlIdentifier = (
 	}
 
 	if ( '`' === line[ index ] ) {
-		const endIndex = line.indexOf( '`', index + 1 );
-		if ( -1 === endIndex ) {
-			return undefined;
+		let endIndex = index + 1;
+		while ( endIndex < line.length ) {
+			endIndex = line.indexOf( '`', endIndex );
+			if ( -1 === endIndex ) {
+				return undefined;
+			}
+			if ( '`' !== line[ endIndex + 1 ] ) {
+				return {
+					name: line.slice( index + 1, endIndex ).replaceAll( '``', '`' ),
+					endIndex: endIndex + 1,
+				};
+			}
+			endIndex += 2;
 		}
-		return { name: line.slice( index + 1, endIndex ), endIndex: endIndex + 1 };
+		return undefined;
 	}
 
 	const matches = SQL_IDENTIFIER_REGEX.exec( line.slice( index ) );
@@ -254,7 +264,7 @@ interface SqlBlockCommentSkipResult {
 	nextIndex: number;
 }
 
-const isSqlQuoteStart = ( char: string ): boolean => "'" === char || '"' === char;
+const isSqlQuoteStart = ( char: string ): boolean => "'" === char || '"' === char || '`' === char;
 
 const isSqlBlockCommentStart = ( line: string, index: number ): boolean =>
 	'/' === line[ index ] && '*' === line[ index + 1 ];
@@ -325,6 +335,15 @@ const skipSqlBlockComment = (
 	};
 };
 
+const blockCommentNeedsSeparator = ( output: string, line: string, nextIndex: number ): boolean =>
+	Boolean( output ) &&
+	! /\s$/.test( output ) &&
+	nextIndex < line.length &&
+	! /\s/.test( line[ nextIndex ] );
+
+const isUnescapedDelimiter = ( quote: string, line: string, index: number ): boolean =>
+	'`' === quote || ! isEscapedByBackslash( line, index );
+
 export const stripSqlCommentsOutsideQuotedStrings = (
 	line: string,
 	state?: SqlCommentStripState
@@ -351,7 +370,7 @@ export const stripSqlCommentsOutsideQuotedStrings = (
 					break;
 				}
 				index = nextQuote;
-				if ( ! isEscapedByBackslash( line, index ) ) {
+				if ( isUnescapedDelimiter( quote, line, index ) ) {
 					if ( line[ index + 1 ] === quote ) {
 						index += 2;
 						continue;
@@ -386,12 +405,15 @@ export const stripSqlCommentsOutsideQuotedStrings = (
 
 		if ( isSqlBlockCommentStart( line, index ) ) {
 			const blockComment = skipSqlBlockComment( line, index + 2, uncommentedLine, state );
+			if ( blockCommentNeedsSeparator( uncommentedLine, line, blockComment.nextIndex ) ) {
+				uncommentedLine += ' ';
+			}
 			inBlockComment = blockComment.inBlockComment;
 			index = blockComment.nextIndex;
 			continue;
 		}
 
-		const nextSpecial = /['"#/-]/g;
+		const nextSpecial = /['"`#/-]/g;
 		nextSpecial.lastIndex = index + 1;
 		const match = nextSpecial.exec( line );
 		const end = match?.index ?? line.length;

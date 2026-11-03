@@ -12,3 +12,5 @@ INSERT INTO wp_postmeta (meta_value) VALUES
 INSERT INTO wp_options (option_name, option_value) VALUES ('home', 'https://embedded-multiline.example');
 more text");
 INSERT INTO wp_options (option_name, option_value) VALUES ('home','https://after-unrelated.example');
+INSERT/**/INTO `db``#archive`.`wp_options` (option_name, option_value) VALUES/**/('home', 'https://quoted-schema.example');
+INSERT INTO `db/*literal*/name`.`wp_options` (option_name, option_value) VALUES ('siteurl', 'https://quoted-comment-marker.example');

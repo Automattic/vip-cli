@@ -83,6 +83,8 @@ func TestImportValidateSQLOptionsRowsDifferential(t *testing.T) {
 		if result.ExitCode != 0 || !strings.Contains(result.Stdout, "home https://real.example/#part") ||
 			!strings.Contains(result.Stdout, "home https://multiline.example/#part") ||
 			!strings.Contains(result.Stdout, "home https://after-unrelated.example") ||
+			!strings.Contains(result.Stdout, "home https://quoted-schema.example") ||
+			!strings.Contains(result.Stdout, "siteurl https://quoted-comment-marker.example") ||
 			strings.Contains(result.Stdout, "https://unrelated.example") || strings.Contains(result.Stdout, "clause.example") ||
 			strings.Contains(result.Stdout, "embedded-multiline.example") {
 			t.Errorf("%s: exit=%d stdout=%q stderr=%q", side.name, result.ExitCode, result.Stdout, result.Stderr)

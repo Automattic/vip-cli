@@ -394,6 +394,8 @@ describe( 'sql-insert-parser', () => {
 
 	describe( 'stripSqlCommentsOutsideQuotedStrings', () => {
 		it.each( [
+			[ 'separates tokens around a block comment', 'INSERT/**/INTO', 'INSERT INTO' ],
+			[ 'preserves comment markers in quoted identifiers', '`a``#b/*c*/`', '`a``#b/*c*/`' ],
 			[ 'returns a plain line without comments unchanged', 'foo bar', 'foo bar' ],
 			[
 				'strips a -- line comment and trims trailing whitespace before it',

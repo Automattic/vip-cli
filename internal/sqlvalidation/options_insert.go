@@ -19,7 +19,7 @@ type optionsInsertScanner struct {
 	quote             byte
 }
 
-var insertHeader = regexp.MustCompile("(?i)^\\s*(?:INSERT|REPLACE)\\b(?:\\s+(?:IGNORE|LOW_PRIORITY|DELAYED|HIGH_PRIORITY|INTO)\\b)*\\s+(`[^`]+`|[a-z0-9_$]+)(?:\\s*\\.\\s*(`[^`]+`|[a-z0-9_$]+))?")
+var insertHeader = regexp.MustCompile("(?i)^\\s*(?:INSERT|REPLACE)\\b(?:\\s+(?:IGNORE|LOW_PRIORITY|DELAYED|HIGH_PRIORITY|INTO)\\b)*\\s+(`(?:``|[^`])+`|[a-z0-9_$]+)(?:\\s*\\.\\s*(`(?:``|[^`])+`|[a-z0-9_$]+))?")
 var optionsTable = regexp.MustCompile(`(?i)^wp_(?:[0-9]+_)?options$`)
 var valuesKeyword = regexp.MustCompile(`(?i)^values?\b`)
 
@@ -72,7 +72,7 @@ func (s *optionsInsertScanner) uncomment(line string) string {
 			next += i
 			out.WriteString(line[i : next+1])
 			i = next
-			if !escapedQuote(line, i) {
+			if s.quote == '`' || !escapedQuote(line, i) {
 				if i+1 < len(line) && line[i+1] == s.quote {
 					i++
 					out.WriteByte(line[i])
@@ -83,7 +83,7 @@ func (s *optionsInsertScanner) uncomment(line string) string {
 			i++
 			continue
 		}
-		if line[i] == '\'' || line[i] == '"' {
+		if line[i] == '\'' || line[i] == '"' || line[i] == '`' {
 			s.quote = line[i]
 			out.WriteByte(line[i])
 			i++
@@ -95,9 +95,16 @@ func (s *optionsInsertScanner) uncomment(line string) string {
 		if strings.HasPrefix(line[i:], "/*") {
 			s.blockComment = true
 			i += 2
+			if end := strings.Index(line[i:], "*/"); end >= 0 && out.Len() > 0 {
+				previous := out.String()[out.Len()-1]
+				next := i + end + 2
+				if next < len(line) && !strings.ContainsRune(" \t\r\n", rune(previous)) && !strings.ContainsRune(" \t\r\n", rune(line[next])) {
+					out.WriteByte(' ')
+				}
+			}
 			continue
 		}
-		next := strings.IndexAny(line[i+1:], "'\"#/-")
+		next := strings.IndexAny(line[i+1:], "'\"`#/-")
 		if next < 0 {
 			out.WriteString(line[i:])
 			break
