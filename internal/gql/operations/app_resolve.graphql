@@ -13,6 +13,7 @@ query ResolveAppByName($name: String!) {
         uniqueLabel
         defaultDomain
         isMultisite
+        isK8sResident
       }
     }
   }
@@ -32,6 +33,7 @@ query ResolveAppByID($id: Int!) {
       uniqueLabel
       defaultDomain
       isMultisite
+      isK8sResident
     }
   }
 }
