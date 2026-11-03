@@ -14,7 +14,9 @@ type optionsInsertScanner struct {
 	collectingColumns bool
 	rowBuffer         string
 	hasValues         bool
+	valuesFinished    bool
 	blockComment      bool
+	quote             byte
 }
 
 var insertHeader = regexp.MustCompile("(?i)^\\s*(?:INSERT|REPLACE)\\b(?:\\s+(?:IGNORE|LOW_PRIORITY|DELAYED|HIGH_PRIORITY|INTO)\\b)*\\s+(`[^`]+`|[a-z0-9_$]+)(?:\\s*\\.\\s*(`[^`]+`|[a-z0-9_$]+))?")
@@ -61,10 +63,24 @@ func (s *optionsInsertScanner) uncomment(line string) string {
 			}
 			continue
 		}
+		if s.quote != 0 {
+			c := line[i]
+			out.WriteByte(c)
+			if c == s.quote && !escapedQuote(line, i) {
+				if i+1 < len(line) && line[i+1] == s.quote {
+					i++
+					out.WriteByte(line[i])
+				} else {
+					s.quote = 0
+				}
+			}
+			i++
+			continue
+		}
 		if line[i] == '\'' || line[i] == '"' {
-			end := skipQuoted(line, i)
-			out.WriteString(line[i:end])
-			i = end
+			s.quote = line[i]
+			out.WriteByte(line[i])
+			i++
 			continue
 		}
 		if line[i] == '#' || (strings.HasPrefix(line[i:], "--") && (i+2 == len(line) || strings.ContainsRune(" \t\r\n", rune(line[i+2])))) {
@@ -118,7 +134,7 @@ func parseColumns(text string) []string {
 	return cols
 }
 
-func parseRows(input string) ([][]string, string) {
+func parseRows(input string) ([][]string, string, bool) {
 	var rows [][]string
 	var row []string
 	var value strings.Builder
@@ -126,6 +142,9 @@ func parseRows(input string) ([][]string, string) {
 	var quote byte
 	for i := 0; i < len(input); i++ {
 		c := input[i]
+		if depth == 0 && quote == 0 && !strings.ContainsRune(" \t\r\n,(", rune(c)) {
+			return rows, "", true
+		}
 		if quote != 0 {
 			value.WriteByte(c)
 			if c == quote && !escapedQuote(input, i) {
@@ -174,9 +193,9 @@ func parseRows(input string) ([][]string, string) {
 		}
 	}
 	if start >= 0 {
-		return rows, input[start:]
+		return rows, input[start:], false
 	}
-	return rows, ""
+	return rows, "", false
 }
 
 func unquoteSQL(value string) string {
@@ -190,6 +209,7 @@ func unquoteSQL(value string) string {
 
 func (s *optionsInsertScanner) scan(line string) [][]string {
 	// A block opener can appear after unrelated SQL and hide a later INSERT.
+	wasInQuotedValue := s.quote != 0
 	header := insertHeader.FindStringSubmatch(line)
 	headerTable := ""
 	if len(header) > 1 {
@@ -198,16 +218,17 @@ func (s *optionsInsertScanner) scan(line string) [][]string {
 			headerTable = header[2]
 		}
 	}
-	if s.blockComment || strings.Contains(line, "/*") || optionsTable.MatchString(s.table) || optionsTable.MatchString(strings.Trim(headerTable, "`")) {
+	if s.blockComment || s.quote != 0 || strings.Contains(line, "/*") || optionsTable.MatchString(s.table) || optionsTable.MatchString(strings.Trim(headerTable, "`")) {
 		line = s.uncomment(line)
 	}
-	if match := insertHeader.FindStringSubmatchIndex(line); match != nil {
+	if match := insertHeader.FindStringSubmatchIndex(line); match != nil && !wasInQuotedValue {
 		name := line[match[2]:match[3]]
 		if match[4] >= 0 {
 			name = line[match[4]:match[5]]
 		}
 		s.table = strings.Trim(name, "`")
 		s.columns, s.columnBuffer, s.rowBuffer, s.hasValues, s.collectingColumns = nil, "", "", false, false
+		s.valuesFinished = false
 		line = line[match[1]:]
 	}
 	if !optionsTable.MatchString(s.table) {
@@ -217,6 +238,12 @@ func (s *optionsInsertScanner) scan(line string) [][]string {
 		return nil
 	}
 	if strings.TrimSpace(line) == "" {
+		return nil
+	}
+	if s.valuesFinished {
+		if strings.HasSuffix(strings.TrimSpace(line), ";") {
+			s.table = ""
+		}
 		return nil
 	}
 	if !s.hasValues {
@@ -249,8 +276,9 @@ func (s *optionsInsertScanner) scan(line string) [][]string {
 	if s.rowBuffer != "" {
 		input = s.rowBuffer + "\n" + line
 	}
-	rows, remainder := parseRows(input)
+	rows, remainder, finished := parseRows(input)
 	s.rowBuffer = remainder
+	s.valuesFinished = finished
 	if remainder == "" && strings.HasSuffix(strings.TrimSpace(line), ";") {
 		s.table = ""
 	}

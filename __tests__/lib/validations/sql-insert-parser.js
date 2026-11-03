@@ -507,11 +507,7 @@ describe( 'sql-insert-parser', () => {
 			],
 			[ 'returns empty rows for an empty input', '', { rows: [], remainder: undefined } ],
 			[ 'returns empty rows for whitespace-only input', '   ', { rows: [], remainder: undefined } ],
-			[
-				'skips garbage before the first opening parenthesis',
-				"... ('a','b')",
-				{ rows: [ [ "'a'", "'b'" ] ], remainder: undefined },
-			],
+			[ 'stops at non-tuple content', "... ('a','b')", { rows: [], finished: true } ],
 		] )( '%s', ( _name, input, expected ) => {
 			expect( parseSqlTupleRows( input, 0 ) ).toEqual( expected );
 		} );

@@ -80,7 +80,9 @@ func TestImportValidateSQLOptionsRowsDifferential(t *testing.T) {
 	scenario.Env = rig.scenarioEnv(scenario)
 	for _, side := range []struct{ name, binary string }{{"node", rig.nodeBin}, {"go", rig.goBin}} {
 		result, _ := rig.runSide(t, scenario, side.binary, nullMux)
-		if result.ExitCode != 0 || !strings.Contains(result.Stdout, "home https://real.example/#part") || strings.Contains(result.Stdout, "unrelated.example") {
+		if result.ExitCode != 0 || !strings.Contains(result.Stdout, "home https://real.example/#part") ||
+			!strings.Contains(result.Stdout, "home https://multiline.example/#part") ||
+			strings.Contains(result.Stdout, "unrelated.example") || strings.Contains(result.Stdout, "clause.example") {
 			t.Errorf("%s: exit=%d stdout=%q stderr=%q", side.name, result.ExitCode, result.Stdout, result.Stderr)
 		}
 	}

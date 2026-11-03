@@ -51,12 +51,12 @@ func TestOptionsInsertDevEnvFixture(t *testing.T) {
 			text.WriteString(result.Recommendation + "\n")
 		}
 	}
-	for _, domain := range []string{"full-order.example", "singular-default.example", "split-header.example", "multi-line-columns.example", "multi-line-tuple.example", "escaped-quote.example/#fragment", "after-semicolon.example"} {
+	for _, domain := range []string{"full-order.example", "singular-default.example", "split-header.example", "multi-line-columns.example", "multi-line-tuple.example", "escaped-quote.example/#fragment", "after-semicolon.example", "after-multiline-quote.example/#fragment"} {
 		if !strings.Contains(text.String(), domain) {
 			t.Errorf("missing %s", domain)
 		}
 	}
-	for _, domain := range []string{"unrelated-table.example", "embedded.example", "commented-insert.example", "non-options-comment.example"} {
+	for _, domain := range []string{"unrelated-table.example", "embedded.example", "commented-insert.example", "non-options-comment.example", "trailing-clause.example"} {
 		if strings.Contains(text.String(), domain) {
 			t.Errorf("unexpected %s", domain)
 		}

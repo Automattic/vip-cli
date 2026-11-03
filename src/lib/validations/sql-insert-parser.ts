@@ -236,10 +236,12 @@ export const isEscapedByBackslash = ( line: string, index: number ): boolean => 
 export interface SqlTupleRowsParseResult {
 	rows: string[][];
 	remainder?: string;
+	finished?: boolean;
 }
 
 export interface SqlCommentStripState {
 	inBlockComment: boolean;
+	quote?: string;
 }
 
 interface SqlTextSegment {
@@ -339,6 +341,32 @@ export const stripSqlCommentsOutsideQuotedStrings = (
 			continue;
 		}
 
+		if ( state?.quote ) {
+			const quote = state.quote;
+			const start = index;
+			while ( index < line.length ) {
+				if ( line[ index ] === quote && ! isEscapedByBackslash( line, index ) ) {
+					if ( line[ index + 1 ] === quote ) {
+						index += 2;
+						continue;
+					}
+					state.quote = undefined;
+					index += 1;
+					break;
+				}
+				index += 1;
+			}
+			uncommentedLine += line.slice( start, index );
+			continue;
+		}
+
+		if ( state && isSqlQuoteStart( line[ index ] ) ) {
+			state.quote = line[ index ];
+			uncommentedLine += line[ index ];
+			index += 1;
+			continue;
+		}
+
 		const quotedSegment = readSqlQuotedSegment( line, index );
 		if ( quotedSegment ) {
 			uncommentedLine += quotedSegment.text;
@@ -368,6 +396,9 @@ export const stripSqlCommentsOutsideQuotedStrings = (
 	return uncommentedLine;
 };
 
+const isNonTupleContent = ( char: string, depth: number, quote?: string ): boolean =>
+	0 === depth && ! quote && ! /[\s,(]/.test( char );
+
 export const parseSqlTupleRows = ( line: string, startIndex: number ): SqlTupleRowsParseResult => {
 	const rows: string[][] = [];
 	let currentRow: string[] | undefined;
@@ -378,6 +409,9 @@ export const parseSqlTupleRows = ( line: string, startIndex: number ): SqlTupleR
 
 	for ( let index = startIndex; index < line.length; index += 1 ) {
 		const char = line[ index ];
+		if ( isNonTupleContent( char, parenthesisDepth, quote ) ) {
+			return { rows, finished: true };
+		}
 
 		if ( quote ) {
 			currentValue += char;

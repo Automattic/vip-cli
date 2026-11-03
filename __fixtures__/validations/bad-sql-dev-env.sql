@@ -94,6 +94,11 @@ INSERT INTO wp_abc_options (option_name, option_value, autoload)
 INSERT INTO wp_posts VALUES ('ordinary post'); /* comment starts after a non-options statement
 INSERT INTO wp_options (option_name, option_value) VALUES ('home', 'https://non-options-comment.example');
 */
+INSERT INTO wp_options (option_name, option_value) VALUES ('blogdescription', 'first
+# inside a string /* still inside */
+INSERT INTO wp_posts is also text'), ('home', 'https://after-multiline-quote.example/#fragment');
+INSERT INTO wp_options (option_name, option_value) VALUES ('blogdescription', 'ok') ON DUPLICATE KEY UPDATE
+option_value = CONCAT('home', 'https://trailing-clause.example');
 INSERT INTO wp_options (option_name, option_value) VALUES ('blogdescription', 'end\''), ('home', 'https://escaped-quote.example/#fragment');
 INSERT INTO wp_options (option_name, option_value) VALUES ('blogdescription', 'first line;
 second line'),

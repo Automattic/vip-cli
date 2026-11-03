@@ -32,6 +32,7 @@ let currentInsertStatementTableName: string | undefined;
 let currentInsertStatementColumns: string[] | undefined;
 let currentInsertStatementColumnList: string | undefined;
 let currentInsertStatementHasValues = false;
+let currentInsertStatementValuesFinished = false;
 let currentInsertStatementRowBuffer: string | undefined;
 let currentSqlCommentStripState: SqlCommentStripState = { inBlockComment: false };
 
@@ -584,13 +585,17 @@ const collectOptionsInsertRows = ( line: string, startIndex: number ): string[][
 	const parseInput = currentInsertStatementRowBuffer
 		? `${ currentInsertStatementRowBuffer }\n${ lineSegment }`
 		: lineSegment;
-	const { rows, remainder } = parseSqlTupleRows( parseInput, 0 );
+	const { rows, remainder, finished } = parseSqlTupleRows( parseInput, 0 );
 	currentInsertStatementRowBuffer = remainder;
+	currentInsertStatementValuesFinished = Boolean( finished );
 	return collectOptionUrlMatchesFromRows( rows );
 };
 
 const collectOptionsInsertMatches = ( uncommentedLine: string ): string[][] => {
 	if ( ! isWordPressOptionsTable( currentInsertStatementTableName ) ) {
+		return [];
+	}
+	if ( currentInsertStatementValuesFinished ) {
 		return [];
 	}
 
@@ -631,6 +636,7 @@ const resetFinishedInsertStatement = ( uncommentedLine: string ): void => {
 		currentInsertStatementColumns = undefined;
 		currentInsertStatementColumnList = undefined;
 		currentInsertStatementHasValues = false;
+		currentInsertStatementValuesFinished = false;
 		currentInsertStatementRowBuffer = undefined;
 	}
 };
@@ -645,7 +651,8 @@ const perLineValidations = (
 
 	checkForTableName( line );
 
-	const rawInsertInfo = getInsertStatementInfo( line );
+	const wasInQuotedValue = Boolean( currentSqlCommentStripState.quote );
+	const rawInsertInfo = wasInQuotedValue ? undefined : getInsertStatementInfo( line );
 	const shouldStripComments =
 		currentSqlCommentStripState.inBlockComment ||
 		line.includes( '/*' ) ||
@@ -655,9 +662,10 @@ const perLineValidations = (
 		? stripSqlCommentsOutsideQuotedStrings( line, currentSqlCommentStripState )
 		: line;
 
-	const insertStatementInfo = shouldStripComments
-		? getInsertStatementInfo( uncommentedLine )
-		: rawInsertInfo;
+	let insertStatementInfo = rawInsertInfo;
+	if ( ! wasInQuotedValue && shouldStripComments ) {
+		insertStatementInfo = getInsertStatementInfo( uncommentedLine );
+	}
 	if ( insertStatementInfo ) {
 		currentInsertStatementTableName = insertStatementInfo.tableName;
 		currentInsertStatementColumns = parseInsertColumnList(
@@ -666,6 +674,7 @@ const perLineValidations = (
 		);
 		currentInsertStatementColumnList = undefined;
 		currentInsertStatementHasValues = false;
+		currentInsertStatementValuesFinished = false;
 		currentInsertStatementRowBuffer = undefined;
 	}
 	const optionsInsertMatches = currentInsertStatementTableName
@@ -722,6 +731,7 @@ export const validate = async (
 	currentInsertStatementColumns = undefined;
 	currentInsertStatementColumnList = undefined;
 	currentInsertStatementHasValues = false;
+	currentInsertStatementValuesFinished = false;
 	currentInsertStatementRowBuffer = undefined;
 	currentSqlCommentStripState = { inBlockComment: false };
 
