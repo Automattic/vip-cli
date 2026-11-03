@@ -1,3 +1,37 @@
+const ALTER_TABLE_OPTIONS = new Set( [
+	'AUTO_INCREMENT',
+	'AUTOEXTEND_SIZE',
+	'AVG_ROW_LENGTH',
+	'CHARACTER',
+	'CHARSET',
+	'CHECKSUM',
+	'COLLATE',
+	'COMMENT',
+	'COMPRESSION',
+	'CONNECTION',
+	'DATA',
+	'DEFAULT',
+	'DELAY_KEY_WRITE',
+	'ENCRYPTION',
+	'ENGINE',
+	'ENGINE_ATTRIBUTE',
+	'INDEX',
+	'INSERT_METHOD',
+	'KEY_BLOCK_SIZE',
+	'MAX_ROWS',
+	'MIN_ROWS',
+	'PACK_KEYS',
+	'PASSWORD',
+	'ROW_FORMAT',
+	'STATS_AUTO_RECALC',
+	'STATS_PERSISTENT',
+	'STATS_SAMPLE_PAGES',
+	'TABLESPACE',
+	'UNION',
+] );
+const isOptionValuePrefix = ( word: string ): boolean =>
+	'=' === word || 'SET' === word || ( 'ENGINE' !== word && ALTER_TABLE_OPTIONS.has( word ) );
+
 // A streaming scanner for CREATE/ALTER TABLE engine options. It never retains
 // row data; quoted text and comments can cross physical lines.
 export class SqlEngineScanner {
@@ -17,8 +51,13 @@ export class SqlEngineScanner {
 	private sawCreateBody = false;
 	private createStage: 'table' | 'if-not' | 'if-exists' | 'after-name' | 'qualified' | 'options' =
 		'table';
+	private createPrevious = '';
 	private alterStage: 'table' | 'if-exists' | 'after-name' | 'qualified' | 'actions' = 'table';
 	private alterCanEngine = false;
+	private alterInOptions = false;
+	private alterInOrder = false;
+	private alterPrevious = '';
+	private engineOrderCandidate = false;
 	private engineLine = 0;
 	private engineEquals = false;
 
@@ -27,8 +66,13 @@ export class SqlEngineScanner {
 		this.depth = 0;
 		this.sawCreateBody = false;
 		this.createStage = 'table';
+		this.createPrevious = '';
 		this.alterStage = 'table';
 		this.alterCanEngine = false;
+		this.alterInOptions = false;
+		this.alterInOrder = false;
+		this.alterPrevious = '';
+		this.engineOrderCandidate = false;
 		this.engineLine = 0;
 		this.engineEquals = false;
 	}
@@ -42,11 +86,20 @@ export class SqlEngineScanner {
 				this.engineEquals = true;
 				return;
 			}
-			if ( ( quoted || /^[A-Z0-9_$]+$/i.test( text ) ) && 'INNODB' !== upper ) {
+			if (
+				( quoted || /^[A-Z0-9_$\u0080-\uFFFF]+$/i.test( text ) ) &&
+				'INNODB' !== upper &&
+				! (
+					this.engineOrderCandidate &&
+					! this.engineEquals &&
+					( 'ASC' === upper || 'DESC' === upper )
+				)
+			) {
 				findings.push( this.engineLine );
 			}
 			this.engineLine = 0;
 			this.engineEquals = false;
+			this.engineOrderCandidate = false;
 		}
 		if ( ';' === text && ! quoted ) {
 			this.resetStatement();
@@ -121,6 +174,8 @@ export class SqlEngineScanner {
 			return;
 		}
 		if ( 'alter-table' === this.phase ) {
+			const previous = this.alterPrevious;
+			this.alterPrevious = upper;
 			if ( 'table' === this.alterStage && ! quoted && 'IF' === upper ) {
 				this.alterStage = 'if-exists';
 				return;
@@ -143,15 +198,36 @@ export class SqlEngineScanner {
 			}
 			if ( ',' === text && ! quoted ) {
 				this.alterCanEngine = true;
+				this.alterInOptions = false;
 				return;
 			}
-			if ( this.alterCanEngine && ! quoted && 'ENGINE' === upper ) {
+			if ( this.alterCanEngine && ! quoted && 'ORDER' === upper ) {
+				this.alterInOrder = true;
+			} else if ( this.alterCanEngine && ! quoted && ALTER_TABLE_OPTIONS.has( upper ) ) {
+				this.alterInOptions = true;
+				if ( 'ENGINE' !== upper ) {
+					this.alterInOrder = false;
+				}
+			}
+			if (
+				( this.alterCanEngine || ( this.alterInOptions && ! isOptionValuePrefix( previous ) ) ) &&
+				! quoted &&
+				'ENGINE' === upper
+			) {
 				this.engineLine = line;
+				this.engineOrderCandidate = this.alterInOrder;
 			}
 			this.alterCanEngine = false;
 			return;
 		}
-		if ( this.sawCreateBody && ! quoted && 'ENGINE' === upper ) {
+		const previous = this.createPrevious;
+		this.createPrevious = upper;
+		if (
+			this.sawCreateBody &&
+			! quoted &&
+			'ENGINE' === upper &&
+			! isOptionValuePrefix( previous )
+		) {
 			this.engineLine = line;
 		} else if ( this.sawCreateBody && ! quoted && ( 'AS' === upper || 'SELECT' === upper ) ) {
 			this.phase = 'other';
@@ -242,7 +318,7 @@ export class SqlEngineScanner {
 				index = match?.index ?? line.length;
 				continue;
 			}
-			const word = /^[A-Za-z0-9_$]+/.exec( line.slice( index ) );
+			const word = /^[A-Za-z0-9_$\u0080-\uFFFF]+/.exec( line.slice( index ) );
 			if ( word ) {
 				this.token( word[ 0 ], lineNumber, findings );
 				index += word[ 0 ].length;

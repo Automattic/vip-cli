@@ -5,3 +5,4 @@ CREATE TABLE `wp_posts` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB;
 INSERT INTO wp_posts VALUES (1,' engine = MyISAM');
+CREATE TABLE wp_帖子 (engine INT) ENGINE=InnoDB;

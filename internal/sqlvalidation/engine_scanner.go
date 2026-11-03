@@ -10,6 +10,10 @@ type engineScanner struct {
 	block, executable              bool
 	depth                          int
 	sawCreateBody, alterCanEngine  bool
+	alterInOptions, alterInOrder   bool
+	alterPrevious                  string
+	createPrevious                 string
+	engineOrderCandidate           bool
 	engineLine                     int
 	engineEquals                   bool
 }
@@ -18,6 +22,23 @@ func (s *engineScanner) reset() {
 	s.phase, s.alterStage, s.createStage = "", "", ""
 	s.depth, s.engineLine = 0, 0
 	s.sawCreateBody, s.alterCanEngine, s.engineEquals = false, false, false
+	s.alterInOptions, s.alterInOrder, s.engineOrderCandidate = false, false, false
+	s.alterPrevious = ""
+	s.createPrevious = ""
+}
+
+func engineIdent(c byte) bool { return isIdent(c) || c >= 0x80 }
+
+func alterTableOption(word string) bool {
+	switch word {
+	case "AUTO_INCREMENT", "AUTOEXTEND_SIZE", "AVG_ROW_LENGTH", "CHARACTER", "CHARSET", "CHECKSUM", "COLLATE", "COMMENT", "COMPRESSION", "CONNECTION", "DATA", "DEFAULT", "DELAY_KEY_WRITE", "ENCRYPTION", "ENGINE", "ENGINE_ATTRIBUTE", "INDEX", "INSERT_METHOD", "KEY_BLOCK_SIZE", "MAX_ROWS", "MIN_ROWS", "PACK_KEYS", "PASSWORD", "ROW_FORMAT", "STATS_AUTO_RECALC", "STATS_PERSISTENT", "STATS_SAMPLE_PAGES", "TABLESPACE", "UNION":
+		return true
+	}
+	return false
+}
+
+func optionValuePrefix(word string) bool {
+	return word == "=" || word == "SET" || (word != "ENGINE" && alterTableOption(word))
 }
 
 func (s *engineScanner) token(text string, line int, findings *[]int, quoted bool) {
@@ -29,15 +50,16 @@ func (s *engineScanner) token(text string, line int, findings *[]int, quoted boo
 		}
 		valid := quoted || text != ""
 		for i := 0; i < len(text) && !quoted; i++ {
-			if !isIdent(text[i]) {
+			if !engineIdent(text[i]) {
 				valid = false
 				break
 			}
 		}
-		if valid && upper != "INNODB" {
+		if valid && upper != "INNODB" && !(s.engineOrderCandidate && !s.engineEquals && (upper == "ASC" || upper == "DESC")) {
 			*findings = append(*findings, s.engineLine)
 		}
 		s.engineLine, s.engineEquals = 0, false
+		s.engineOrderCandidate = false
 	}
 	if text == ";" && !quoted {
 		s.reset()
@@ -120,6 +142,8 @@ func (s *engineScanner) token(text string, line int, findings *[]int, quoted boo
 		return
 	}
 	if s.phase == "alter-table" {
+		previous := s.alterPrevious
+		s.alterPrevious = upper
 		if s.alterStage == "" && !quoted && upper == "IF" {
 			s.alterStage = "if-exists"
 			return
@@ -145,15 +169,27 @@ func (s *engineScanner) token(text string, line int, findings *[]int, quoted boo
 		}
 		if text == "," && !quoted {
 			s.alterCanEngine = true
+			s.alterInOptions = false
 			return
 		}
-		if s.alterCanEngine && !quoted && upper == "ENGINE" {
+		if s.alterCanEngine && !quoted && upper == "ORDER" {
+			s.alterInOrder = true
+		} else if s.alterCanEngine && !quoted && alterTableOption(upper) {
+			s.alterInOptions = true
+			if upper != "ENGINE" {
+				s.alterInOrder = false
+			}
+		}
+		if (s.alterCanEngine || (s.alterInOptions && !optionValuePrefix(previous))) && !quoted && upper == "ENGINE" {
 			s.engineLine = line
+			s.engineOrderCandidate = s.alterInOrder
 		}
 		s.alterCanEngine = false
 		return
 	}
-	if s.sawCreateBody && !quoted && upper == "ENGINE" {
+	previous := s.createPrevious
+	s.createPrevious = upper
+	if s.sawCreateBody && !quoted && upper == "ENGINE" && !optionValuePrefix(previous) {
 		s.engineLine = line
 	} else if s.sawCreateBody && !quoted && (upper == "AS" || upper == "SELECT") {
 		s.phase = "other"
@@ -246,9 +282,9 @@ func (s *engineScanner) scan(line string, lineNumber int) []int {
 			i += next + 1
 			continue
 		}
-		if isIdent(line[i]) {
+		if engineIdent(line[i]) {
 			end := i + 1
-			for end < len(line) && isIdent(line[end]) {
+			for end < len(line) && engineIdent(line[end]) {
 				end++
 			}
 			s.token(line[i:end], lineNumber, &findings, false)

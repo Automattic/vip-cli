@@ -19,5 +19,16 @@
   {"name":"create select without definitions", "lines":["CREATE TABLE IF NOT EXISTS db.t ENGINE=MyISAM AS SELECT 1;"], "want":[1]},
   {"name":"quoted engine with punctuation", "lines":["CREATE TABLE t (id INT) ENGINE='my-engine';"], "want":[1]},
   {"name":"multiline quoted engine", "lines":["CREATE TABLE t (id INT) ENGINE='Inno", "DB';"], "want":[1]},
-  {"name":"empty engine", "lines":["CREATE TABLE t (id INT) ENGINE='';"], "want":[1]}
+  {"name":"empty engine", "lines":["CREATE TABLE t (id INT) ENGINE='';"], "want":[1]},
+  {"name":"unicode table identifier", "lines":["CREATE TABLE 帖子 (engine INT) ENGINE=InnoDB;"], "want":[]},
+  {"name":"alter whitespace separated options", "lines":["ALTER TABLE t DEFAULT CHARACTER SET=utf8mb4 ENGINE=MyISAM;"], "want":[1]},
+  {"name":"alter order by engine column", "lines":["ALTER TABLE t ORDER BY id, engine DESC;"], "want":[]},
+  {"name":"alter order and engine option", "lines":["ALTER TABLE t ORDER BY id, engine ASC, ENGINE=MyISAM;"], "want":[1]},
+  {"name":"engine as charset value", "lines":["ALTER TABLE t DEFAULT CHARACTER SET=engine ENGINE=MyISAM;"], "want":[1]},
+  {"name":"create charset value named engine", "lines":["CREATE TABLE t (id INT) DEFAULT CHARACTER SET=engine ENGINE=InnoDB;"], "want":[]},
+  {"name":"create charset value then bad engine", "lines":["CREATE TABLE t (id INT) CHARSET engine ENGINE=MyISAM;"], "want":[1]},
+  {"name":"tablespace named engine", "lines":["ALTER TABLE t TABLESPACE engine ENGINE=InnoDB;"], "want":[]},
+  {"name":"table named comment", "lines":["ALTER TABLE comment ENGINE=MyISAM;"], "want":[1]},
+  {"name":"alter whitespace separated innodb", "lines":["ALTER TABLE t DEFAULT CHARSET=utf8mb4 ENGINE=InnoDB;"], "want":[]},
+  {"name":"alter order ascending", "lines":["ALTER TABLE t ORDER BY id, engine ASC;"], "want":[]}
 ]
