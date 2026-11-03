@@ -85,14 +85,12 @@ func TestDevEnvSiteHomeURLLandoFalsePositives(t *testing.T) {
 	}
 }
 
-// Node's matcher for this check has no /i flag, so it is case-SENSITIVE on the
-// option name (unlike most other checks). Pinning it stops a future "cleanup"
-// from adding (?i) and diverging.
-func TestDevEnvSiteHomeURLLandoMatcherIsCaseSensitive(t *testing.T) {
+// Node normalizes option names before matching.
+func TestDevEnvSiteHomeURLLandoMatcherIsCaseInsensitive(t *testing.T) {
 	in := strings.NewReader(`INSERT INTO wp_options VALUES (1,'SITEURL','https://example.com');` + "\n")
 	res, _ := ValidateWith(in, devEnvOptions("e.vipdev.site"), nil)
-	if c := findCheck(t, res, CheckSiteHomeURLLando); len(c.Results) != 0 {
-		t.Errorf("uppercase option name matched: %#v", c.Results)
+	if c := findCheck(t, res, CheckSiteHomeURLLando); len(c.Results) != 1 {
+		t.Errorf("uppercase option name: got %#v, want one result", c.Results)
 	}
 }
 

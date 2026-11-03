@@ -10,11 +10,31 @@ import {
 	type PostLineExecutionProcessingParams,
 	getReadInterface,
 } from '../../lib/validations/line-by-line';
+import {
+	checkRequiresOptionsInsertContext,
+	findValuesKeyword,
+	findValuesKeywordIndex,
+	getInsertStatementInfo,
+	getOptionUrlMatchResults,
+	isWordPressOptionsTable,
+	parseInsertColumnList,
+	parseInsertColumnListSegment,
+	parseSqlTupleRows,
+	type SqlCommentStripState,
+	stripSqlCommentsOutsideQuotedStrings,
+} from '../../lib/validations/sql-insert-parser';
 import { OmitIndexSignature } from '../types';
 
 let problemsFound = 0;
 let lineNum = 1;
 const tableNames: string[] = [];
+let currentInsertStatementTableName: string | undefined;
+let currentInsertStatementColumns: string[] | undefined;
+let currentInsertStatementColumnList: string | undefined;
+let currentInsertStatementHasValues = false;
+let currentInsertStatementValuesFinished = false;
+let currentInsertStatementRowBuffer: string | undefined;
+let currentSqlCommentStripState: SqlCommentStripState = { inBlockComment: false };
 
 function formatError( message: string ): string {
 	return `${ chalk.red( 'SQL Error:' ) } ${ message }`;
@@ -39,7 +59,7 @@ export interface CheckResult {
 export interface CheckType {
 	excerpt: string;
 	matchHandler: ( lineNumber: number, result: string[], extraParam: string ) => CheckResult;
-	matcher: RegExp | string;
+	matcher?: RegExp | string;
 	message: string;
 	outputFormatter: ( check: CheckType, type: string, isImport: boolean ) => ValidationResult;
 	recommendation: string;
@@ -333,7 +353,6 @@ const checks: Checks = {
 		recommendation: "Disabling 'UNIQUE_CHECKS' is not allowed. These lines should be removed",
 	},
 	siteHomeUrl: {
-		matcher: `['"](siteurl|home)['"],\\s?['"](.*?)['"]`,
 		matchHandler: ( lineNumber, results ) => ( { text: results[ 1 ] + ' ' + results[ 2 ] } ),
 		outputFormatter: infoCheckFormatter,
 		results: [],
@@ -342,12 +361,8 @@ const checks: Checks = {
 		recommendation: '',
 	},
 	siteHomeUrlLando: {
-		matcher: `['"](siteurl|home)['"],\\s?['"]([^'"]+)['"]`,
 		matchHandler: ( lineNumber, results, expectedDomain ) => {
 			let foundDomain = results[ 2 ];
-			if ( ! /^https?:\/\//i.test( foundDomain ) ) {
-				return { falsePositive: true };
-			}
 			foundDomain = foundDomain.replace( /^https?:\/\//, '' );
 			if ( ! foundDomain.trim() ) {
 				return { falsePositive: true };
@@ -519,10 +534,112 @@ const checkForTableName = ( line: string ): void => {
 	}
 };
 
+const collectInsertColumnList = ( line: string, startIndex: number ): string[] | undefined => {
+	if ( undefined !== currentInsertStatementColumnList ) {
+		const closingParenthesisIndex = line.indexOf( ')' );
+		if ( -1 === closingParenthesisIndex ) {
+			currentInsertStatementColumnList += `\n${ line }`;
+			return undefined;
+		}
+
+		const columnList = `${ currentInsertStatementColumnList }\n${ line.slice(
+			0,
+			closingParenthesisIndex
+		) }`;
+		currentInsertStatementColumnList = undefined;
+		return parseInsertColumnListSegment( columnList );
+	}
+
+	const valuesIndex = findValuesKeywordIndex( line );
+	const openingParenthesisIndex = line.indexOf( '(', startIndex );
+	if (
+		-1 === openingParenthesisIndex ||
+		( -1 !== valuesIndex && openingParenthesisIndex > valuesIndex )
+	) {
+		return undefined;
+	}
+
+	const closingParenthesisIndex = line.indexOf( ')', openingParenthesisIndex + 1 );
+	if ( -1 !== closingParenthesisIndex ) {
+		return parseInsertColumnListSegment(
+			line.slice( openingParenthesisIndex + 1, closingParenthesisIndex )
+		);
+	}
+
+	currentInsertStatementColumnList = line.slice( openingParenthesisIndex + 1 );
+	return undefined;
+};
+
+const isSqlCommentOnlyLine = ( line: string ): boolean => {
+	return '' === line.trim();
+};
+
+const collectOptionUrlMatchesFromRows = ( rows: string[][] ): string[][] => {
+	return rows
+		.map( row => getOptionUrlMatchResults( row, currentInsertStatementColumns ) )
+		.filter( ( results ): results is string[] => Boolean( results ) );
+};
+
+const collectOptionsInsertRows = ( line: string, startIndex: number ): string[][] => {
+	const lineSegment = line.slice( startIndex );
+	const parseInput = currentInsertStatementRowBuffer
+		? `${ currentInsertStatementRowBuffer }\n${ lineSegment }`
+		: lineSegment;
+	const { rows, remainder, finished } = parseSqlTupleRows( parseInput, 0 );
+	currentInsertStatementRowBuffer = remainder;
+	currentInsertStatementValuesFinished = Boolean( finished );
+	return collectOptionUrlMatchesFromRows( rows );
+};
+
+const collectOptionsInsertMatches = ( uncommentedLine: string ): string[][] => {
+	if ( ! isWordPressOptionsTable( currentInsertStatementTableName ) ) {
+		return [];
+	}
+	if ( currentInsertStatementValuesFinished ) {
+		return [];
+	}
+
+	if ( isSqlCommentOnlyLine( uncommentedLine ) ) {
+		return [];
+	}
+
+	if ( ! currentInsertStatementHasValues ) {
+		currentInsertStatementColumns =
+			currentInsertStatementColumns ?? collectInsertColumnList( uncommentedLine, 0 );
+
+		const valuesKeyword = findValuesKeyword( uncommentedLine );
+		if ( ! valuesKeyword ) {
+			return [];
+		}
+
+		currentInsertStatementHasValues = true;
+		return collectOptionsInsertRows( uncommentedLine, valuesKeyword.endIndex );
+	}
+
+	return collectOptionsInsertRows( uncommentedLine, 0 );
+};
+
 const DEFAULT_VALIDATION_OPTIONS: ValidationOptions = {
 	isImport: true,
 	skipChecks: DEV_ENV_SPECIFIC_CHECKS,
 	extraCheckParams: {},
+};
+
+const resetFinishedInsertStatement = ( uncommentedLine: string ): void => {
+	if (
+		currentInsertStatementTableName &&
+		! currentInsertStatementRowBuffer &&
+		! currentSqlCommentStripState.quote &&
+		uncommentedLine.length > 0 &&
+		uncommentedLine.trimEnd().endsWith( ';' )
+	) {
+		currentInsertStatementTableName = undefined;
+		currentInsertStatementColumns = undefined;
+		currentInsertStatementColumnList = undefined;
+		currentInsertStatementHasValues = false;
+		currentInsertStatementValuesFinished = false;
+		currentInsertStatementRowBuffer = undefined;
+	}
 };
 
 const perLineValidations = (
@@ -535,17 +652,58 @@ const perLineValidations = (
 
 	checkForTableName( line );
 
+	const wasInQuotedValue = Boolean( currentSqlCommentStripState.quote );
+	const rawInsertInfo = wasInQuotedValue ? undefined : getInsertStatementInfo( line );
+	const shouldStripComments =
+		currentSqlCommentStripState.inBlockComment ||
+		Boolean( currentSqlCommentStripState.quote ) ||
+		line.includes( '/*' ) ||
+		Boolean( currentInsertStatementTableName ) ||
+		Boolean( rawInsertInfo );
+	const uncommentedLine = shouldStripComments
+		? stripSqlCommentsOutsideQuotedStrings( line, currentSqlCommentStripState )
+		: line;
+
+	let insertStatementInfo = rawInsertInfo;
+	if ( ! wasInQuotedValue && shouldStripComments ) {
+		insertStatementInfo = getInsertStatementInfo( uncommentedLine );
+	}
+	if ( insertStatementInfo ) {
+		currentInsertStatementTableName = insertStatementInfo.tableName;
+		currentInsertStatementColumns = parseInsertColumnList(
+			uncommentedLine,
+			insertStatementInfo.tableEndIndex
+		);
+		currentInsertStatementColumnList = undefined;
+		currentInsertStatementHasValues = false;
+		currentInsertStatementValuesFinished = false;
+		currentInsertStatementRowBuffer = undefined;
+	}
+	const optionsInsertMatches = currentInsertStatementTableName
+		? collectOptionsInsertMatches( uncommentedLine )
+		: [];
+
 	const checkKeys = Object.keys( checks ).filter(
 		checkItem => ! options.skipChecks.includes( checkItem )
 	);
 	for ( const checkKey of checkKeys ) {
 		const check: CheckType = checks[ checkKey ];
-		const results = line.match( check.matcher ); // NOSONAR
 		const extraCheckParams = options.extraCheckParams[ checkKey ];
+
+		if ( checkRequiresOptionsInsertContext( checkKey ) ) {
+			for ( const results of optionsInsertMatches ) {
+				check.results.push( check.matchHandler( lineNum, results, extraCheckParams ) );
+			}
+			continue;
+		}
+
+		const results = check.matcher === undefined ? null : line.match( check.matcher ); // NOSONAR
 		if ( results ) {
 			check.results.push( check.matchHandler( lineNum, results, extraCheckParams ) );
 		}
 	}
+
+	resetFinishedInsertStatement( uncommentedLine );
 
 	lineNum += 1;
 };
@@ -571,6 +729,14 @@ export const validate = async (
 	filename: string,
 	options: ValidationOptions = DEFAULT_VALIDATION_OPTIONS
 ): Promise< void > => {
+	currentInsertStatementTableName = undefined;
+	currentInsertStatementColumns = undefined;
+	currentInsertStatementColumnList = undefined;
+	currentInsertStatementHasValues = false;
+	currentInsertStatementValuesFinished = false;
+	currentInsertStatementRowBuffer = undefined;
+	currentSqlCommentStripState = { inBlockComment: false };
+
 	const fileMeta = await getFileMeta( filename );
 
 	if ( fileMeta.isCompressed ) {
