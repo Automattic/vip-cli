@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import { once } from 'node:events';
 import path from 'node:path';
 
+import { SqlEngineScanner } from './sql-engine-scanner';
 import * as exit from '../../lib/cli/exit';
 import { getFileMeta } from '../../lib/client-file-uploader';
 import { trackEvent } from '../../lib/tracker';
@@ -24,7 +25,6 @@ import {
 	stripSqlCommentsOutsideQuotedStrings,
 } from '../../lib/validations/sql-insert-parser';
 import { OmitIndexSignature } from '../types';
-import { SqlEngineScanner } from './sql-engine-scanner';
 
 let problemsFound = 0;
 let lineNum = 1;
