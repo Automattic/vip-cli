@@ -620,6 +620,21 @@ const DEFAULT_VALIDATION_OPTIONS: ValidationOptions = {
 	extraCheckParams: {},
 };
 
+const resetFinishedInsertStatement = ( uncommentedLine: string ): void => {
+	if (
+		currentInsertStatementTableName &&
+		! currentInsertStatementRowBuffer &&
+		uncommentedLine.length > 0 &&
+		uncommentedLine.trimEnd().endsWith( ';' )
+	) {
+		currentInsertStatementTableName = undefined;
+		currentInsertStatementColumns = undefined;
+		currentInsertStatementColumnList = undefined;
+		currentInsertStatementHasValues = false;
+		currentInsertStatementRowBuffer = undefined;
+	}
+};
+
 const perLineValidations = (
 	line: string,
 	options: ValidationOptions = DEFAULT_VALIDATION_OPTIONS
@@ -677,17 +692,7 @@ const perLineValidations = (
 		}
 	}
 
-	if (
-		currentInsertStatementTableName &&
-		uncommentedLine.length > 0 &&
-		uncommentedLine.trimEnd().endsWith( ';' )
-	) {
-		currentInsertStatementTableName = undefined;
-		currentInsertStatementColumns = undefined;
-		currentInsertStatementColumnList = undefined;
-		currentInsertStatementHasValues = false;
-		currentInsertStatementRowBuffer = undefined;
-	}
+	resetFinishedInsertStatement( uncommentedLine );
 
 	lineNum += 1;
 };

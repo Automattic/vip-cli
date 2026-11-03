@@ -208,6 +208,12 @@ describe( 'lib/validations/sql', () => {
 		} );
 		it( 'should suggest replacements for option rows inserted with supported statement variants', () => {
 			expect( output ).toContain(
+				'Use \'--search-replace="escaped-quote.example/#fragment,test.domain"\' switch to replace the domain'
+			);
+			expect( output ).toContain(
+				'Use \'--search-replace="after-semicolon.example,test.domain"\' switch to replace the domain'
+			);
+			expect( output ).toContain(
 				'Use \'--search-replace="full-order.example,test.domain"\' switch to replace the domain'
 			);
 			expect( output ).toContain(

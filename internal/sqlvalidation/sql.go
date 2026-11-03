@@ -244,13 +244,9 @@ func allChecks() []*Check {
 			Formatter:      FormatterLineNumber,
 			MatchHandler:   handlerLine,
 		},
-		// sql.ts:335-343 — siteHomeUrl
-		//   matcher: `['"](siteurl|home)['"],\\s?['"](.*?)['"]`  (string ->
-		//   dynamic RegExp; no /i flag, so case-sensitive in Node)
-		//   matchHandler: {text: results[1] + ' ' + results[2]}
+		// siteHomeUrl is matched against parsed options INSERT rows.
 		{
 			Key:            "siteHomeUrl",
-			Matcher:        regexp.MustCompile(`['"](siteurl|home)['"],\s?['"](.*?)['"]`),
 			Message:        "Siteurl/home matches",
 			Recommendation: "",
 			Formatter:      FormatterInfo,
@@ -262,10 +258,6 @@ func allChecks() []*Check {
 		// still points at production, which after import leaves the LOCAL
 		// site redirecting to the live site.
 		//
-		//   matcher: `['"](siteurl|home)['"],\\s?['"]([^'"]+)['"]`
-		//   (a STRING matcher -> dynamic RegExp with NO /i flag, so the
-		//   option name is matched case-sensitively — unlike most checks.)
-		//
 		// NOTE Node marks every finding here `warning: true`, which makes
 		// generalCheckFormatter skip `problemsFound += 1` — i.e. Node WARNS
 		// and imports anyway. vip-next treats it as fatal; that severity
@@ -273,7 +265,6 @@ func allChecks() []*Check {
 		// not here.
 		{
 			Key:            CheckSiteHomeURLLando,
-			Matcher:        regexp.MustCompile(`['"](siteurl|home)['"],\s?['"]([^'"]+)['"]`),
 			Message:        "Siteurl/home options not pointing to lando domain",
 			Recommendation: "Use search-replace to change environment's domain",
 			Formatter:      FormatterGeneral,
@@ -334,8 +325,8 @@ func handlerSiteHomeURL(_ int, matches []string, _ string) CheckResult {
 }
 
 // httpSchemePrefix / httpSchemePrefixCI port the TWO different regexes Node
-// uses back-to-back on the same value in siteHomeUrlLando's matchHandler
-// (sql.ts:348 and :351): the guard test is case-INsensitive, the strip is
+// uses for URL filtering and in siteHomeUrlLando's matchHandler: the guard is
+// case-insensitive, the strip is
 // case-SENSITIVE. That asymmetry is Node's, and it is load-bearing for the
 // output: `HTTP://EXAMPLE.COM` passes the guard but keeps its scheme through
 // the strip, so the recommendation Node prints (and we print) names
@@ -449,6 +440,7 @@ func ValidateWithLineHook(r io.Reader, hook func(line string, lineNum int)) (*Re
 // DEV_ENV_SPECIFIC_CHECKS Node turns on there (dev-env-import-sql.ts:96).
 func ValidateWith(r io.Reader, opts Options, hook func(line string, lineNum int)) (*Result, error) {
 	res := &Result{Checks: newChecks(opts)}
+	var optionsScanner optionsInsertScanner
 
 	err := ScanLines(r, func(line string, lineNum int) error {
 		if hook != nil {
@@ -469,8 +461,15 @@ func ValidateWith(r io.Reader, opts Options, hook func(line string, lineNum int)
 			res.TableNames = append(res.TableNames, name)
 		}
 
+		optionMatches := optionsScanner.scan(line)
 		for _, check := range res.Checks {
 			extraParam := opts.ExtraCheckParams[check.Key]
+			if check.Key == "siteHomeUrl" || check.Key == CheckSiteHomeURLLando {
+				for _, match := range optionMatches {
+					check.Results = append(check.Results, check.MatchHandler(lineNum, match, extraParam))
+				}
+				continue
+			}
 			// engineInnoDB uses a custom matcher because Node's pattern uses
 			// a negative lookahead RE2 can't express directly.
 			if check.Key == "engineInnoDB" {

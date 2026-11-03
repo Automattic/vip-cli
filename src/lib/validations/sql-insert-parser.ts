@@ -133,14 +133,16 @@ const skipSqlDelimitedSegment = ( line: string, startIndex: number ): number | u
 			continue;
 		}
 
+		if ( '`' !== delimiter && isEscapedByBackslash( line, index ) ) {
+			continue;
+		}
+
 		if ( nextChar === delimiter ) {
 			index += 1;
 			continue;
 		}
 
-		if ( '`' === delimiter || ! isEscapedByBackslash( line, index ) ) {
-			return index;
-		}
+		return index;
 	}
 
 	return line.length - 1;
@@ -380,16 +382,14 @@ export const parseSqlTupleRows = ( line: string, startIndex: number ): SqlTupleR
 		if ( quote ) {
 			currentValue += char;
 
-			if ( char === quote ) {
+			if ( char === quote && ! isEscapedByBackslash( line, index ) ) {
 				if ( line[ index + 1 ] === quote ) {
 					currentValue += line[ index + 1 ];
 					index += 1;
 					continue;
 				}
 
-				if ( ! isEscapedByBackslash( line, index ) ) {
-					quote = undefined;
-				}
+				quote = undefined;
 			}
 
 			continue;

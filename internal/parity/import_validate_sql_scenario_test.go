@@ -66,3 +66,22 @@ func TestM6bImportValidateSQLScenarios(t *testing.T) {
 		})
 	}
 }
+
+func TestImportValidateSQLOptionsRowsDifferential(t *testing.T) {
+	rig, skip := differentialAvailable(t)
+	if skip != "" {
+		t.Skip(LoudSkip("options row differential", skip))
+	}
+	scenario := &Scenario{
+		Name: "options-rows",
+		Argv: []string{"import", "validate-sql", "../../testdata/parity/recordings/import-validate-sql-options-rows/options.sql"},
+		Env:  map[string]string{"DO_NOT_TRACK": "1", "NODE_ENV": "test"},
+	}
+	scenario.Env = rig.scenarioEnv(scenario)
+	for _, side := range []struct{ name, binary string }{{"node", rig.nodeBin}, {"go", rig.goBin}} {
+		result, _ := rig.runSide(t, scenario, side.binary, nullMux)
+		if result.ExitCode != 0 || !strings.Contains(result.Stdout, "home https://real.example/#part") || strings.Contains(result.Stdout, "unrelated.example") {
+			t.Errorf("%s: exit=%d stdout=%q stderr=%q", side.name, result.ExitCode, result.Stdout, result.Stderr)
+		}
+	}
+}
