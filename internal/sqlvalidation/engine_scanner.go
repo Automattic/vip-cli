@@ -136,6 +136,9 @@ func (s *engineScanner) token(text string, line int, findings *[]int, quoted boo
 		if s.depth > 0 {
 			s.depth--
 		}
+		if s.depth == 0 {
+			s.createPrevious, s.alterPrevious = ")", ")"
+		}
 		return
 	}
 	if s.depth > 0 {
@@ -144,6 +147,9 @@ func (s *engineScanner) token(text string, line int, findings *[]int, quoted boo
 	if s.phase == "alter-table" {
 		previous := s.alterPrevious
 		s.alterPrevious = upper
+		if previous == "=" || (upper == "DEFAULT" && alterTableOption(previous)) {
+			s.alterPrevious = "<value>"
+		}
 		if s.alterStage == "" && !quoted && upper == "IF" {
 			s.alterStage = "if-exists"
 			return
@@ -176,9 +182,6 @@ func (s *engineScanner) token(text string, line int, findings *[]int, quoted boo
 			s.alterInOrder = true
 		} else if s.alterCanEngine && !quoted && alterTableOption(upper) {
 			s.alterInOptions = true
-			if upper != "ENGINE" {
-				s.alterInOrder = false
-			}
 		}
 		if (s.alterCanEngine || (s.alterInOptions && !optionValuePrefix(previous))) && !quoted && upper == "ENGINE" {
 			s.engineLine = line
@@ -189,6 +192,9 @@ func (s *engineScanner) token(text string, line int, findings *[]int, quoted boo
 	}
 	previous := s.createPrevious
 	s.createPrevious = upper
+	if previous == "=" || (upper == "DEFAULT" && alterTableOption(previous)) {
+		s.createPrevious = "<value>"
+	}
 	if s.sawCreateBody && !quoted && upper == "ENGINE" && !optionValuePrefix(previous) {
 		s.engineLine = line
 	} else if s.sawCreateBody && !quoted && (upper == "AS" || upper == "SELECT") {

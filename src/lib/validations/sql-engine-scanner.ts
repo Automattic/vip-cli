@@ -168,6 +168,9 @@ export class SqlEngineScanner {
 		}
 		if ( ! quoted && ')' === text ) {
 			this.depth = Math.max( 0, this.depth - 1 );
+			if ( 0 === this.depth ) {
+				this.createPrevious = this.alterPrevious = ')';
+			}
 			return;
 		}
 		if ( this.depth ) {
@@ -175,7 +178,10 @@ export class SqlEngineScanner {
 		}
 		if ( 'alter-table' === this.phase ) {
 			const previous = this.alterPrevious;
-			this.alterPrevious = upper;
+			this.alterPrevious =
+				'=' === previous || ( 'DEFAULT' === upper && ALTER_TABLE_OPTIONS.has( previous ) )
+					? '<value>'
+					: upper;
 			if ( 'table' === this.alterStage && ! quoted && 'IF' === upper ) {
 				this.alterStage = 'if-exists';
 				return;
@@ -205,9 +211,6 @@ export class SqlEngineScanner {
 				this.alterInOrder = true;
 			} else if ( this.alterCanEngine && ! quoted && ALTER_TABLE_OPTIONS.has( upper ) ) {
 				this.alterInOptions = true;
-				if ( 'ENGINE' !== upper ) {
-					this.alterInOrder = false;
-				}
 			}
 			if (
 				( this.alterCanEngine || ( this.alterInOptions && ! isOptionValuePrefix( previous ) ) ) &&
@@ -221,7 +224,10 @@ export class SqlEngineScanner {
 			return;
 		}
 		const previous = this.createPrevious;
-		this.createPrevious = upper;
+		this.createPrevious =
+			'=' === previous || ( 'DEFAULT' === upper && ALTER_TABLE_OPTIONS.has( previous ) )
+				? '<value>'
+				: upper;
 		if (
 			this.sawCreateBody &&
 			! quoted &&

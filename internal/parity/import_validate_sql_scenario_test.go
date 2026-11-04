@@ -103,7 +103,7 @@ func TestImportValidateSQLEngineDifferential(t *testing.T) {
 		noEngineFinding  bool
 	}{
 		{"clean", "ENGINE != InnoDB was found 0 times.", 0, true},
-		{"bad", "ENGINE != InnoDB on line(s) 5, 6.", 1, false},
+		{"bad", "ENGINE != InnoDB on line(s) 5, 6, 7, 8, 9.", 1, false},
 		{"order", "ALTER TABLE statement on line(s) 3.", 1, true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

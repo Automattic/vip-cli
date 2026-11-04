@@ -30,5 +30,12 @@
   {"name":"tablespace named engine", "lines":["ALTER TABLE t TABLESPACE engine ENGINE=InnoDB;"], "want":[]},
   {"name":"table named comment", "lines":["ALTER TABLE comment ENGINE=MyISAM;"], "want":[1]},
   {"name":"alter whitespace separated innodb", "lines":["ALTER TABLE t DEFAULT CHARSET=utf8mb4 ENGINE=InnoDB;"], "want":[]},
-  {"name":"alter order ascending", "lines":["ALTER TABLE t ORDER BY id, engine ASC;"], "want":[]}
+  {"name":"alter order ascending", "lines":["ALTER TABLE t ORDER BY id, engine ASC;"], "want":[]},
+  {"name":"create default option value", "lines":["CREATE TABLE t (id INT) PACK_KEYS=DEFAULT ENGINE=MyISAM;"], "want":[1]},
+  {"name":"create parenthesized option value", "lines":["CREATE TABLE t (id INT) UNION=(t1,t2) ENGINE=MRG_MYISAM;"], "want":[1]},
+  {"name":"alter default option value", "lines":["ALTER TABLE t PACK_KEYS=DEFAULT ENGINE=MyISAM;"], "want":[1]},
+  {"name":"default option value without equals", "lines":["CREATE TABLE t (id INT) PACK_KEYS DEFAULT ENGINE=MyISAM;", "ALTER TABLE t STATS_PERSISTENT DEFAULT ENGINE=Aria;"], "want":[1,2]},
+  {"name":"alter parenthesized option value", "lines":["ALTER TABLE t UNION=(t1,t2) ENGINE=MRG_MYISAM;"], "want":[1]},
+  {"name":"alter order option named columns", "lines":["ALTER TABLE t ORDER BY id, comment, engine DESC;"], "want":[]},
+  {"name":"alter order option named columns then engine", "lines":["ALTER TABLE t ORDER BY id, comment, engine DESC, ENGINE=MyISAM;"], "want":[1]}
 ]
