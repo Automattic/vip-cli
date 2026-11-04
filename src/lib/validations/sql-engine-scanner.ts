@@ -64,6 +64,11 @@ export class SqlEngineScanner {
 	private engineEquals = false;
 	private noBackslashEscapes = false;
 	private sqlModeAssignment = false;
+	private setAtCount = 0;
+	private setGlobalScope = false;
+	private sqlModeSegment = '';
+	private sqlModeSegmentLong = false;
+	private sqlModeValueHasMode = false;
 
 	private resetStatement(): void {
 		this.phase = 'start';
@@ -80,6 +85,8 @@ export class SqlEngineScanner {
 		this.engineLine = 0;
 		this.engineEquals = false;
 		this.sqlModeAssignment = false;
+		this.setAtCount = 0;
+		this.setGlobalScope = false;
 	}
 
 	// State transitions mirror the bounded CREATE/ALTER TABLE grammar.
@@ -125,14 +132,27 @@ export class SqlEngineScanner {
 		}
 		if ( 'set' === this.phase ) {
 			if ( quoted && this.sqlModeAssignment ) {
-				this.noBackslashEscapes = upper
-					.split( ',' )
-					.some( mode => 'NO_BACKSLASH_ESCAPES' === mode.trim() );
+				// The streamed segments already decided whether the mode is present.
+				this.noBackslashEscapes = this.sqlModeValueHasMode;
 				this.sqlModeAssignment = false;
+			} else if ( ! quoted && '@' === text ) {
+				this.setAtCount += 1;
 			} else if ( ! quoted && 'SQL_MODE' === upper ) {
-				this.sqlModeAssignment = true;
+				// Single-@ user variables and GLOBAL assignments never change
+				// the importing session, so only session assignments count.
+				this.sqlModeAssignment = 1 !== this.setAtCount && ! this.setGlobalScope;
+				this.setAtCount = 0;
+			} else if ( ! quoted && 'GLOBAL' === upper ) {
+				this.setGlobalScope = true;
+				this.setAtCount = 0;
+			} else if ( ! quoted && ',' === text ) {
+				// Each comma-separated assignment carries its own scope.
+				this.setGlobalScope = false;
+				this.setAtCount = 0;
+				this.sqlModeAssignment = false;
 			} else if ( ! quoted && '=' !== text ) {
 				this.sqlModeAssignment = false;
+				this.setAtCount = 0;
 			}
 			return;
 		}
@@ -261,6 +281,44 @@ export class SqlEngineScanner {
 		}
 	}
 
+	// SQL mode values stream through bounded comma-separated segments so a
+	// NO_BACKSLASH_ESCAPES entry beyond any fixed capture window is still
+	// recognized while buffering stays small.
+	private extendSqlModeSegment( span: string ): void {
+		if ( this.sqlModeSegmentLong ) {
+			return;
+		}
+		this.sqlModeSegment += span;
+		if ( this.sqlModeSegment.length > 128 ) {
+			this.sqlModeSegmentLong = true;
+			this.sqlModeSegment = '';
+		}
+	}
+
+	private completeSqlModeSegment(): void {
+		if (
+			! this.sqlModeSegmentLong &&
+			'NO_BACKSLASH_ESCAPES' === this.sqlModeSegment.trim().toUpperCase()
+		) {
+			this.sqlModeValueHasMode = true;
+		}
+		this.sqlModeSegment = '';
+		this.sqlModeSegmentLong = false;
+	}
+
+	private appendSqlMode( chunk: string ): void {
+		while ( chunk.length ) {
+			const comma = chunk.indexOf( ',' );
+			if ( -1 === comma ) {
+				this.extendSqlModeSegment( chunk );
+				return;
+			}
+			this.extendSqlModeSegment( chunk.slice( 0, comma ) );
+			this.completeSqlModeSegment();
+			chunk = chunk.slice( comma + 1 );
+		}
+	}
+
 	// The lexical states must be checked in order for each input segment.
 	// eslint-disable-next-line complexity
 	public scan( line: string, lineNumber: number ): number[] {
@@ -279,7 +337,9 @@ export class SqlEngineScanner {
 			if ( this.quote ) {
 				const end = line.indexOf( this.quote, index );
 				if ( -1 === end ) {
-					if ( this.engineLine || this.sqlModeAssignment ) {
+					if ( this.sqlModeAssignment ) {
+						this.appendSqlMode( line.slice( index ) + '\n' );
+					} else if ( this.engineLine ) {
 						this.quotedValue = ( this.quotedValue + line.slice( index, index + 128 ) + '\n' ).slice(
 							0,
 							128
@@ -287,7 +347,9 @@ export class SqlEngineScanner {
 					}
 					break;
 				}
-				if ( this.engineLine || this.sqlModeAssignment ) {
+				if ( this.sqlModeAssignment ) {
+					this.appendSqlMode( line.slice( index, end ) );
+				} else if ( this.engineLine ) {
 					this.quotedValue = (
 						this.quotedValue + line.slice( index, Math.min( end, index + 128 ) )
 					).slice( 0, 128 );
@@ -303,6 +365,9 @@ export class SqlEngineScanner {
 				}
 				index = end + 1;
 				this.quote = '';
+				if ( this.sqlModeAssignment ) {
+					this.completeSqlModeSegment();
+				}
 				this.token( this.quotedValue, lineNumber, findings, true );
 				this.quotedValue = '';
 				continue;
@@ -335,6 +400,15 @@ export class SqlEngineScanner {
 			if ( '\'"`'.includes( line[ index ] ) ) {
 				this.quote = line[ index++ ];
 				this.quotedValue = '';
+				this.sqlModeSegment = '';
+				this.sqlModeSegmentLong = false;
+				this.sqlModeValueHasMode = false;
+				continue;
+			}
+			if ( 'set' === this.phase && '@' === line[ index ] ) {
+				// Preserve variable sigils so user and system variables differ.
+				this.token( '@', lineNumber, findings );
+				index++;
 				continue;
 			}
 			if ( 'other' === this.phase && ';' !== line[ index ] ) {

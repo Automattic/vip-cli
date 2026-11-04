@@ -18,6 +18,11 @@ type engineScanner struct {
 	engineEquals                   bool
 	noBackslashEscapes             bool
 	sqlModeAssignment              bool
+	setAtCount                     int
+	setGlobalScope                 bool
+	sqlModeSegment                 string
+	sqlModeSegmentLong             bool
+	sqlModeValueHasMode            bool
 }
 
 func (s *engineScanner) reset() {
@@ -28,6 +33,7 @@ func (s *engineScanner) reset() {
 	s.alterPrevious = ""
 	s.createPrevious = ""
 	s.sqlModeAssignment = false
+	s.setAtCount, s.setGlobalScope = 0, false
 }
 
 func engineIdent(c byte) bool { return isIdent(c) || c >= 0x80 }
@@ -82,17 +88,27 @@ func (s *engineScanner) token(text string, line int, findings *[]int, quoted boo
 		return
 	case "set":
 		if quoted && s.sqlModeAssignment {
-			s.noBackslashEscapes = false
-			for mode := range strings.SplitSeq(upper, ",") {
-				if strings.TrimSpace(mode) == "NO_BACKSLASH_ESCAPES" {
-					s.noBackslashEscapes = true
-				}
-			}
+			// The streamed segments already decided whether the mode is present.
+			s.noBackslashEscapes = s.sqlModeValueHasMode
 			s.sqlModeAssignment = false
+		} else if !quoted && text == "@" {
+			s.setAtCount++
 		} else if !quoted && upper == "SQL_MODE" {
-			s.sqlModeAssignment = true
+			// Single-@ user variables and GLOBAL assignments never change the
+			// importing session, so only session assignments count.
+			s.sqlModeAssignment = s.setAtCount != 1 && !s.setGlobalScope
+			s.setAtCount = 0
+		} else if !quoted && upper == "GLOBAL" {
+			s.setGlobalScope = true
+			s.setAtCount = 0
+		} else if !quoted && text == "," {
+			// Each comma-separated assignment carries its own scope.
+			s.setGlobalScope = false
+			s.setAtCount = 0
+			s.sqlModeAssignment = false
 		} else if !quoted && text != "=" {
 			s.sqlModeAssignment = false
+			s.setAtCount = 0
 		}
 		return
 	case "create":
@@ -222,6 +238,43 @@ func (s *engineScanner) token(text string, line int, findings *[]int, quoted boo
 	}
 }
 
+// extendSQLModeSegment appends a comma-free span to the current segment,
+// marking it unusable once it grows past the bounded window.
+func (s *engineScanner) extendSQLModeSegment(span string) {
+	if s.sqlModeSegmentLong {
+		return
+	}
+	s.sqlModeSegment += span
+	if len(s.sqlModeSegment) > 128 {
+		s.sqlModeSegmentLong = true
+		s.sqlModeSegment = ""
+	}
+}
+
+// completeSQLModeSegment checks one finished comma-separated mode.
+func (s *engineScanner) completeSQLModeSegment() {
+	if !s.sqlModeSegmentLong && strings.ToUpper(strings.TrimSpace(s.sqlModeSegment)) == "NO_BACKSLASH_ESCAPES" {
+		s.sqlModeValueHasMode = true
+	}
+	s.sqlModeSegment = ""
+	s.sqlModeSegmentLong = false
+}
+
+// appendSQLMode streams a quoted value chunk through the bounded segments so
+// modes beyond any fixed capture window are still recognized.
+func (s *engineScanner) appendSQLMode(chunk string) {
+	for len(chunk) > 0 {
+		comma := strings.IndexByte(chunk, ',')
+		if comma < 0 {
+			s.extendSQLModeSegment(chunk)
+			return
+		}
+		s.extendSQLModeSegment(chunk[:comma])
+		s.completeSQLModeSegment()
+		chunk = chunk[comma+1:]
+	}
+}
+
 func (s *engineScanner) scan(line string, lineNumber int) []int {
 	var findings []int
 	for i := 0; i < len(line); {
@@ -237,7 +290,9 @@ func (s *engineScanner) scan(line string, lineNumber int) []int {
 		if s.quote != 0 {
 			end := strings.IndexByte(line[i:], s.quote)
 			if end < 0 {
-				if s.engineLine != 0 || s.sqlModeAssignment {
+				if s.sqlModeAssignment {
+					s.appendSQLMode(line[i:] + "\n")
+				} else if s.engineLine != 0 {
 					s.quotedValue += line[i:min(len(line), i+128)] + "\n"
 					if len(s.quotedValue) > 128 {
 						s.quotedValue = s.quotedValue[:128]
@@ -246,7 +301,9 @@ func (s *engineScanner) scan(line string, lineNumber int) []int {
 				break
 			}
 			end += i
-			if s.engineLine != 0 || s.sqlModeAssignment {
+			if s.sqlModeAssignment {
+				s.appendSQLMode(line[i:end])
+			} else if s.engineLine != 0 {
 				s.quotedValue += line[i:min(end, i+128)]
 				if len(s.quotedValue) > 128 {
 					s.quotedValue = s.quotedValue[:128]
@@ -262,6 +319,9 @@ func (s *engineScanner) scan(line string, lineNumber int) []int {
 			}
 			i = end + 1
 			s.quote = 0
+			if s.sqlModeAssignment {
+				s.completeSQLModeSegment()
+			}
 			s.token(s.quotedValue, lineNumber, &findings, true)
 			s.quotedValue = ""
 			continue
@@ -297,6 +357,15 @@ func (s *engineScanner) scan(line string, lineNumber int) []int {
 		if strings.ContainsRune("'\"`", rune(line[i])) {
 			s.quote = line[i]
 			s.quotedValue = ""
+			s.sqlModeSegment = ""
+			s.sqlModeSegmentLong = false
+			s.sqlModeValueHasMode = false
+			i++
+			continue
+		}
+		if s.phase == "set" && line[i] == '@' {
+			// Preserve variable sigils so user and system variables differ.
+			s.token("@", lineNumber, &findings, false)
 			i++
 			continue
 		}
