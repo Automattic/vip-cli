@@ -16,19 +16,26 @@ describe( 'lib/analytics', () => {
 			process.env = OLD_ENV;
 		} );
 
-		it( 'should track events for all clients', async () => {
+		it( 'should send events to the client with client info', async () => {
 			delete process.env.DO_NOT_TRACK;
-			const stubClient1 = new AnalyticsClientStub();
-			const stubClient1Spy = jest.spyOn( stubClient1, 'trackEvent' );
-			const stubClient2 = new AnalyticsClientStub();
-			const stubClient2Spy = jest.spyOn( stubClient2, 'trackEvent' );
-			const analytics = new Analytics( [ stubClient1, stubClient2 ] );
+			const stubClient = new AnalyticsClientStub();
+			const stubClientSpy = jest.spyOn( stubClient, 'trackEvent' );
+			const analytics = new Analytics( stubClient );
 
-			const result = analytics.trackEvent( 'test_event', {} );
+			const result = analytics.trackEvent( 'test_event', { foo: 'bar' } );
 
-			await expect( result ).resolves.toStrictEqual( [ false, false ] );
-			expect( stubClient1Spy ).toHaveBeenCalledTimes( 1 );
-			expect( stubClient2Spy ).toHaveBeenCalledTimes( 1 );
+			await expect( result ).resolves.toBe( false );
+			expect( stubClientSpy ).toHaveBeenCalledWith(
+				'test_event',
+				expect.objectContaining( {
+					cli_version: expect.any( String ),
+					os_name: expect.any( String ),
+					os_version: expect.any( String ),
+					os_arch: expect.any( String ),
+					node_version: expect.any( String ),
+					foo: 'bar',
+				} )
+			);
 		} );
 
 		it( 'should not track events when DO_NOT_TRACK is set', async () => {
@@ -36,11 +43,11 @@ describe( 'lib/analytics', () => {
 
 			const stubClient = new AnalyticsClientStub();
 			const stubClientSpy = jest.spyOn( stubClient, 'trackEvent' );
-			const analytics = new Analytics( [ stubClient ] );
+			const analytics = new Analytics( stubClient );
 
 			const result = analytics.trackEvent( 'test_event', {} );
 
-			await expect( result ).resolves.toStrictEqual( [] );
+			await expect( result ).resolves.toBe( false );
 			expect( stubClientSpy ).toHaveBeenCalledTimes( 0 );
 		} );
 	} );

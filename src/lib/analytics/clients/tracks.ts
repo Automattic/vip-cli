@@ -4,7 +4,6 @@ import { fetch, type Response } from 'undici';
 
 import { checkIfUserIsVip } from '../../cli/apiConfig';
 
-import type { AnalyticsClient } from './client';
 import type { Env } from '../../env';
 
 const debug = debugLib( '@automattic/vip:analytics:clients:tracks' );
@@ -30,7 +29,7 @@ export type TrackFunction = (
 
 // TODO: add batch support (can include multiples in `events` array)
 
-export default class Tracks implements AnalyticsClient {
+export default class Tracks {
 	private readonly userAgent: string;
 	private readonly baseParams: BaseParams;
 

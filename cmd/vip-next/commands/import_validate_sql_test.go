@@ -114,7 +114,7 @@ func TestImportValidateSQLFindingTracksFailureNotSuccess(t *testing.T) {
 	t.Setenv("GO_ENV", "")
 	t.Setenv("NODE_ENV", "")
 	client := &recordingTelemetryClient{}
-	SetConfig(Config{Tracker: &telemetry.Tracker{Clients: []telemetry.Client{client}}})
+	SetConfig(Config{Tracker: &telemetry.Tracker{Client: client}})
 	t.Cleanup(func() { SetConfig(Config{}) })
 
 	path := writeTempSQL(t, "DROP DATABASE foo;\n")

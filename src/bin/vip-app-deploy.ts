@@ -50,7 +50,7 @@ const DEPLOY_PREFLIGHT_PROGRESS_STEPS = [
 interface PromptToContinueParams {
 	launched: boolean;
 	formattedEnvironment: string;
-	track: ( eventName: string ) => Promise< false | unknown[] >;
+	track: ( eventName: string ) => Promise< unknown >;
 	domain: string;
 }
 

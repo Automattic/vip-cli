@@ -3,7 +3,6 @@ import { arch, platform, release } from 'node:os';
 import pkg from '../../package.json';
 
 interface AppInfo {
-	name: string;
 	version: string;
 }
 
@@ -25,7 +24,6 @@ export interface Env {
 }
 
 const app: AppInfo = {
-	name: pkg.name,
 	version: pkg.version,
 };
 

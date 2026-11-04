@@ -1,4 +1,4 @@
-// Package telemetry handles analytics (Tracks + Pendo) for the Go binary.
+// Package telemetry handles Tracks analytics for the Go binary.
 // Anonymous UUIDs use vip-next's private keychain namespace so writes cannot
 // alter the Node CLI's telemetry identity.
 package telemetry
