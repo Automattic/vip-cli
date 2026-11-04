@@ -82,6 +82,37 @@ func TestTracksClientSendsBinaryKind(t *testing.T) {
 	}
 }
 
+// os_arch must use Node's process.arch names so Tracks sees one value per
+// architecture across both runtimes.
+func TestTracksClientSendsNodeArch(t *testing.T) {
+	prev := goarch
+	t.Cleanup(func() { goarch = prev })
+
+	for _, tc := range []struct{ goarch, want string }{
+		{"amd64", "x64"},
+		{"arm64", "arm64"},
+		{"386", "ia32"},
+	} {
+		t.Run(tc.goarch, func(t *testing.T) {
+			goarch = tc.goarch
+			var body string
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				b, _ := io.ReadAll(r.Body)
+				body = string(b)
+			}))
+			defer srv.Close()
+			c := &TracksClient{Endpoint: srv.URL, UserID: "u", UserType: "anon", UserAgent: "x"}
+			if err := c.TrackEvent("test", nil); err != nil {
+				t.Fatalf("TrackEvent: %v", err)
+			}
+			v, _ := url.ParseQuery(body)
+			if got := v.Get("events[0][os_arch]"); got != tc.want {
+				t.Errorf("os_arch = %q, want %q; body=%s", got, tc.want, body)
+			}
+		})
+	}
+}
+
 func TestTracksClientLazyUserIDResolved(t *testing.T) {
 	var calls int
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
