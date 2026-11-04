@@ -16,6 +16,8 @@ type engineScanner struct {
 	engineOrderCandidate           bool
 	engineLine                     int
 	engineEquals                   bool
+	noBackslashEscapes             bool
+	sqlModeAssignment              bool
 }
 
 func (s *engineScanner) reset() {
@@ -25,13 +27,14 @@ func (s *engineScanner) reset() {
 	s.alterInOptions, s.alterInOrder, s.engineOrderCandidate = false, false, false
 	s.alterPrevious = ""
 	s.createPrevious = ""
+	s.sqlModeAssignment = false
 }
 
 func engineIdent(c byte) bool { return isIdent(c) || c >= 0x80 }
 
 func alterTableOption(word string) bool {
 	switch word {
-	case "AUTO_INCREMENT", "AUTOEXTEND_SIZE", "AVG_ROW_LENGTH", "CHARACTER", "CHARSET", "CHECKSUM", "COLLATE", "COMMENT", "COMPRESSION", "CONNECTION", "DATA", "DEFAULT", "DELAY_KEY_WRITE", "ENCRYPTION", "ENGINE", "ENGINE_ATTRIBUTE", "INDEX", "INSERT_METHOD", "KEY_BLOCK_SIZE", "MAX_ROWS", "MIN_ROWS", "PACK_KEYS", "PASSWORD", "ROW_FORMAT", "STATS_AUTO_RECALC", "STATS_PERSISTENT", "STATS_SAMPLE_PAGES", "TABLESPACE", "UNION":
+	case "AUTO_INCREMENT", "AUTOEXTEND_SIZE", "AVG_ROW_LENGTH", "CHARACTER", "CHARSET", "CHECKSUM", "COLLATE", "COMMENT", "COMPRESSION", "CONNECTION", "DATA", "DEFAULT", "DELAY_KEY_WRITE", "ENCRYPTION", "ENGINE", "ENGINE_ATTRIBUTE", "INDEX", "INSERT_METHOD", "KEY_BLOCK_SIZE", "MAX_ROWS", "MIN_ROWS", "PACK_KEYS", "PASSWORD", "ROW_FORMAT", "SECONDARY_ENGINE_ATTRIBUTE", "STATS_AUTO_RECALC", "STATS_PERSISTENT", "STATS_SAMPLE_PAGES", "TABLESPACE", "UNION":
 		return true
 	}
 	return false
@@ -71,8 +74,25 @@ func (s *engineScanner) token(text string, line int, findings *[]int, quoted boo
 			s.phase = "create"
 		} else if !quoted && upper == "ALTER" {
 			s.phase = "alter"
+		} else if !quoted && upper == "SET" {
+			s.phase = "set"
 		} else {
 			s.phase = "other"
+		}
+		return
+	case "set":
+		if quoted && s.sqlModeAssignment {
+			s.noBackslashEscapes = false
+			for mode := range strings.SplitSeq(upper, ",") {
+				if strings.TrimSpace(mode) == "NO_BACKSLASH_ESCAPES" {
+					s.noBackslashEscapes = true
+				}
+			}
+			s.sqlModeAssignment = false
+		} else if !quoted && upper == "SQL_MODE" {
+			s.sqlModeAssignment = true
+		} else if !quoted && text != "=" {
+			s.sqlModeAssignment = false
 		}
 		return
 	case "create":
@@ -217,7 +237,7 @@ func (s *engineScanner) scan(line string, lineNumber int) []int {
 		if s.quote != 0 {
 			end := strings.IndexByte(line[i:], s.quote)
 			if end < 0 {
-				if s.engineLine != 0 {
+				if s.engineLine != 0 || s.sqlModeAssignment {
 					s.quotedValue += line[i:min(len(line), i+128)] + "\n"
 					if len(s.quotedValue) > 128 {
 						s.quotedValue = s.quotedValue[:128]
@@ -226,13 +246,13 @@ func (s *engineScanner) scan(line string, lineNumber int) []int {
 				break
 			}
 			end += i
-			if s.engineLine != 0 {
+			if s.engineLine != 0 || s.sqlModeAssignment {
 				s.quotedValue += line[i:min(end, i+128)]
 				if len(s.quotedValue) > 128 {
 					s.quotedValue = s.quotedValue[:128]
 				}
 			}
-			escaped := s.quote != '`' && escapedQuote(line, end)
+			escaped := s.quote != '`' && !s.noBackslashEscapes && escapedQuote(line, end)
 			if escaped || end+1 < len(line) && line[end+1] == s.quote {
 				i = end + 1
 				if !escaped && i < len(line) {

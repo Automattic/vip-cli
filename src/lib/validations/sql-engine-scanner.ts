@@ -23,6 +23,7 @@ const ALTER_TABLE_OPTIONS = new Set( [
 	'PACK_KEYS',
 	'PASSWORD',
 	'ROW_FORMAT',
+	'SECONDARY_ENGINE_ATTRIBUTE',
 	'STATS_AUTO_RECALC',
 	'STATS_PERSISTENT',
 	'STATS_SAMPLE_PAGES',
@@ -40,6 +41,7 @@ export class SqlEngineScanner {
 		| 'create'
 		| 'temporary'
 		| 'alter'
+		| 'set'
 		| 'create-table'
 		| 'alter-table'
 		| 'other' = 'start';
@@ -60,6 +62,8 @@ export class SqlEngineScanner {
 	private engineOrderCandidate = false;
 	private engineLine = 0;
 	private engineEquals = false;
+	private noBackslashEscapes = false;
+	private sqlModeAssignment = false;
 
 	private resetStatement(): void {
 		this.phase = 'start';
@@ -75,6 +79,7 @@ export class SqlEngineScanner {
 		this.engineOrderCandidate = false;
 		this.engineLine = 0;
 		this.engineEquals = false;
+		this.sqlModeAssignment = false;
 	}
 
 	// State transitions mirror the bounded CREATE/ALTER TABLE grammar.
@@ -112,6 +117,22 @@ export class SqlEngineScanner {
 			}
 			if ( ! quoted && 'ALTER' === upper ) {
 				this.phase = 'alter';
+			}
+			if ( ! quoted && 'SET' === upper ) {
+				this.phase = 'set';
+			}
+			return;
+		}
+		if ( 'set' === this.phase ) {
+			if ( quoted && this.sqlModeAssignment ) {
+				this.noBackslashEscapes = upper
+					.split( ',' )
+					.some( mode => 'NO_BACKSLASH_ESCAPES' === mode.trim() );
+				this.sqlModeAssignment = false;
+			} else if ( ! quoted && 'SQL_MODE' === upper ) {
+				this.sqlModeAssignment = true;
+			} else if ( ! quoted && '=' !== text ) {
+				this.sqlModeAssignment = false;
 			}
 			return;
 		}
@@ -258,7 +279,7 @@ export class SqlEngineScanner {
 			if ( this.quote ) {
 				const end = line.indexOf( this.quote, index );
 				if ( -1 === end ) {
-					if ( this.engineLine ) {
+					if ( this.engineLine || this.sqlModeAssignment ) {
 						this.quotedValue = ( this.quotedValue + line.slice( index, index + 128 ) + '\n' ).slice(
 							0,
 							128
@@ -266,7 +287,7 @@ export class SqlEngineScanner {
 					}
 					break;
 				}
-				if ( this.engineLine ) {
+				if ( this.engineLine || this.sqlModeAssignment ) {
 					this.quotedValue = (
 						this.quotedValue + line.slice( index, Math.min( end, index + 128 ) )
 					).slice( 0, 128 );
@@ -275,10 +296,9 @@ export class SqlEngineScanner {
 				for ( let cursor = end - 1; cursor >= 0 && '\\' === line[ cursor ]; cursor-- ) {
 					slashes++;
 				}
-				if ( ( '`' !== this.quote && slashes % 2 ) || line[ end + 1 ] === this.quote ) {
-					index =
-						end +
-						( line[ end + 1 ] === this.quote && ! ( '`' !== this.quote && slashes % 2 ) ? 2 : 1 );
+				const escaped = '`' !== this.quote && ! this.noBackslashEscapes && slashes % 2;
+				if ( escaped || line[ end + 1 ] === this.quote ) {
+					index = end + ( line[ end + 1 ] === this.quote && ! escaped ? 2 : 1 );
 					continue;
 				}
 				index = end + 1;

@@ -37,5 +37,8 @@
   {"name":"default option value without equals", "lines":["CREATE TABLE t (id INT) PACK_KEYS DEFAULT ENGINE=MyISAM;", "ALTER TABLE t STATS_PERSISTENT DEFAULT ENGINE=Aria;"], "want":[1,2]},
   {"name":"alter parenthesized option value", "lines":["ALTER TABLE t UNION=(t1,t2) ENGINE=MRG_MYISAM;"], "want":[1]},
   {"name":"alter order option named columns", "lines":["ALTER TABLE t ORDER BY id, comment, engine DESC;"], "want":[]},
-  {"name":"alter order option named columns then engine", "lines":["ALTER TABLE t ORDER BY id, comment, engine DESC, ENGINE=MyISAM;"], "want":[1]}
+  {"name":"alter order option named columns then engine", "lines":["ALTER TABLE t ORDER BY id, comment, engine DESC, ENGINE=MyISAM;"], "want":[1]},
+  {"name":"secondary engine attribute", "lines":["ALTER TABLE t SECONDARY_ENGINE_ATTRIBUTE='{}' ENGINE=MyISAM;"], "want":[1]},
+  {"name":"no backslash escapes and reset", "lines":["SET SQL_MODE='NO_BACKSLASH_ESCAPES';", "INSERT INTO t VALUES ('C:\\');", "CREATE TABLE bad (id INT) ENGINE=MyISAM;", "SET SESSION SQL_MODE='';", "INSERT INTO t VALUES ('it\\'s ENGINE=Aria');", "CREATE TABLE bad2 (id INT) ENGINE=Aria;"], "want":[3,6]},
+  {"name":"executable mode assignment", "lines":["/*!40101 SET SQL_MODE='ANSI,NO_BACKSLASH_ESCAPES' */;", "INSERT INTO t VALUES ('C:\\');", "CREATE TABLE bad (id INT) ENGINE=MyISAM;"], "want":[3]}
 ]
