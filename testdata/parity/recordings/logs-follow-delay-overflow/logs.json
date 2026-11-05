@@ -1,0 +1,1 @@
+{"data":{"app":{"id":1,"environments":[{"id":2,"logs":{"nodes":[{"timestamp":"2024-01-01T00:00:00Z","message":"delay-fixture-page"}],"nextCursor":"cursor","pollingDelaySeconds":2147483647}}]}}}

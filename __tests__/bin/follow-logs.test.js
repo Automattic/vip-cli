@@ -73,6 +73,29 @@ describe( 'follow log polling', () => {
 	it.each( [
 		[ 'runtime', followRuntime, getRecentLogs ],
 		[ 'slow', followSlow, getRecentSlowlogs ],
+	] )( '%s bounds server hints before scheduling a timer', async ( _name, follow, fetchLogs ) => {
+		for ( const [ seconds, milliseconds ] of [
+			[ 1, 5000 ],
+			[ 30, 30000 ],
+			[ 300, 300000 ],
+			[ 301, 300000 ],
+			[ 2147483647, 300000 ],
+		] ) {
+			fetchLogs.mockResolvedValue( {
+				nodes: [],
+				nextCursor: 'cursor',
+				pollingDelaySeconds: seconds,
+			} );
+			delay.mockRejectedValueOnce( new Error( 'stop polling' ) );
+			// eslint-disable-next-line no-await-in-loop
+			await expect( follow( { ...options } ) ).rejects.toThrow( 'stop polling' );
+			expect( delay ).toHaveBeenLastCalledWith( milliseconds );
+		}
+	} );
+
+	it.each( [
+		[ 'runtime', followRuntime, getRecentLogs ],
+		[ 'slow', followSlow, getRecentSlowlogs ],
 	] )(
 		'%s stops immediately when the initial request fails',
 		async ( _name, follow, fetchLogs ) => {
