@@ -1,59 +1,31 @@
 package telemetry
 
 import (
-	"context"
 	"fmt"
 	"os"
 )
 
-// Client is the common interface satisfied by TracksClient and PendoClient.
+// Client is the interface satisfied by TracksClient; tests substitute fakes.
 type Client interface {
 	TrackEvent(name string, props map[string]any) error
 }
 
-// Tracker fans out analytics events to all configured Clients.
-// Set Disabled to suppress all events without removing the clients.
+// Tracker sends analytics events to its Client.
+// Set Disabled to suppress all events without removing the client.
 // isDoNotTrack() also suppresses events when the environment signals opt-out.
 type Tracker struct {
-	Clients   []Client
+	Client    Client
 	UUIDStore *UUIDStore
 	Disabled  bool
 }
 
-// SetPendoTokenSource binds Pendo to the invocation's credential store before
-// login can emit events. Tracks has its own authentication scheme.
-func (t *Tracker) SetPendoTokenSource(getToken func() (string, error)) {
-	if t == nil {
-		return
-	}
-	for _, client := range t.Clients {
-		if pendo, ok := client.(*PendoClient); ok {
-			pendo.GetToken = getToken
-		}
-	}
-}
-
-// SetContext attaches the parsed command's diagnostics before command events.
-func (t *Tracker) SetContext(ctx context.Context) {
-	if t == nil {
-		return
-	}
-	for _, client := range t.Clients {
-		if pendo, ok := client.(*PendoClient); ok {
-			pendo.Context = ctx
-		}
-	}
-}
-
-// TrackEvent emits name with props to every configured Client.
+// TrackEvent emits name with props to the configured Client.
 // It is a no-op when the tracker is disabled or DO_NOT_TRACK / test env vars are set.
 func (t *Tracker) TrackEvent(name string, props map[string]any) {
-	if t.Disabled || isDoNotTrack() {
+	if t.Disabled || isDoNotTrack() || t.Client == nil {
 		return
 	}
-	for _, c := range t.Clients {
-		_ = c.TrackEvent(name, props)
-	}
+	_ = t.Client.TrackEvent(name, props)
 }
 
 // AliasUser emits a special "_alias_user" event that links the anonymous UUID

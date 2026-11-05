@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"runtime"
 	"strings"
 	"time"
 
@@ -20,6 +21,9 @@ import (
 //
 // Addition vs Node: events[0][cli_binary_kind]=go-native is injected on every event
 // per spec §9.3 for rollout adoption tracking.
+//
+// events[0][os_arch] matches Node's client_info.os_arch (os.arch()), using Node's
+// architecture names.
 type TracksClient struct {
 	Endpoint  string
 	UserID    string        // if non-empty, used as-is
@@ -27,6 +31,26 @@ type TracksClient struct {
 	UserType  string
 	UserAgent string
 	HTTP      *http.Client
+}
+
+// goarch is the architecture reported as os_arch; tests override it.
+var goarch = runtime.GOARCH
+
+// nodeArchNames maps GOARCH values that Node's process.arch names differently.
+var nodeArchNames = map[string]string{
+	"amd64":    "x64",
+	"386":      "ia32",
+	"mipsle":   "mipsel",
+	"mips64le": "mips64el",
+	"ppc64le":  "ppc64",
+}
+
+// nodeArch returns Node's name for a GOARCH value.
+func nodeArch(arch string) string {
+	if name, ok := nodeArchNames[arch]; ok {
+		return name
+	}
+	return arch
 }
 
 // resolveUserID returns UserID if set, otherwise calls GetUserID().
@@ -55,6 +79,7 @@ func (c *TracksClient) TrackEvent(name string, props map[string]any) error {
 	form.Set("events[0][_en]", name)
 	// Spec §9.3: rollout adoption tracking — not present in Node binary.
 	form.Set("events[0][cli_binary_kind]", "go-native")
+	form.Set("events[0][os_arch]", nodeArch(goarch))
 	for k, v := range props {
 		form.Set(fmt.Sprintf("events[0][%s]", k), fmt.Sprint(v))
 	}

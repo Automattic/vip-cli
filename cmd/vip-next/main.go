@@ -11,7 +11,6 @@
 package main
 
 import (
-	"context"
 	"errors"
 	"log/slog"
 	"os"
@@ -23,7 +22,6 @@ import (
 	"github.com/Automattic/vip/cmd/vip-next/commands"
 	"github.com/Automattic/vip/internal/appctx"
 	"github.com/Automattic/vip/internal/auth"
-	"github.com/Automattic/vip/internal/debuglog"
 	"github.com/Automattic/vip/internal/envalias"
 	"github.com/Automattic/vip/internal/exit"
 	"github.com/Automattic/vip/internal/gql"
@@ -84,9 +82,6 @@ func cliErrorHook(tracker *telemetry.Tracker) func(error) {
 }
 
 func runWithDeps(argv []string, deps runDeps) error {
-	// As in Node, DEBUG applies during login bootstrap; command flags take
-	// precedence once the command parser installs its invocation context.
-	deps.Tracker.SetContext(debuglog.WithLogger(context.Background(), os.Getenv("DEBUG"), os.Stderr))
 	rewritten, app, env, err := envalias.Rewrite(argv)
 	if err != nil {
 		return err
@@ -122,7 +117,7 @@ func runWithDeps(argv []string, deps runDeps) error {
 
 	var rootRef *cobra.Command
 	executeRoot := func() error {
-		rc := &rootContext{aliasApp: app, aliasEnv: env, tracker: deps.Tracker}
+		rc := &rootContext{aliasApp: app, aliasEnv: env}
 		rootRef = newRootCmd(rc)
 		rootRef.SetArgs(prepareArgs(rootRef, rewritten))
 		finish := installUpdateNotifier(rootRef, deps.StartUpdateNotice)
@@ -139,7 +134,6 @@ func runWithDeps(argv []string, deps runDeps) error {
 	apiHost := defaultAPIHost()
 	k := deps.NewKeychain(apiHost)
 	store := auth.NewStore(k)
-	deps.Tracker.SetPendoTokenSource(store.Load)
 	if !auth.ShouldBypassAuth(argv) {
 		return withAuthenticatedSession(!isNonInteractiveArgv(argv), authBootstrapDeps{
 			Keychain: k,

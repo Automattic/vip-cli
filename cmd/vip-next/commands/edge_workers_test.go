@@ -38,7 +38,7 @@ func TestEdgeWorkersTelemetry(t *testing.T) {
 	}
 	recorder := &edgeEventRecorder{}
 	cfg := GetConfig()
-	cfg.Tracker = &telemetry.Tracker{Clients: []telemetry.Client{recorder}}
+	cfg.Tracker = &telemetry.Tracker{Client: recorder}
 	SetConfig(cfg)
 	dir := edgeTestProject(t)
 	api := &edgeCommandAPI{valid: true}

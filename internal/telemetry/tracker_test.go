@@ -19,18 +19,9 @@ func (f *fakeClient) TrackEvent(name string, props map[string]any) error {
 	return nil
 }
 
-func TestTrackerFanOut(t *testing.T) {
-	a, b := &fakeClient{}, &fakeClient{}
-	tr := &Tracker{Clients: []Client{a, b}}
-	tr.TrackEvent("foo", map[string]any{"x": 1})
-	if len(a.events) != 1 || len(b.events) != 1 {
-		t.Errorf("expected fan-out; a=%d b=%d", len(a.events), len(b.events))
-	}
-}
-
 func TestTrackerDoNotTrackDisables(t *testing.T) {
 	c := &fakeClient{}
-	tr := &Tracker{Clients: []Client{c}, Disabled: true}
+	tr := &Tracker{Client: c, Disabled: true}
 	tr.TrackEvent("foo", nil)
 	if len(c.events) != 0 {
 		t.Error("expected no events when Disabled")
@@ -39,7 +30,7 @@ func TestTrackerDoNotTrackDisables(t *testing.T) {
 
 func TestMakeCommandTracker(t *testing.T) {
 	c := &fakeClient{}
-	tr := &Tracker{Clients: []Client{c}}
+	tr := &Tracker{Client: c}
 	ct := tr.MakeCommandTracker("whoami", map[string]any{"command": "vip whoami"})
 	ct("execute", nil)
 	ct("success", map[string]any{"duration_ms": 42})
@@ -58,7 +49,7 @@ func TestAliasUserEmitsAliasEvent(t *testing.T) {
 	c := &fakeClient{}
 	store := newTestUUIDStore()
 	store.Set("anon-id")
-	tr := &Tracker{Clients: []Client{c}, UUIDStore: store}
+	tr := &Tracker{Client: c, UUIDStore: store}
 	tr.AliasUser(99)
 	if len(c.events) != 1 || c.events[0] != "_alias_user" {
 		t.Errorf("expected _alias_user event, got %v", c.events)

@@ -8,7 +8,7 @@ import (
 	"github.com/Automattic/vip/internal/version"
 )
 
-// NewDefault constructs a Tracker wired with Tracks + Pendo clients and the
+// NewDefault constructs a Tracker wired with the Tracks client and the
 // keychain-backed UUID store. Returns nil if construction fails — callers
 // should check.
 //
@@ -41,25 +41,14 @@ func NewDefault() *Tracker {
 
 	// Follow the ldflags-injected build version (Makefile -X
 	// …/internal/version.Version). This was hardcoded to the literal
-	// "vip-next/dev", so every released build reported itself to Tracks and
-	// Pendo as a dev build and tagging a release silently changed nothing.
-	userAgent := "vip-next/" + version.Version
+	// "vip-next/dev", so every released build reported itself to Tracks as a
+	// dev build and tagging a release silently changed nothing.
 	return &Tracker{
-		Clients: []Client{
-			&TracksClient{
-				Endpoint:  TracksEndpoint,
-				GetUserID: getUUID,
-				UserType:  TracksAnonUserType,
-				UserAgent: userAgent,
-			},
-			&PendoClient{
-				// Node prefixes API_HOST (src/lib/api/http.ts); a staging or
-				// local run must not post into production analytics.
-				Endpoint:    PendoEndpointFor(host),
-				GetUserID:   getUUID,
-				UserAgent:   userAgent,
-				EventPrefix: TracksEventPrefix,
-			},
+		Client: &TracksClient{
+			Endpoint:  TracksEndpoint,
+			GetUserID: getUUID,
+			UserType:  TracksAnonUserType,
+			UserAgent: "vip-next/" + version.Version,
 		},
 		UUIDStore: uuidStore,
 		Disabled:  false,

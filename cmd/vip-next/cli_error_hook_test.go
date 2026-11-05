@@ -44,7 +44,7 @@ func TestCLIErrorHookScrubsThePayload(t *testing.T) {
 	secretPath := filepath.Join(home, "clients", "acme-corp", "db.sql")
 
 	client := &capturingClient{}
-	tracker := &telemetry.Tracker{Clients: []telemetry.Client{client}}
+	tracker := &telemetry.Tracker{Client: client}
 
 	hook := cliErrorHook(tracker)
 	hook(errors.New("open " + secretPath + ": permission denied"))
@@ -74,7 +74,7 @@ func TestCLIErrorHookScrubsPresignedCredentials(t *testing.T) {
 	t.Setenv("NODE_ENV", "")
 
 	client := &capturingClient{}
-	tracker := &telemetry.Tracker{Clients: []telemetry.Client{client}}
+	tracker := &telemetry.Tracker{Client: client}
 
 	cliErrorHook(tracker)(errors.New(
 		`Get "https://vip.s3.amazonaws.com/report.json?X-Amz-Signature=abc123def456": i/o timeout`))

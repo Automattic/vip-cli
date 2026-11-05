@@ -86,7 +86,7 @@ func TestDevEnvCommandTelemetryAfterSlugResolution(t *testing.T) {
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
 	client := &devEnvEventClient{}
 	old := GetConfig()
-	SetConfig(Config{Tracker: &telemetry.Tracker{Clients: []telemetry.Client{client}}})
+	SetConfig(Config{Tracker: &telemetry.Tracker{Client: client}})
 	t.Cleanup(func() { SetConfig(old) })
 
 	root := &cobra.Command{Use: "dev-env"}
@@ -117,7 +117,7 @@ func TestDevEnvTelemetryDoesNotStartBeforeSlugResolution(t *testing.T) {
 	t.Chdir(t.TempDir())
 	client := &devEnvEventClient{}
 	old := GetConfig()
-	SetConfig(Config{Tracker: &telemetry.Tracker{Clients: []telemetry.Client{client}}})
+	SetConfig(Config{Tracker: &telemetry.Tracker{Client: client}})
 	t.Cleanup(func() { SetConfig(old) })
 
 	root := &cobra.Command{Use: "dev-env"}
@@ -144,7 +144,7 @@ func TestDevEnvTelemetryRecordsCommandError(t *testing.T) {
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
 	client := &devEnvEventClient{}
 	old := GetConfig()
-	SetConfig(Config{Tracker: &telemetry.Tracker{Clients: []telemetry.Client{client}}})
+	SetConfig(Config{Tracker: &telemetry.Tracker{Client: client}})
 	t.Cleanup(func() { SetConfig(old) })
 
 	root := &cobra.Command{Use: "dev-env"}
@@ -174,7 +174,7 @@ func TestDevEnvCreateEmitsCommandEvents(t *testing.T) {
 	t.Chdir(t.TempDir())
 	client := &devEnvEventClient{}
 	old := GetConfig()
-	SetConfig(Config{Tracker: &telemetry.Tracker{Clients: []telemetry.Client{client}}})
+	SetConfig(Config{Tracker: &telemetry.Tracker{Client: client}})
 	t.Cleanup(func() { SetConfig(old) })
 
 	root := DevEnvCmd()
@@ -203,7 +203,7 @@ func TestDevEnvImportSQLTracksDumpType(t *testing.T) {
 	}
 	client := &devEnvEventClient{}
 	old := GetConfig()
-	SetConfig(Config{Tracker: &telemetry.Tracker{Clients: []telemetry.Client{client}}})
+	SetConfig(Config{Tracker: &telemetry.Tracker{Client: client}})
 	t.Cleanup(func() { SetConfig(old) })
 
 	root := &cobra.Command{Use: "dev-env"}
@@ -232,7 +232,7 @@ func TestDevEnvEnvvarSetInvalidNameEvent(t *testing.T) {
 	t.Setenv("XDG_DATA_HOME", t.TempDir())
 	client := &devEnvEventClient{}
 	old := GetConfig()
-	SetConfig(Config{Tracker: &telemetry.Tracker{Clients: []telemetry.Client{client}}})
+	SetConfig(Config{Tracker: &telemetry.Tracker{Client: client}})
 	t.Cleanup(func() { SetConfig(old) })
 
 	root := DevEnvCmd()
@@ -277,7 +277,7 @@ func TestDevEnvAllCommandUsesAllProperty(t *testing.T) {
 	t.Setenv("NODE_ENV", "")
 	client := &devEnvEventClient{}
 	old := GetConfig()
-	SetConfig(Config{Tracker: &telemetry.Tracker{Clients: []telemetry.Client{client}}})
+	SetConfig(Config{Tracker: &telemetry.Tracker{Client: client}})
 	t.Cleanup(func() { SetConfig(old) })
 
 	root := &cobra.Command{Use: "dev-env"}
@@ -300,7 +300,7 @@ func TestDevEnvSyncNotRunningUsesNodeEvent(t *testing.T) {
 	t.Setenv("NODE_ENV", "")
 	client := &devEnvEventClient{}
 	old := GetConfig()
-	SetConfig(Config{Tracker: &telemetry.Tracker{Clients: []telemetry.Client{client}}})
+	SetConfig(Config{Tracker: &telemetry.Tracker{Client: client}})
 	t.Cleanup(func() { SetConfig(old) })
 
 	root := &cobra.Command{Use: "dev-env"}
