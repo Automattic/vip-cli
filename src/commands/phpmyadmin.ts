@@ -230,9 +230,13 @@ export class PhpMyAdminCommand {
 			exit.withError( 'No environment was specified' );
 		}
 
-		if ( ! this.silent ) {
-			const message =
-				'Note: PHPMyAdmin sessions are read-only. If you run a query that writes to DB, it will fail.';
+		if ( ! this.silent && this.env.isK8sResident !== false ) {
+			let message =
+				'Note: phpMyAdmin sessions may be read-only. Queries that write to the database may fail.';
+			if ( this.env.isK8sResident === true ) {
+				message =
+					'Note: phpMyAdmin sessions are read-only. If you run a query that writes to DB, it will fail.';
+			}
 			console.log( chalk.yellow( message ) );
 		}
 

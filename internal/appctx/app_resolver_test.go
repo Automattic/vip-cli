@@ -2,6 +2,7 @@ package appctx
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -94,6 +95,67 @@ func TestWithAppContextResolvesByID(t *testing.T) {
 	}
 	if !strings.Contains(gotBody, "ResolveAppByID") {
 		t.Errorf("expected ResolveAppByID in request body; got %s", gotBody)
+	}
+}
+
+func TestWithAppContextCarriesNullableK8sResidence(t *testing.T) {
+	for _, lookup := range []struct {
+		name   string
+		appKey string
+		data   func(string) string
+	}{
+		{"name", "myapp", func(env string) string {
+			return `{"data":{"apps":{"edges":[{"id":42,"name":"myapp","environments":[` + env + `]}]}}}`
+		}},
+		{"id", "42", func(env string) string {
+			return `{"data":{"app":{"id":42,"name":"myapp","environments":[` + env + `]}}}`
+		}},
+	} {
+		for _, field := range []struct {
+			name string
+			json string
+			want *bool
+		}{
+			{"true", `,"isK8sResident":true`, func() *bool { v := true; return &v }()},
+			{"false", `,"isK8sResident":false`, func() *bool { v := false; return &v }()},
+			{"null", `,"isK8sResident":null`, nil},
+			{"missing", "", nil},
+		} {
+			t.Run(lookup.name+"/"+field.name, func(t *testing.T) {
+				env := `{"id":7,"name":"develop","type":"develop"` + field.json + `}`
+				srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					body, err := io.ReadAll(r.Body)
+					if err != nil {
+						t.Errorf("read request: %v", err)
+					}
+					if !strings.Contains(string(body), "isK8sResident") {
+						t.Errorf("request did not select isK8sResident: %s", body)
+					}
+					w.Header().Set("Content-Type", "application/json")
+					_, _ = w.Write([]byte(lookup.data(env)))
+				}))
+				defer srv.Close()
+
+				cmd := makeAppCmd(lookup.appKey, "", true)
+				run := WithAppContext(AppContextConfig{Client: gqlClientForServer(srv)})(func(cmd *cobra.Command, _ []string) error {
+					envs := FromContext(cmd.Context()).AvailableEnvs()
+					if len(envs) != 1 {
+						t.Fatalf("AvailableEnvs = %+v, want one env", envs)
+					}
+					got := envs[0].IsK8sResident
+					if got == nil && field.want == nil {
+						return nil
+					}
+					if got == nil || field.want == nil || *got != *field.want {
+						t.Errorf("IsK8sResident = %v, want %v", got, field.want)
+					}
+					return nil
+				})
+				if err := run(cmd, nil); err != nil {
+					t.Fatalf("run: %v", err)
+				}
+			})
+		}
 	}
 }
 
