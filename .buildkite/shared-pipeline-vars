@@ -5,7 +5,7 @@
 
 # a8c CI toolkit Buildkite plugin — provides install_gems, secret injection, and
 # GitHub status helpers on the macOS agent.
-export CI_TOOLKIT_PLUGIN="automattic/a8c-ci-toolkit#6.3.0"
+export CI_TOOLKIT_PLUGIN="automattic/a8c-ci-toolkit#7.1.1"
 
 export BIN_BASE="vip-next"
 
