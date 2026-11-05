@@ -121,10 +121,13 @@ export async function followLogs( opt: FollowLogsOptions ): Promise< void > {
 			after = slowlogs.nextCursor;
 			isFirstRequest = false;
 
-			// Keep a sane lower limit of MIN_POLLING_DELAY_IN_SECONDS just in case something goes wrong in the server-side
-			delay = Math.max(
-				slowlogs.pollingDelaySeconds || DEFAULT_POLLING_DELAY_IN_SECONDS,
-				MIN_POLLING_DELAY_IN_SECONDS
+			// Bound server hints before converting to milliseconds: overflowing Node timers run almost immediately.
+			delay = Math.min(
+				Math.max(
+					slowlogs.pollingDelaySeconds || DEFAULT_POLLING_DELAY_IN_SECONDS,
+					MIN_POLLING_DELAY_IN_SECONDS
+				),
+				MAX_POLLING_DELAY_IN_SECONDS
 			);
 		}
 
