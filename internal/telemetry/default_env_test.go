@@ -11,9 +11,9 @@ func TestNewDefaultUsesProcessLocalIdentityForEnvironmentPAT(t *testing.T) {
 	if tracker == nil || tracker.UUIDStore != nil {
 		t.Fatalf("environment PAT tracker must not have a keychain UUID store: %+v", tracker)
 	}
-	tracks, ok := tracker.Clients[0].(*TracksClient)
+	tracks, ok := tracker.Client.(*TracksClient)
 	if !ok {
-		t.Fatalf("first telemetry client = %T, want TracksClient", tracker.Clients[0])
+		t.Fatalf("telemetry client = %T, want TracksClient", tracker.Client)
 	}
 	first := tracks.GetUserID()
 	if first == "" || tracks.GetUserID() != first {

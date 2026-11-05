@@ -29,7 +29,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Run npm-prepare-release
-        uses: Automattic/vip-actions/npm-prepare-release@6bf9fde7ac8acce516488384357e3e6fb28669cf # v0.7.6
+        uses: Automattic/vip-actions/npm-prepare-release@eeb5b001885157fbbe6d06a89214b97fd5b03539 # v0.8.0
         env:
           # The action captures `npm version` stdout to build the release branch name.
           # Keep lifecycle script banners from polluting that value while still allowing

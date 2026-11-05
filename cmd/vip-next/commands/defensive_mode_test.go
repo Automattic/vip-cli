@@ -58,8 +58,8 @@ func graphqlMock(t *testing.T) (*httptest.Server, func() string) {
 }
 
 // setupTestConfig wires SetConfig with a genqlient client pointed at srv.
-// The tracker is explicitly Disabled so we never touch the real Tracks /
-// Pendo endpoints during a unit test — telemetry.NewDefault() would honor
+// The tracker is explicitly Disabled so we never touch the real Tracks
+// endpoint during a unit test — telemetry.NewDefault() would honor
 // GO_ENV=test, but we don't want to rely on a global env var being set.
 func setupTestConfig(srv *httptest.Server) {
 	c := graphql.NewClient(srv.URL+"/graphql", srv.Client())

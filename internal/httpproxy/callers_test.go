@@ -32,7 +32,6 @@ var tokenBearingSources = []string{
 	"../wpstream/engineio.go",
 	"../sqlexport/download.go",
 	"../telemetry/tracks.go",
-	"../telemetry/pendo.go",
 }
 
 func TestTokenBearingClientsDoNotUseTheDefaultTransport(t *testing.T) {

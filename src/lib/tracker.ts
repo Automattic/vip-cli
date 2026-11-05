@@ -1,43 +1,31 @@
 import debugLib from 'debug';
 
-import Pendo from './analytics/clients/pendo';
 import Tracks from './analytics/clients/tracks';
 import Analytics from './analytics/index';
 import env from './env';
 import config from '../lib/cli/config';
 import Token from '../lib/token';
 
-import type { AnalyticsClient } from './analytics/clients/client';
 import type { Response } from 'undici';
 
 const debug = debugLib( '@automattic/vip:analytics' );
 
 let analytics: Analytics | null = null;
 
-async function init(): Promise< Analytics > {
+async function init(): Promise< Analytics | null > {
 	const uuid = await Token.uuid();
-
-	const clients: AnalyticsClient[] = [];
 
 	const tracksUserType = config.tracksUserType;
 	const tracksEventPrefix = config.tracksEventPrefix;
 
-	if ( tracksUserType && tracksEventPrefix ) {
-		clients.push( new Tracks( uuid, tracksUserType, tracksEventPrefix, env ) );
-
-		clients.push(
-			new Pendo( {
-				env,
-				eventPrefix: tracksEventPrefix,
-				userId: uuid,
-			} )
-		);
+	if ( ! tracksUserType || ! tracksEventPrefix ) {
+		return null;
 	}
 
-	return new Analytics( clients );
+	return new Analytics( new Tracks( uuid, tracksUserType, tracksEventPrefix, env ) );
 }
 
-async function getInstance(): Promise< Analytics > {
+async function getInstance(): Promise< Analytics | null > {
 	if ( analytics ) {
 		return analytics;
 	}
@@ -50,14 +38,14 @@ async function getInstance(): Promise< Analytics > {
 export async function trackEvent(
 	name: string,
 	props: Record< string, unknown > = {}
-): Promise< ( false | Response )[] > {
+): Promise< Response | false > {
 	try {
 		await Token.uuid();
 		const client = await getInstance();
-		return await client.trackEvent( name, props );
+		return client ? await client.trackEvent( name, props ) : false;
 	} catch ( err ) {
 		debug( 'trackEvent() failed', err );
-		return [];
+		return false;
 	}
 }
 
@@ -81,7 +69,7 @@ export function trackEventWithEnv(
 	envId: string | number,
 	eventName: string,
 	eventProps: Record< string, unknown > = {}
-): Promise< false | unknown[] > {
+): Promise< Response | false > {
 	return trackEvent( eventName, { ...eventProps, app_id: appId, env_id: envId } );
 }
 
