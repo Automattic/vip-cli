@@ -1,7 +1,14 @@
 import debugLib from 'debug';
 import { randomInt } from 'node:crypto';
 
-import { exec, readEnvironmentData, writeEnvironmentData } from './dev-environment-core';
+import UserError from '../user-error';
+import {
+	exec,
+	getEnvironmentPath,
+	readEnvironmentData,
+	writeEnvironmentData,
+} from './dev-environment-core';
+import { landoShell } from './dev-environment-lando';
 
 import type Lando from 'lando';
 
@@ -78,4 +85,23 @@ export const flushCache = async ( lando: Lando, slug: string, quiet?: boolean ) 
 
 export const executeQuery = async ( lando: Lando, slug: string, query: string ) => {
 	await exec( lando, slug, [ 'wp', 'db', 'query', query ] );
+};
+
+/** Run the container-owned cleanup before WordPress can read imported credentials. */
+export const sanitizeImportedCredentials = async ( lando: Lando, slug: string ) => {
+	try {
+		if ( ! lando.tasks?.some( task => task.command === 'ssh' ) ) {
+			throw new Error( 'Lando shell task is unavailable.' );
+		}
+		await landoShell( lando, getEnvironmentPath( slug ), 'php', 'www-data', [
+			'php',
+			'/dev-tools/import-cleanup.php',
+		] );
+	} catch ( error ) {
+		throw new UserError(
+			`Database imported, but credential cleanup attempt failed: ${
+				( error as Error ).message
+			}. Your import may contain non-local Jetpack credentials.`
+		);
+	}
 };

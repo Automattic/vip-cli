@@ -80,13 +80,20 @@ function setStdinTTY( value ) {
 }
 
 describe( 'vip dev-env update prompt suppression', () => {
+	let originalStdinTTY;
+
 	beforeEach( () => {
+		originalStdinTTY = Object.getOwnPropertyDescriptor( process.stdin, 'isTTY' );
 		jest.clearAllMocks();
 		process.exitCode = 0;
 	} );
 
 	afterEach( () => {
-		setStdinTTY( true );
+		if ( originalStdinTTY ) {
+			Object.defineProperty( process.stdin, 'isTTY', originalStdinTTY );
+		} else {
+			delete process.stdin.isTTY;
+		}
 	} );
 
 	it( 'keeps wizard interactive for TTY even with metadata/config options present', async () => {
