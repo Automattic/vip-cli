@@ -16,15 +16,28 @@ Should include any special considerations, decisions, and links to relevant GitH
 
 Please don't include internal or private links :)
 
-## Changelog Description
+<details open>
+<summary><h2>Changelog Description</h2></summary>
 
-<!-- Changelogs are published for our customers. Well-written entries help them stay informed on platform changes and all of the great work that we do! -->
+<!--
+!! Everything inside this block (between <summary> and </details>) is published publicly on
+https://docs.wpvip.com/changelog/ when the PR is merged. Nothing outside it is published, and HTML
+comments like this one are stripped.
 
-<!-- Write a concise description of changes in the relevant section.
+Leave the placeholders below empty unless the change is customer-facing. Keep the blank lines after
+</summary> and before </details>, and don't indent entries by 4+ spaces, or the Markdown won't render.
+
+Changelogs are published for our customers. Well-written entries help them stay informed on platform
+changes and all of the great work that we do!
+
+Write a concise description of changes in the relevant section.
 - Add new line items as needed.
 - Entries should follow the [Common Changelog Style Guide](https://github.com/vweevers/common-changelog).
 - Remove all unused sections before merging.
 - Proof-read.
+
+If this PR does not require a changelog entry, leave the placeholders below empty. Don't add notes
+like "N/A" or "No changelog needed": anything inside this block is published.
 -->
 
 ### Added
@@ -44,6 +57,8 @@ Please don't include internal or private links :)
 
 - <!-- e.g. "Increased priority of wp_mail_from filter in VIP Dashboard to prevent unintentional overriding" -->
 - <!-- e.g. "HyperDB: Updated to latest version to fix PHP error with addslashes()" -->
+
+</details>
 
 ## Pull request checklist
 
