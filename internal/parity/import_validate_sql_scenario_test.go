@@ -91,3 +91,31 @@ func TestImportValidateSQLOptionsRowsDifferential(t *testing.T) {
 		}
 	}
 }
+
+func TestImportValidateSQLEngineDifferential(t *testing.T) {
+	rig, skip := differentialAvailable(t)
+	if skip != "" {
+		t.Skip(LoudSkip("SQL engine differential", skip))
+	}
+	for _, tc := range []struct {
+		name, diagnostic string
+		exit             int
+		noEngineFinding  bool
+	}{
+		{"clean", "ENGINE != InnoDB was found 0 times.", 0, true},
+		{"bad", "ENGINE != InnoDB on line(s) 5, 6, 7, 8, 9, 10, 13, 16, 19, 22.", 1, false},
+		{"order", "ALTER TABLE statement on line(s) 3.", 1, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			scenario := &Scenario{Name: "sql-engine-" + tc.name, Argv: []string{"import", "validate-sql", "../../testdata/parity/recordings/sql-engine-validation/" + tc.name + ".sql"}, Env: map[string]string{"DO_NOT_TRACK": "1", "NODE_ENV": "test"}}
+			scenario.Env = rig.scenarioEnv(scenario)
+			for _, side := range []struct{ name, binary string }{{"node", rig.nodeBin}, {"go", rig.goBin}} {
+				result, _ := rig.runSide(t, scenario, side.binary, nullMux)
+				output := result.Stdout + result.Stderr
+				if result.ExitCode != tc.exit || !strings.Contains(output, tc.diagnostic) || (tc.noEngineFinding && strings.Contains(output, "ENGINE != InnoDB on line(s)")) {
+					t.Errorf("%s: exit=%d stdout=%q stderr=%q", side.name, result.ExitCode, result.Stdout, result.Stderr)
+				}
+			}
+		})
+	}
+}

@@ -111,7 +111,7 @@ func TestValidateSiteHomeUrl(t *testing.T) {
 
 func TestValidateEngineInnoDB(t *testing.T) {
 	// Non-InnoDB engine should be flagged.
-	in := strings.NewReader(") ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;\n")
+	in := strings.NewReader("CREATE TABLE t (id INT) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;\n")
 	res, _ := Validate(in)
 	c := findCheck(t, res, "engineInnoDB")
 	if len(c.Results) != 1 {
@@ -119,7 +119,7 @@ func TestValidateEngineInnoDB(t *testing.T) {
 	}
 
 	// InnoDB should NOT be flagged.
-	in = strings.NewReader(") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;\n")
+	in = strings.NewReader("CREATE TABLE t (id INT) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;\n")
 	res, _ = Validate(in)
 	c = findCheck(t, res, "engineInnoDB")
 	if len(c.Results) != 0 {
@@ -127,7 +127,7 @@ func TestValidateEngineInnoDB(t *testing.T) {
 	}
 
 	// Case-insensitive ENGINE=, and an optional space before InnoDB are OK.
-	in = strings.NewReader(") engine= InnoDB DEFAULT CHARSET=utf8mb4;\n")
+	in = strings.NewReader("CREATE TABLE t (id INT) engine= InnoDB DEFAULT CHARSET=utf8mb4;\n")
 	res, _ = Validate(in)
 	c = findCheck(t, res, "engineInnoDB")
 	if len(c.Results) != 0 {

@@ -126,8 +126,8 @@ describe( 'lib/validations/sql', () => {
 		it( 'no instances of CREATE TABLE statements', () => {
 			expect( output ).toContain( 'CREATE TABLE was not found' );
 		} );
-		it( 'instances of ENGINE != InnoDB', () => {
-			expect( output ).toContain( 'ENGINE != InnoDB on line(s) 14' );
+		it( 'ignores ENGINE in commented-out definitions', () => {
+			expect( output ).toContain( 'ENGINE != InnoDB was found 0 times.' );
 		} );
 		it( 'use statement should be ok', () => {
 			expect( output ).not.toContain(
