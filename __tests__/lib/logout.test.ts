@@ -15,8 +15,10 @@ jest.mock( '../../src/lib/api/http', () => ( {
 
 jest.mock( '../../src/lib/token', () => ( {
 	__esModule: true,
+	ENV_TOKEN_NAME: 'VIP_CLI_TOKEN',
 	default: {
 		purge: jest.fn( () => Promise.resolve( true ) ),
+		isEnvironmentSet: jest.fn( () => false ),
 	},
 } ) );
 
@@ -37,10 +39,13 @@ jest.mock( '../../src/lib/tracker', () => ( {
 const mockHttpApiFn = jest.mocked( http );
 // eslint-disable-next-line @typescript-eslint/unbound-method
 const mockTokenPurgeFn = jest.mocked( Token.purge );
+// eslint-disable-next-line @typescript-eslint/unbound-method
+const mockIsEnvironmentSet = jest.mocked( Token.isEnvironmentSet );
 
 describe( 'logout', () => {
 	beforeEach( () => {
 		jest.clearAllMocks();
+		mockIsEnvironmentSet.mockReturnValue( false );
 	} );
 
 	it( 'purges primary token, clears elevated-token cache, and emits telemetry', async () => {
@@ -56,5 +61,19 @@ describe( 'logout', () => {
 		await expect( logout() ).rejects.toThrow();
 		expect( mockTokenPurgeFn ).toHaveBeenCalledTimes( 1 );
 		expect( tokenCache.clearAll ).toHaveBeenCalledTimes( 1 );
+	} );
+
+	it( 'leaves a stored credential untouched while an environment PAT is active', async () => {
+		mockIsEnvironmentSet.mockReturnValue( true );
+		const log = jest.spyOn( console, 'log' ).mockImplementation( () => undefined );
+		try {
+			await logout();
+			expect( mockHttpApiFn ).not.toHaveBeenCalled();
+			expect( mockTokenPurgeFn ).not.toHaveBeenCalled();
+			expect( tokenCache.clearAll ).not.toHaveBeenCalled();
+			expect( log ).toHaveBeenCalledWith( expect.stringContaining( 'VIP_CLI_TOKEN' ) );
+		} finally {
+			log.mockRestore();
+		}
 	} );
 } );

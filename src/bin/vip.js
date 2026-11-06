@@ -8,8 +8,9 @@ import { prompt } from 'enquirer';
 
 import command, { containsAppEnvArgument } from '../lib/cli/command';
 import config from '../lib/cli/config';
+import * as exit from '../lib/cli/exit';
 import tokenCache from '../lib/rechallenge/token-cache';
-import Token from '../lib/token';
+import Token, { EnvTokenError, ENV_TOKEN_NAME } from '../lib/token';
 import { aliasUser, trackEvent } from '../lib/tracker';
 
 const debug = debugLib( '@automattic/vip:bin:vip' );
@@ -157,8 +158,6 @@ async function runLoginFlow() {
 }
 
 const rootCmd = async function () {
-	let token = await Token.get();
-
 	const isHelpCommand = doesArgvHaveAtLeastOneParam( process.argv, [ 'help', '-h', '--help' ] );
 	const isVersionCommand = doesArgvHaveAtLeastOneParam( process.argv, [ '-v', '--version' ] );
 	const isLogoutCommand = doesArgvHaveAtLeastOneParam( process.argv, [ 'logout' ] );
@@ -171,15 +170,32 @@ const rootCmd = async function () {
 
 	debug( 'Argv:', process.argv );
 
-	if (
+	if ( isLoginCommand && Token.isEnvironmentSet() ) {
+		exit.withError(
+			`${ ENV_TOKEN_NAME } is active. Unset it before using \`vip login\` to store a different token.`
+		);
+	}
+
+	const skipsLogin =
 		! isLoginCommand &&
 		( isLogoutCommand ||
 			isHelpCommand ||
 			isVersionCommand ||
 			isDevEnvCommandWithoutEnv ||
-			token?.valid() ||
-			isCustomDeployCmdWithKey )
-	) {
+			isCustomDeployCmdWithKey );
+	let token;
+	if ( ! skipsLogin ) {
+		try {
+			token = await Token.get();
+		} catch ( err ) {
+			if ( err instanceof EnvTokenError ) {
+				exit.withError( err.message );
+			}
+			throw err;
+		}
+	}
+
+	if ( skipsLogin || ( ! isLoginCommand && token?.valid() ) ) {
 		await runCmd();
 	} else {
 		token = await runLoginFlow();

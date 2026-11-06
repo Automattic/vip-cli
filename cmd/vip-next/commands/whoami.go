@@ -27,6 +27,9 @@ type Config struct {
 	// handlers should attach to gql.Client instances. Wired by main.go.
 	// Per the M3 contract: error → rechallenge → retry → transport.
 	Middleware []gql.Middleware
+	// HTTPClient is the raw GraphQL PAT client, with the same auth guards as
+	// GQLClient, including deferred auth errors for bypassed invocations.
+	HTTPClient gql.Doer
 
 	// M4 additions:
 	// GQLClient is the genqlient client wrapped around the same middleware
@@ -64,7 +67,7 @@ type WhoamiDeps struct {
 	Context context.Context
 	APIHost string
 	Token   string
-	Client  *gql.Client
+	Client  gql.Doer
 	Stdout  io.Writer
 }
 
@@ -147,6 +150,7 @@ func NewWhoamiCmd() *cobra.Command {
 				Context: cmd.Context(),
 				APIHost: host,
 				Token:   pkgConfig.Token,
+				Client:  pkgConfig.HTTPClient,
 				Stdout:  cmd.OutOrStdout(),
 			})
 		},

@@ -120,7 +120,7 @@ func TestCommandSurfaceScenarios(t *testing.T) {
 
 	// ── 1. dev-env routing ────────────────────────────────────────────────────
 	// dev-env subcommands are implemented (Plan 5) and auth-bypassed (no
-	// VIP_TOKEN_OVERRIDE or GraphQL server needed). These scenarios assert the
+	// VIP_CLI_TOKEN or GraphQL server needed). These scenarios assert the
 	// command tree routes to the right leaf and the leaf runs — with an isolated
 	// (empty) data dir so they never touch the host's real environments.
 	t.Run("dev-env-start-routes-to-leaf", func(t *testing.T) {
@@ -181,7 +181,7 @@ func TestCommandSurfaceScenarios(t *testing.T) {
 	// unchanged so we can assert the plumbing without a real binary.
 	//
 	// search-replace is NOT on the cobra auth-bypass list (it's a standalone
-	// command without @app), so the binary requires VIP_TOKEN_OVERRIDE to be
+	// command without @app), so the binary requires VIP_CLI_TOKEN to be
 	// set (else it exits 1 with "not logged in"). However inspection of bypass.go
 	// shows only login/logout/dev-env/help/version are bypassed — search-replace
 	// needs a token. We supply one (even though no server is needed for the
@@ -209,7 +209,7 @@ func TestCommandSurfaceScenarios(t *testing.T) {
 
 		env := commandSurfaceBaseEnv()
 		env["API_HOST"] = srv.URL
-		env["VIP_TOKEN_OVERRIDE"] = makeTestToken(t)
+		env["VIP_CLI_TOKEN"] = makeTestToken(t)
 		env["VIP_SEARCH_REPLACE_BIN"] = srBin
 
 		res, err := Run(RunSpec{
@@ -249,7 +249,7 @@ func TestCommandSurfaceScenarios(t *testing.T) {
 
 		env := commandSurfaceBaseEnv()
 		env["API_HOST"] = srv.URL
-		env["VIP_TOKEN_OVERRIDE"] = makeTestToken(t)
+		env["VIP_CLI_TOKEN"] = makeTestToken(t)
 		env["VIP_SEARCH_REPLACE_BIN"] = srBin
 
 		res, err := Run(RunSpec{
@@ -284,8 +284,7 @@ func TestCommandSurfaceScenarios(t *testing.T) {
 
 	// ── 3. logout ─────────────────────────────────────────────────────────────
 	// logout is auth-bypassed (no login required). Stand up a server to capture
-	// POST /logout; set VIP_TOKEN_OVERRIDE so store.Load returns a token and
-	// PostLogout actually fires.
+	// POST /logout; seed an actual Go credential so revocation and deletion run.
 	t.Run("logout", func(t *testing.T) {
 		var (
 			logoutHits int32
@@ -304,7 +303,15 @@ func TestCommandSurfaceScenarios(t *testing.T) {
 
 		env := commandSurfaceBaseEnv()
 		env["API_HOST"] = srv.URL
-		env["VIP_TOKEN_OVERRIDE"] = makeTestToken(t)
+		env["VIP_CLI_TOKEN"] = ""
+		t.Cleanup(func() {
+			if err := goKeychainOp(srv.URL, "clear", ""); err != nil {
+				t.Error(err)
+			}
+		})
+		if err := goKeychainOp(srv.URL, "seed", makeTestToken(t)); err != nil {
+			t.Fatal(err)
+		}
 
 		res, err := Run(RunSpec{
 			Binary: goBin,
@@ -346,7 +353,7 @@ func TestCommandSurfaceScenarios(t *testing.T) {
 
 		env := commandSurfaceBaseEnv()
 		env["API_HOST"] = srv.URL
-		env["VIP_TOKEN_OVERRIDE"] = makeTestToken(t)
+		env["VIP_CLI_TOKEN"] = makeTestToken(t)
 
 		res, err := Run(RunSpec{
 			Binary: goBin,
@@ -381,7 +388,7 @@ func TestCommandSurfaceScenarios(t *testing.T) {
 
 		env := commandSurfaceBaseEnv()
 		env["API_HOST"] = srv.URL
-		env["VIP_TOKEN_OVERRIDE"] = makeTestToken(t)
+		env["VIP_CLI_TOKEN"] = makeTestToken(t)
 
 		res, err := Run(RunSpec{
 			Binary: goBin,
@@ -418,7 +425,7 @@ func TestCommandSurfaceScenarios(t *testing.T) {
 
 		env := commandSurfaceBaseEnv()
 		env["API_HOST"] = srv.URL
-		env["VIP_TOKEN_OVERRIDE"] = makeTestToken(t)
+		env["VIP_CLI_TOKEN"] = makeTestToken(t)
 
 		res, err := Run(RunSpec{
 			Binary: goBin,
@@ -465,7 +472,7 @@ func TestCommandSurfaceScenarios(t *testing.T) {
 
 		env := commandSurfaceBaseEnv()
 		env["API_HOST"] = srv.URL
-		env["VIP_TOKEN_OVERRIDE"] = makeTestToken(t)
+		env["VIP_CLI_TOKEN"] = makeTestToken(t)
 
 		res, err := Run(RunSpec{
 			Binary: goBin,
