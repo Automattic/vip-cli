@@ -12,7 +12,7 @@ command()
 	)
 	.command(
 		'media',
-		'Import media files to a production environment from an archived file at a local path or a publicly accessible remote URL.'
+		'Import media files to an environment from an archived file at a local path or a publicly accessible remote URL.'
 	)
 	.example(
 		'vip @example-app.develop import sql example-file.sql',
