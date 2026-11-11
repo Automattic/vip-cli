@@ -13,9 +13,10 @@ func TestEngineScannerSharedCases(t *testing.T) {
 		t.Fatal(err)
 	}
 	var cases []struct {
-		Name  string
-		Lines []string
-		Want  []int
+		Name       string
+		Lines      []string
+		Want       []int
+		Incomplete bool
 	}
 	if err := json.Unmarshal(data, &cases); err != nil {
 		t.Fatal(err)
@@ -29,6 +30,9 @@ func TestEngineScannerSharedCases(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tc.Want) {
 				t.Fatalf("got %v, want %v", got, tc.Want)
+			}
+			if err := scanner.finish(); (err != nil) != tc.Incomplete {
+				t.Fatalf("finish error = %v, want incomplete = %v", err, tc.Incomplete)
 			}
 		})
 	}

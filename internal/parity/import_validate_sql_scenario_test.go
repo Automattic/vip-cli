@@ -105,6 +105,11 @@ func TestImportValidateSQLEngineDifferential(t *testing.T) {
 		{"clean", "ENGINE != InnoDB was found 0 times.", 0, true},
 		{"bad", "ENGINE != InnoDB on line(s) 5, 6, 7, 8, 9, 10, 13, 16, 19, 22.", 1, false},
 		{"order", "ALTER TABLE statement on line(s) 3.", 1, true},
+		{"review", "ENGINE != InnoDB on line(s) 9, 10, 11, 12, 14, 17, 19, 20, 21.", 1, false},
+		{"incomplete", "SQL engine validation could not finish: unterminated quoted value or block comment.", 1, false},
+		{"comment-incomplete", "SQL engine validation could not finish: unterminated quoted value or block comment.", 1, false},
+		{"cr", "ENGINE != InnoDB on line(s) 10.", 1, false},
+		{"bom", "ENGINE != InnoDB on line(s) 1.", 1, false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			scenario := &Scenario{Name: "sql-engine-" + tc.name, Argv: []string{"import", "validate-sql", "../../testdata/parity/recordings/sql-engine-validation/" + tc.name + ".sql"}, Env: map[string]string{"DO_NOT_TRACK": "1", "NODE_ENV": "test"}}

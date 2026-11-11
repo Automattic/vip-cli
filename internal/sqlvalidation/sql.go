@@ -4,6 +4,7 @@ import (
 	"io"
 	"os"
 	"regexp"
+	"slices"
 	"strings"
 )
 
@@ -461,6 +462,11 @@ func ValidateWith(r io.Reader, opts Options, hook func(line string, lineNum int)
 	})
 	if err != nil {
 		return nil, err
+	}
+	if !slices.Contains(opts.SkipChecks, "engineInnoDB") {
+		if err := engineScanner.finish(); err != nil {
+			return nil, err
+		}
 	}
 	return res, nil
 }

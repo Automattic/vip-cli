@@ -39,6 +39,8 @@ export class SqlEngineScanner {
 	private phase:
 		| 'start'
 		| 'create'
+		| 'create-or'
+		| 'create-replace'
 		| 'temporary'
 		| 'alter'
 		| 'set'
@@ -63,6 +65,13 @@ export class SqlEngineScanner {
 	private engineLine = 0;
 	private engineEquals = false;
 	private noBackslashEscapes = false;
+	private ansiQuotes = false;
+	private sqlModeValueHasAnsi = false;
+	private delimiter = ';';
+	private started = false;
+	private partitionClause = false;
+	private partitionDefinitionDepth = 0;
+	private partitionPrevious = '';
 	private sqlModeAssignment = false;
 	private setAtCount = 0;
 	private setGlobalScope = false;
@@ -87,183 +96,309 @@ export class SqlEngineScanner {
 		this.sqlModeAssignment = false;
 		this.setAtCount = 0;
 		this.setGlobalScope = false;
+		this.partitionClause = false;
+		this.partitionDefinitionDepth = 0;
+		this.partitionPrevious = '';
 	}
 
-	// State transitions mirror the bounded CREATE/ALTER TABLE grammar.
-	// eslint-disable-next-line complexity
+	// Tokens are dispatched by statement phase; each handler owns one grammar boundary.
 	private token( text: string, line: number, findings: number[], quoted = false ): void {
 		const upper = text.toUpperCase();
-		if ( this.engineLine ) {
-			if ( '=' === text && ! this.engineEquals ) {
-				this.engineEquals = true;
-				return;
-			}
-			if (
-				( quoted || /^[A-Z0-9_$\u0080-\uFFFF]+$/i.test( text ) ) &&
-				'INNODB' !== upper &&
-				! (
-					this.engineOrderCandidate &&
-					! this.engineEquals &&
-					( 'ASC' === upper || 'DESC' === upper )
-				)
-			) {
-				findings.push( this.engineLine );
-			}
-			this.engineLine = 0;
-			this.engineEquals = false;
-			this.engineOrderCandidate = false;
+		if ( this.engineLine && this.engineValueToken( text, upper, findings, quoted ) ) {
+			return;
 		}
 		if ( ';' === text && ! quoted ) {
 			this.resetStatement();
 			return;
 		}
-		if ( 'start' === this.phase ) {
-			this.phase = 'other';
-			if ( ! quoted && 'CREATE' === upper ) {
-				this.phase = 'create';
-			}
-			if ( ! quoted && 'ALTER' === upper ) {
-				this.phase = 'alter';
-			}
-			if ( ! quoted && 'SET' === upper ) {
-				this.phase = 'set';
+		switch ( this.phase ) {
+			case 'start':
+				this.startToken( upper, quoted );
+				return;
+			case 'set':
+				this.setToken( upper, quoted );
+				return;
+			case 'create':
+				this.createPrefixToken( upper, quoted );
+				return;
+			case 'create-or':
+				this.phase = ! quoted && 'REPLACE' === upper ? 'create-replace' : 'other';
+				return;
+			case 'create-replace':
+				this.createPrefixToken( upper, quoted );
+				return;
+			case 'temporary':
+			case 'alter':
+				this.tablePrefixToken( upper, quoted );
+				return;
+			case 'create-table':
+			case 'alter-table':
+				this.tableToken( text, upper, line, quoted );
+		}
+	}
+
+	private engineValueToken(
+		text: string,
+		upper: string,
+		findings: number[],
+		quoted: boolean
+	): boolean {
+		if ( '=' === text && ! this.engineEquals ) {
+			this.engineEquals = true;
+			return true;
+		}
+		if (
+			( quoted || /^[A-Z0-9_$\u0080-\uFFFF]+$/i.test( text ) ) &&
+			'INNODB' !== upper &&
+			! (
+				this.engineOrderCandidate &&
+				! this.engineEquals &&
+				( 'ASC' === upper || 'DESC' === upper )
+			)
+		) {
+			findings.push( this.engineLine );
+		}
+		this.engineLine = 0;
+		this.engineEquals = false;
+		this.engineOrderCandidate = false;
+		return false;
+	}
+
+	private startToken( upper: string, quoted: boolean ): void {
+		this.phase = 'other';
+		if ( ! quoted && 'CREATE' === upper ) {
+			this.phase = 'create';
+		}
+		if ( ! quoted && 'ALTER' === upper ) {
+			this.phase = 'alter';
+		}
+		if ( ! quoted && 'SET' === upper ) {
+			this.phase = 'set';
+		}
+	}
+
+	private setToken( upper: string, quoted: boolean ): void {
+		if ( quoted ) {
+			if ( this.sqlModeAssignment ) {
+				this.noBackslashEscapes = this.sqlModeValueHasMode;
+				this.ansiQuotes = this.sqlModeValueHasAnsi;
+				this.sqlModeAssignment = false;
 			}
 			return;
 		}
-		if ( 'set' === this.phase ) {
-			if ( quoted && this.sqlModeAssignment ) {
-				// The streamed segments already decided whether the mode is present.
-				this.noBackslashEscapes = this.sqlModeValueHasMode;
-				this.sqlModeAssignment = false;
-			} else if ( ! quoted && '@' === text ) {
+		switch ( upper ) {
+			case '@':
 				this.setAtCount += 1;
-			} else if ( ! quoted && 'SQL_MODE' === upper ) {
-				// Single-@ user variables and GLOBAL assignments never change
-				// the importing session, so only session assignments count.
+				break;
+			case 'SQL_MODE':
+				// User variables and GLOBAL assignments do not change session modes.
 				this.sqlModeAssignment = 1 !== this.setAtCount && ! this.setGlobalScope;
 				this.setAtCount = 0;
-			} else if ( ! quoted && 'GLOBAL' === upper ) {
+				break;
+			case 'GLOBAL':
 				this.setGlobalScope = true;
 				this.setAtCount = 0;
-			} else if ( ! quoted && ',' === text ) {
-				// Each comma-separated assignment carries its own scope.
+				break;
+			case ',':
 				this.setGlobalScope = false;
 				this.setAtCount = 0;
 				this.sqlModeAssignment = false;
-			} else if ( ! quoted && '=' !== text ) {
+				break;
+			case '=':
+				break;
+			default:
 				this.sqlModeAssignment = false;
 				this.setAtCount = 0;
-			}
+		}
+	}
+
+	private createPrefixToken( upper: string, quoted: boolean ): void {
+		this.phase = 'other';
+		if ( ! quoted && 'TEMPORARY' === upper ) {
+			this.phase = 'temporary';
+		}
+		if ( ! quoted && 'TABLE' === upper ) {
+			this.phase = 'create-table';
+		}
+		if ( ! quoted && 'OR' === upper ) {
+			this.phase = 'create-or';
+		}
+	}
+
+	private tablePrefixToken( upper: string, quoted: boolean ): void {
+		if (
+			'alter' === this.phase &&
+			! quoted &&
+			[ 'IGNORE', 'ONLINE', 'OFFLINE' ].includes( upper )
+		) {
 			return;
 		}
-		if ( 'create' === this.phase ) {
-			this.phase = 'other';
-			if ( ! quoted && 'TEMPORARY' === upper ) {
-				this.phase = 'temporary';
-			}
-			if ( ! quoted && 'TABLE' === upper ) {
-				this.phase = 'create-table';
-			}
+		const next = 'alter' === this.phase ? 'alter-table' : 'create-table';
+		this.phase = ! quoted && 'TABLE' === upper ? next : 'other';
+	}
+
+	private tableToken( text: string, upper: string, line: number, quoted: boolean ): void {
+		if (
+			'create-table' === this.phase &&
+			'options' !== this.createStage &&
+			this.createNameToken( text, upper, quoted )
+		) {
 			return;
 		}
-		if ( 'temporary' === this.phase || 'alter' === this.phase ) {
-			const next = 'alter' === this.phase ? 'alter-table' : 'create-table';
-			this.phase = ! quoted && 'TABLE' === upper ? next : 'other';
-			return;
-		}
-		if ( 'create-table' !== this.phase && 'alter-table' !== this.phase ) {
-			return;
-		}
-		if ( 'create-table' === this.phase && 'options' !== this.createStage ) {
-			if ( 'table' === this.createStage && ! quoted && 'IF' === upper ) {
-				this.createStage = 'if-not';
-				return;
-			}
-			if ( 'if-not' === this.createStage || 'if-exists' === this.createStage ) {
-				if ( ! quoted && 'if-not' === this.createStage && 'NOT' === upper ) {
-					this.createStage = 'if-exists';
-				} else if ( ! quoted && 'if-exists' === this.createStage && 'EXISTS' === upper ) {
-					this.createStage = 'table';
-				} else {
-					this.phase = 'other';
-				}
-				return;
-			}
-			if ( 'table' === this.createStage || 'qualified' === this.createStage ) {
-				this.createStage = 'after-name';
-				return;
-			}
-			if ( ! quoted && '.' === text ) {
-				this.createStage = 'qualified';
-				return;
-			}
-			this.createStage = 'options';
-			if ( '(' !== text || quoted ) {
-				this.sawCreateBody = true;
-			}
-		}
-		if ( ! quoted && '(' === text ) {
-			this.depth += 1;
-			this.sawCreateBody = true;
-			return;
-		}
-		if ( ! quoted && ')' === text ) {
-			this.depth = Math.max( 0, this.depth - 1 );
-			if ( 0 === this.depth ) {
-				this.createPrevious = this.alterPrevious = ')';
-			}
-			return;
-		}
-		if ( this.depth ) {
+		this.partitionToken( text, upper, line, quoted );
+		if ( this.parenthesisToken( text, quoted ) ) {
 			return;
 		}
 		if ( 'alter-table' === this.phase ) {
-			const previous = this.alterPrevious;
-			this.alterPrevious =
-				'=' === previous || ( 'DEFAULT' === upper && ALTER_TABLE_OPTIONS.has( previous ) )
-					? '<value>'
-					: upper;
-			if ( 'table' === this.alterStage && ! quoted && 'IF' === upper ) {
-				this.alterStage = 'if-exists';
-				return;
+			this.alterOptionToken( text, upper, line, quoted );
+		} else {
+			this.createOptionToken( upper, line, quoted );
+		}
+	}
+
+	private createConditionalName( upper: string, quoted: boolean ): void {
+		if ( ! quoted && 'if-not' === this.createStage && 'NOT' === upper ) {
+			this.createStage = 'if-exists';
+		} else if ( ! quoted && 'if-exists' === this.createStage && 'EXISTS' === upper ) {
+			this.createStage = 'table';
+		} else {
+			this.phase = 'other';
+		}
+	}
+
+	private createNameToken( text: string, upper: string, quoted: boolean ): boolean {
+		if ( 'table' === this.createStage && ! quoted && 'IF' === upper ) {
+			this.createStage = 'if-not';
+			return true;
+		}
+		if ( 'if-not' === this.createStage || 'if-exists' === this.createStage ) {
+			this.createConditionalName( upper, quoted );
+			return true;
+		}
+		if ( 'table' === this.createStage || 'qualified' === this.createStage ) {
+			this.createStage = 'after-name';
+			return true;
+		}
+		if ( ! quoted && '.' === text ) {
+			this.createStage = 'qualified';
+			return true;
+		}
+		this.createStage = 'options';
+		if ( '(' !== text || quoted ) {
+			this.sawCreateBody = true;
+		}
+
+		return false;
+	}
+
+	private partitionToken( text: string, upper: string, line: number, quoted: boolean ): void {
+		if ( quoted ) {
+			if ( this.partitionClause ) {
+				this.partitionPrevious = text;
 			}
-			if ( 'if-exists' === this.alterStage ) {
-				this.alterStage = ! quoted && 'EXISTS' === upper ? 'table' : 'actions';
-				return;
-			}
-			if ( 'table' === this.alterStage || 'qualified' === this.alterStage ) {
-				this.alterStage = 'after-name';
-				return;
-			}
-			if ( 'after-name' === this.alterStage ) {
-				if ( '.' === text ) {
-					this.alterStage = 'qualified';
-					return;
-				}
-				this.alterStage = 'actions';
-				this.alterCanEngine = true;
-			}
-			if ( ',' === text && ! quoted ) {
-				this.alterCanEngine = true;
-				this.alterInOptions = false;
-				return;
-			}
-			if ( this.alterCanEngine && ! quoted && 'ORDER' === upper ) {
-				this.alterInOrder = true;
-			} else if ( this.alterCanEngine && ! quoted && ALTER_TABLE_OPTIONS.has( upper ) ) {
-				this.alterInOptions = true;
-			}
-			if (
-				( this.alterCanEngine || ( this.alterInOptions && ! isOptionValuePrefix( previous ) ) ) &&
-				! quoted &&
-				'ENGINE' === upper
-			) {
-				this.engineLine = line;
-				this.engineOrderCandidate = this.alterInOrder;
-			}
-			this.alterCanEngine = false;
 			return;
 		}
+		if (
+			! this.depth &&
+			'PARTITION' === upper &&
+			( this.sawCreateBody || ( 'alter-table' === this.phase && 'actions' === this.alterStage ) )
+		) {
+			this.partitionClause = true;
+		}
+		if ( this.partitionClause ) {
+			if (
+				this.depth &&
+				[ 'PARTITION', 'SUBPARTITION' ].includes( upper ) &&
+				[ '(', ',' ].includes( this.partitionPrevious )
+			) {
+				this.partitionDefinitionDepth = this.depth;
+			}
+			if ( this.partitionDefinitionDepth === this.depth && this.depth && 'ENGINE' === upper ) {
+				this.engineLine = line;
+			}
+			this.partitionPrevious = text;
+		}
+	}
+
+	private parenthesisToken( text: string, quoted: boolean ): boolean {
+		if ( ! quoted && '(' === text ) {
+			this.depth += 1;
+			this.sawCreateBody = true;
+			return true;
+		}
+		if ( ! quoted && ')' === text ) {
+			this.depth = Math.max( 0, this.depth - 1 );
+			if ( this.depth < this.partitionDefinitionDepth ) {
+				this.partitionDefinitionDepth = 0;
+			}
+			if ( 0 === this.depth ) {
+				this.createPrevious = this.alterPrevious = ')';
+			}
+			return true;
+		}
+		if ( this.depth ) {
+			return true;
+		}
+
+		return false;
+	}
+
+	private alterNameToken( text: string, upper: string, quoted: boolean ): boolean {
+		if ( 'table' === this.alterStage && ! quoted && 'IF' === upper ) {
+			this.alterStage = 'if-exists';
+			return true;
+		}
+		if ( 'if-exists' === this.alterStage ) {
+			this.alterStage = ! quoted && 'EXISTS' === upper ? 'table' : 'actions';
+			return true;
+		}
+		if ( 'table' === this.alterStage || 'qualified' === this.alterStage ) {
+			this.alterStage = 'after-name';
+			return true;
+		}
+		if ( 'after-name' === this.alterStage ) {
+			if ( '.' === text ) {
+				this.alterStage = 'qualified';
+				return true;
+			}
+			this.alterStage = 'actions';
+			this.alterCanEngine = true;
+		}
+
+		return false;
+	}
+
+	private alterOptionToken( text: string, upper: string, line: number, quoted: boolean ): void {
+		const previous = this.alterPrevious;
+		this.alterPrevious =
+			'=' === previous || ( 'DEFAULT' === upper && ALTER_TABLE_OPTIONS.has( previous ) )
+				? '<value>'
+				: upper;
+		if ( this.alterNameToken( text, upper, quoted ) ) {
+			return;
+		}
+		if ( ',' === text && ! quoted ) {
+			this.alterCanEngine = true;
+			this.alterInOptions = false;
+			return;
+		}
+		if ( this.alterCanEngine && ! quoted && 'ORDER' === upper ) {
+			this.alterInOrder = true;
+		} else if ( this.alterCanEngine && ! quoted && ALTER_TABLE_OPTIONS.has( upper ) ) {
+			this.alterInOptions = true;
+		}
+		if (
+			( this.alterCanEngine || ( this.alterInOptions && ! isOptionValuePrefix( previous ) ) ) &&
+			! quoted &&
+			'ENGINE' === upper
+		) {
+			this.engineLine = line;
+			this.engineOrderCandidate = this.alterInOrder;
+		}
+		this.alterCanEngine = false;
+	}
+
+	private createOptionToken( upper: string, line: number, quoted: boolean ): void {
 		const previous = this.createPrevious;
 		this.createPrevious =
 			'=' === previous || ( 'DEFAULT' === upper && ALTER_TABLE_OPTIONS.has( previous ) )
@@ -296,11 +431,15 @@ export class SqlEngineScanner {
 	}
 
 	private completeSqlModeSegment(): void {
+		const mode = this.sqlModeSegment.trim().toUpperCase();
+		if ( ! this.sqlModeSegmentLong && 'NO_BACKSLASH_ESCAPES' === mode ) {
+			this.sqlModeValueHasMode = true;
+		}
 		if (
 			! this.sqlModeSegmentLong &&
-			'NO_BACKSLASH_ESCAPES' === this.sqlModeSegment.trim().toUpperCase()
+			[ 'ANSI', 'ANSI_QUOTES', 'DB2', 'MAXDB', 'MSSQL', 'ORACLE', 'POSTGRESQL' ].includes( mode )
 		) {
-			this.sqlModeValueHasMode = true;
+			this.sqlModeValueHasAnsi = true;
 		}
 		this.sqlModeSegment = '';
 		this.sqlModeSegmentLong = false;
@@ -319,10 +458,151 @@ export class SqlEngineScanner {
 		}
 	}
 
-	// The lexical states must be checked in order for each input segment.
-	// eslint-disable-next-line complexity
+	private captureQuotedSpan( span: string, multiline: boolean ): void {
+		const suffix = multiline ? '\n' : '';
+		if ( this.sqlModeAssignment ) {
+			this.appendSqlMode( span + suffix );
+		} else if ( this.engineLine ) {
+			this.quotedValue = ( this.quotedValue + span.slice( 0, 128 ) + suffix ).slice( 0, 128 );
+		}
+	}
+
+	private quoteIsEscaped( line: string, end: number ): boolean {
+		let slashes = 0;
+		for ( let cursor = end - 1; cursor >= 0 && '\\' === line[ cursor ]; cursor-- ) {
+			slashes++;
+		}
+		const identifier = '`' === this.quote || ( '"' === this.quote && this.ansiQuotes );
+		return ! identifier && ! this.noBackslashEscapes && Boolean( slashes % 2 );
+	}
+
+	private scanQuoted(
+		line: string,
+		index: number,
+		lineNumber: number,
+		findings: number[]
+	): number {
+		const end = line.indexOf( this.quote, index );
+		if ( -1 === end ) {
+			this.captureQuotedSpan( line.slice( index ), true );
+			return line.length;
+		}
+		this.captureQuotedSpan( line.slice( index, end ), false );
+		const escaped = this.quoteIsEscaped( line, end );
+		if ( escaped || line[ end + 1 ] === this.quote ) {
+			return end + ( line[ end + 1 ] === this.quote && ! escaped ? 2 : 1 );
+		}
+
+		this.quote = '';
+		if ( this.sqlModeAssignment ) {
+			this.completeSqlModeSegment();
+		}
+		this.token( this.quotedValue, lineNumber, findings, true );
+		this.quotedValue = '';
+		return end + 1;
+	}
+
+	private openComment( line: string, index: number ): number {
+		// Inspect only the bounded executable-comment prefix and version.
+		// eslint-disable-next-line security/detect-unsafe-regex
+		const marker = /^\/\*(?:!|M!)(?:\d{5,6})?/i.exec( line.slice( index, index + 12 ) );
+		if ( marker ) {
+			this.executable = true;
+			return index + marker[ 0 ].length;
+		}
+		this.block = true;
+		return index + 2;
+	}
+
+	private isLineComment( line: string, index: number ): boolean {
+		return (
+			'#' === line[ index ] ||
+			( line.startsWith( '--', index ) &&
+				( index + 2 === line.length ||
+					line.charCodeAt( index + 2 ) <= 0x20 ||
+					0x7f === line.charCodeAt( index + 2 ) ) )
+		);
+	}
+
+	private openQuote( quote: string ): void {
+		this.quote = quote;
+		this.quotedValue = '';
+		this.sqlModeSegment = '';
+		this.sqlModeSegmentLong = false;
+		this.sqlModeValueHasMode = false;
+		this.sqlModeValueHasAnsi = false;
+	}
+
+	private scanToken( line: string, index: number, lineNumber: number, findings: number[] ): number {
+		if ( 'other' === this.phase && ';' !== line[ index ] ) {
+			const special = /['"`;#/-]/g;
+			special.lastIndex = index + 1;
+			const match = special.exec( line );
+			const delimiterIndex = line.indexOf( this.delimiter, index + 1 );
+			return Math.min(
+				match?.index ?? line.length,
+				-1 === delimiterIndex ? line.length : delimiterIndex
+			);
+		}
+		const word = /^[A-Za-z0-9_$\u0080-\uFFFF]+/.exec( line.slice( index ) );
+		if ( word ) {
+			const delimiterIndex = word[ 0 ].indexOf( this.delimiter );
+			const text = -1 === delimiterIndex ? word[ 0 ] : word[ 0 ].slice( 0, delimiterIndex );
+			this.token( text, lineNumber, findings );
+			return index + text.length;
+		}
+		if ( '(),.='.includes( line[ index ] ) ) {
+			this.token( line[ index ], lineNumber, findings );
+		}
+		return index + 1;
+	}
+
+	private scanUnquoted(
+		line: string,
+		index: number,
+		lineNumber: number,
+		findings: number[]
+	): number {
+		if ( this.executable && line.startsWith( '*/', index ) ) {
+			this.executable = false;
+			return index + 2;
+		}
+		if ( line.startsWith( this.delimiter, index ) ) {
+			this.token( ';', lineNumber, findings );
+			return index + this.delimiter.length;
+		}
+		if ( line.startsWith( '/*', index ) ) {
+			return this.openComment( line, index );
+		}
+		if ( this.isLineComment( line, index ) ) {
+			return line.length;
+		}
+		if ( '\'"`'.includes( line[ index ] ) ) {
+			this.openQuote( line[ index ] );
+			return index + 1;
+		}
+		if ( 'set' === this.phase && '@' === line[ index ] ) {
+			this.token( '@', lineNumber, findings );
+			return index + 1;
+		}
+		return this.scanToken( line, index, lineNumber, findings );
+	}
+
+	// Check lexical states in order; quoted text and comments can span lines.
 	public scan( line: string, lineNumber: number ): number[] {
 		const findings: number[] = [];
+		if ( ! this.started ) {
+			this.started = true;
+			line = line.replace( /^(?:\uFEFF|\u00EF\u00BB\u00BF)/, '' );
+		}
+		if ( ! this.quote && ! this.block && ! this.executable ) {
+			const directive = /^[ \t]*DELIMITER[ \t]+([^ \t\r\n]+)[ \t]*$/i.exec( line );
+			if ( directive ) {
+				this.delimiter = directive[ 1 ];
+				this.resetStatement();
+				return findings;
+			}
+		}
 		let index = 0;
 		while ( index < line.length ) {
 			if ( this.block ) {
@@ -332,103 +612,20 @@ export class SqlEngineScanner {
 				}
 				this.block = false;
 				index = end + 2;
-				continue;
+			} else if ( this.quote ) {
+				index = this.scanQuoted( line, index, lineNumber, findings );
+			} else {
+				index = this.scanUnquoted( line, index, lineNumber, findings );
 			}
-			if ( this.quote ) {
-				const end = line.indexOf( this.quote, index );
-				if ( -1 === end ) {
-					if ( this.sqlModeAssignment ) {
-						this.appendSqlMode( line.slice( index ) + '\n' );
-					} else if ( this.engineLine ) {
-						this.quotedValue = ( this.quotedValue + line.slice( index, index + 128 ) + '\n' ).slice(
-							0,
-							128
-						);
-					}
-					break;
-				}
-				if ( this.sqlModeAssignment ) {
-					this.appendSqlMode( line.slice( index, end ) );
-				} else if ( this.engineLine ) {
-					this.quotedValue = (
-						this.quotedValue + line.slice( index, Math.min( end, index + 128 ) )
-					).slice( 0, 128 );
-				}
-				let slashes = 0;
-				for ( let cursor = end - 1; cursor >= 0 && '\\' === line[ cursor ]; cursor-- ) {
-					slashes++;
-				}
-				const escaped = '`' !== this.quote && ! this.noBackslashEscapes && slashes % 2;
-				if ( escaped || line[ end + 1 ] === this.quote ) {
-					index = end + ( line[ end + 1 ] === this.quote && ! escaped ? 2 : 1 );
-					continue;
-				}
-				index = end + 1;
-				this.quote = '';
-				if ( this.sqlModeAssignment ) {
-					this.completeSqlModeSegment();
-				}
-				this.token( this.quotedValue, lineNumber, findings, true );
-				this.quotedValue = '';
-				continue;
-			}
-			if ( this.executable && line.startsWith( '*/', index ) ) {
-				this.executable = false;
-				index += 2;
-				continue;
-			}
-			if ( line.startsWith( '/*', index ) ) {
-				// Only inspect the bounded executable-comment prefix and version.
-				// eslint-disable-next-line security/detect-unsafe-regex
-				const marker = /^\/\*(?:!|M!)(?:\d{5,6})?/i.exec( line.slice( index, index + 12 ) );
-				if ( marker ) {
-					this.executable = true;
-					index += marker[ 0 ].length;
-				} else {
-					this.block = true;
-					index += 2;
-				}
-				continue;
-			}
-			if (
-				'#' === line[ index ] ||
-				( line.startsWith( '--', index ) &&
-					( index + 2 === line.length || /\s/.test( line[ index + 2 ] ) ) )
-			) {
-				break;
-			}
-			if ( '\'"`'.includes( line[ index ] ) ) {
-				this.quote = line[ index++ ];
-				this.quotedValue = '';
-				this.sqlModeSegment = '';
-				this.sqlModeSegmentLong = false;
-				this.sqlModeValueHasMode = false;
-				continue;
-			}
-			if ( 'set' === this.phase && '@' === line[ index ] ) {
-				// Preserve variable sigils so user and system variables differ.
-				this.token( '@', lineNumber, findings );
-				index++;
-				continue;
-			}
-			if ( 'other' === this.phase && ';' !== line[ index ] ) {
-				const special = /['"`;#/-]/g;
-				special.lastIndex = index + 1;
-				const match = special.exec( line );
-				index = match?.index ?? line.length;
-				continue;
-			}
-			const word = /^[A-Za-z0-9_$\u0080-\uFFFF]+/.exec( line.slice( index ) );
-			if ( word ) {
-				this.token( word[ 0 ], lineNumber, findings );
-				index += word[ 0 ].length;
-				continue;
-			}
-			if ( '();,.='.includes( line[ index ] ) ) {
-				this.token( line[ index ], lineNumber, findings );
-			}
-			index++;
 		}
 		return [ ...new Set( findings ) ];
+	}
+
+	public finish(): void {
+		if ( this.quote || this.block || this.executable ) {
+			throw new Error(
+				'SQL engine validation could not finish: unterminated quoted value or block comment.'
+			);
+		}
 	}
 }

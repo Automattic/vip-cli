@@ -5,6 +5,17 @@ import (
 	"testing"
 )
 
+func TestValidateIncompleteEngineScan(t *testing.T) {
+	for _, sql := range []string{"INSERT INTO t VALUES ('oops", "/* unfinished", "/*! unfinished", "SET SESSION sql_mode=CONCAT(@@sql_mode, ',NO_BACKSLASH_ESCAPES');\nINSERT INTO t VALUES ('C:\\');\nCREATE TABLE bad (id INT) ENGINE=MyISAM;"} {
+		if _, err := Validate(strings.NewReader(sql)); err == nil || !strings.Contains(err.Error(), "SQL engine validation could not finish") {
+			t.Fatalf("SQL=%q err=%v", sql, err)
+		}
+		if _, err := ValidateWith(strings.NewReader(sql), Options{SkipChecks: []string{"engineInnoDB"}}, nil); err != nil {
+			t.Fatalf("skipped engine check: %v", err)
+		}
+	}
+}
+
 // findCheck returns the named check from the Result. Test helper.
 func findCheck(t *testing.T, res *Result, key string) *Check {
 	t.Helper()

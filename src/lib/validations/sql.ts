@@ -423,6 +423,9 @@ function findDuplicates< T >( arr: T[], where: Set< T > ) {
 }
 
 const postValidation = async ( options: ValidationOptions ): Promise< void > => {
+	if ( ! options.skipChecks.includes( 'engineInnoDB' ) ) {
+		engineScanner.finish();
+	}
 	await trackEvent( 'import_validate_sql_command_execute', { is_import: options.isImport } );
 
 	if ( ! options.isImport ) {

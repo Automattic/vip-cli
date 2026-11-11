@@ -1,28 +1,40 @@
 package sqlvalidation
 
-import "strings"
+import (
+	"fmt"
+	"regexp"
+	"strings"
+)
+
+var delimiterDirective = regexp.MustCompile(`(?i)^[ \t]*DELIMITER[ \t]+([^ \t\r\n]+)[ \t]*$`)
 
 // engineScanner recognizes table engine options without retaining row data.
 type engineScanner struct {
-	phase, alterStage, createStage string
-	quote                          byte
-	quotedValue                    string
-	block, executable              bool
-	depth                          int
-	sawCreateBody, alterCanEngine  bool
-	alterInOptions, alterInOrder   bool
-	alterPrevious                  string
-	createPrevious                 string
-	engineOrderCandidate           bool
-	engineLine                     int
-	engineEquals                   bool
-	noBackslashEscapes             bool
-	sqlModeAssignment              bool
-	setAtCount                     int
-	setGlobalScope                 bool
-	sqlModeSegment                 string
-	sqlModeSegmentLong             bool
-	sqlModeValueHasMode            bool
+	phase, alterStage, createStage  string
+	quote                           byte
+	quotedValue                     string
+	block, executable               bool
+	depth                           int
+	sawCreateBody, alterCanEngine   bool
+	alterInOptions, alterInOrder    bool
+	alterPrevious                   string
+	createPrevious                  string
+	engineOrderCandidate            bool
+	engineLine                      int
+	engineEquals                    bool
+	noBackslashEscapes              bool
+	sqlModeAssignment               bool
+	setAtCount                      int
+	setGlobalScope                  bool
+	sqlModeSegment                  string
+	sqlModeSegmentLong              bool
+	sqlModeValueHasMode             bool
+	ansiQuotes, sqlModeValueHasAnsi bool
+	delimiter                       string
+	started                         bool
+	partitionClause                 bool
+	partitionDefinitionDepth        int
+	partitionPrevious               string
 }
 
 func (s *engineScanner) reset() {
@@ -34,6 +46,7 @@ func (s *engineScanner) reset() {
 	s.createPrevious = ""
 	s.sqlModeAssignment = false
 	s.setAtCount, s.setGlobalScope = 0, false
+	s.partitionClause, s.partitionDefinitionDepth, s.partitionPrevious = false, 0, ""
 }
 
 func engineIdent(c byte) bool { return isIdent(c) || c >= 0x80 }
@@ -90,6 +103,7 @@ func (s *engineScanner) token(text string, line int, findings *[]int, quoted boo
 		if quoted && s.sqlModeAssignment {
 			// The streamed segments already decided whether the mode is present.
 			s.noBackslashEscapes = s.sqlModeValueHasMode
+			s.ansiQuotes = s.sqlModeValueHasAnsi
 			s.sqlModeAssignment = false
 		} else if !quoted && text == "@" {
 			s.setAtCount++
@@ -114,13 +128,29 @@ func (s *engineScanner) token(text string, line int, findings *[]int, quoted boo
 	case "create":
 		if !quoted && upper == "TEMPORARY" {
 			s.phase = "temporary"
+		} else if !quoted && upper == "OR" {
+			s.phase = "create-or"
 		} else if !quoted && upper == "TABLE" {
 			s.phase = "create-table"
 		} else {
 			s.phase = "other"
 		}
 		return
+	case "create-or":
+		if !quoted && upper == "REPLACE" {
+			s.phase = "create-replace"
+		} else {
+			s.phase = "other"
+		}
+		return
+	case "create-replace":
+		s.phase = "create"
+		s.token(text, line, findings, quoted)
+		return
 	case "temporary", "alter":
+		if s.phase == "alter" && !quoted && (upper == "IGNORE" || upper == "ONLINE" || upper == "OFFLINE") {
+			return
+		}
 		if !quoted && upper == "TABLE" {
 			if s.phase == "alter" {
 				s.phase = "alter-table"
@@ -163,6 +193,20 @@ func (s *engineScanner) token(text string, line int, findings *[]int, quoted boo
 			s.sawCreateBody = true
 		}
 	}
+	// Partition definitions have their own ENGINE options, outside column
+	// bodies and partitioning expressions.
+	if s.depth == 0 && !quoted && upper == "PARTITION" && (s.sawCreateBody || (s.phase == "alter-table" && s.alterStage == "actions")) {
+		s.partitionClause = true
+	}
+	if s.partitionClause {
+		if s.depth > 0 && !quoted && (upper == "PARTITION" || upper == "SUBPARTITION") && (s.partitionPrevious == "(" || s.partitionPrevious == ",") {
+			s.partitionDefinitionDepth = s.depth
+		}
+		if s.partitionDefinitionDepth == s.depth && s.depth > 0 && !quoted && upper == "ENGINE" {
+			s.engineLine = line
+		}
+		s.partitionPrevious = text
+	}
 	if !quoted && text == "(" {
 		s.depth++
 		s.sawCreateBody = true
@@ -171,6 +215,9 @@ func (s *engineScanner) token(text string, line int, findings *[]int, quoted boo
 	if !quoted && text == ")" {
 		if s.depth > 0 {
 			s.depth--
+		}
+		if s.depth < s.partitionDefinitionDepth {
+			s.partitionDefinitionDepth = 0
 		}
 		if s.depth == 0 {
 			s.createPrevious, s.alterPrevious = ")", ")"
@@ -256,6 +303,12 @@ func (s *engineScanner) completeSQLModeSegment() {
 	if !s.sqlModeSegmentLong && strings.ToUpper(strings.TrimSpace(s.sqlModeSegment)) == "NO_BACKSLASH_ESCAPES" {
 		s.sqlModeValueHasMode = true
 	}
+	if !s.sqlModeSegmentLong {
+		switch strings.ToUpper(strings.TrimSpace(s.sqlModeSegment)) {
+		case "ANSI", "ANSI_QUOTES", "DB2", "MAXDB", "MSSQL", "ORACLE", "POSTGRESQL":
+			s.sqlModeValueHasAnsi = true
+		}
+	}
 	s.sqlModeSegment = ""
 	s.sqlModeSegmentLong = false
 }
@@ -277,6 +330,20 @@ func (s *engineScanner) appendSQLMode(chunk string) {
 
 func (s *engineScanner) scan(line string, lineNumber int) []int {
 	var findings []int
+	if !s.started {
+		s.started = true
+		line = strings.TrimPrefix(line, "\xef\xbb\xbf")
+	}
+	if s.delimiter == "" {
+		s.delimiter = ";"
+	}
+	if s.quote == 0 && !s.block && !s.executable {
+		if directive := delimiterDirective.FindStringSubmatch(line); directive != nil {
+			s.delimiter = directive[1]
+			s.reset()
+			return findings
+		}
+	}
 	for i := 0; i < len(line); {
 		if s.block {
 			end := strings.Index(line[i:], "*/")
@@ -309,7 +376,8 @@ func (s *engineScanner) scan(line string, lineNumber int) []int {
 					s.quotedValue = s.quotedValue[:128]
 				}
 			}
-			escaped := s.quote != '`' && !s.noBackslashEscapes && escapedQuote(line, end)
+			identifier := s.quote == '`' || (s.quote == '"' && s.ansiQuotes)
+			escaped := !identifier && !s.noBackslashEscapes && escapedQuote(line, end)
 			if escaped || end+1 < len(line) && line[end+1] == s.quote {
 				i = end + 1
 				if !escaped && i < len(line) {
@@ -329,6 +397,11 @@ func (s *engineScanner) scan(line string, lineNumber int) []int {
 		if s.executable && strings.HasPrefix(line[i:], "*/") {
 			s.executable = false
 			i += 2
+			continue
+		}
+		if strings.HasPrefix(line[i:], s.delimiter) {
+			s.token(";", lineNumber, &findings, false)
+			i += len(s.delimiter)
 			continue
 		}
 		if strings.HasPrefix(line[i:], "/*") {
@@ -351,7 +424,7 @@ func (s *engineScanner) scan(line string, lineNumber int) []int {
 			}
 			continue
 		}
-		if line[i] == '#' || strings.HasPrefix(line[i:], "--") && (i+2 == len(line) || strings.ContainsRune(" \t\r\n", rune(line[i+2]))) {
+		if line[i] == '#' || strings.HasPrefix(line[i:], "--") && (i+2 == len(line) || (line[i+2] <= 0x20 || line[i+2] == 0x7f)) {
 			break
 		}
 		if strings.ContainsRune("'\"`", rune(line[i])) {
@@ -360,6 +433,7 @@ func (s *engineScanner) scan(line string, lineNumber int) []int {
 			s.sqlModeSegment = ""
 			s.sqlModeSegmentLong = false
 			s.sqlModeValueHasMode = false
+			s.sqlModeValueHasAnsi = false
 			i++
 			continue
 		}
@@ -371,6 +445,10 @@ func (s *engineScanner) scan(line string, lineNumber int) []int {
 		}
 		if s.phase == "other" && line[i] != ';' {
 			next := strings.IndexAny(line[i+1:], "'\"`;#/-")
+			delimiterIndex := strings.Index(line[i+1:], s.delimiter)
+			if delimiterIndex >= 0 && (next < 0 || delimiterIndex < next) {
+				next = delimiterIndex
+			}
 			if next < 0 {
 				break
 			}
@@ -382,11 +460,14 @@ func (s *engineScanner) scan(line string, lineNumber int) []int {
 			for end < len(line) && engineIdent(line[end]) {
 				end++
 			}
+			if delimiterIndex := strings.Index(line[i:end], s.delimiter); delimiterIndex >= 0 {
+				end = i + delimiterIndex
+			}
 			s.token(line[i:end], lineNumber, &findings, false)
 			i = end
 			continue
 		}
-		if strings.ContainsRune("();,.=", rune(line[i])) {
+		if strings.ContainsRune("(),.=", rune(line[i])) {
 			s.token(line[i:i+1], lineNumber, &findings, false)
 		}
 		i++
@@ -400,4 +481,12 @@ func (s *engineScanner) scan(line string, lineNumber int) []int {
 		}
 	}
 	return unique
+}
+
+// finish prevents a lexical desynchronization from silently hiding later DDL.
+func (s *engineScanner) finish() error {
+	if s.quote != 0 || s.block || s.executable {
+		return fmt.Errorf("SQL engine validation could not finish: unterminated quoted value or block comment.")
+	}
+	return nil
 }
