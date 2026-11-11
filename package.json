@@ -151,7 +151,7 @@
     "typescript": "^6.0.2"
   },
   "dependencies": {
-    "@apollo/client": "4.3.5",
+    "@apollo/client": "4.3.7",
     "@automattic/vip-search-replace": "^2.0.0",
     "@json2csv/plainjs": "^7.0.3",
     "@wwa/single-line-log": "^1.1.4",
@@ -164,7 +164,7 @@
     "debug": "4.4.3",
     "ejs": "^7.0.1",
     "enquirer": "2.4.1",
-    "graphql": "17.0.2",
+    "graphql": "17.1.0",
     "graphql-tag": "2.12.7",
     "graphql-ws": "^6.2.0",
     "https-proxy-agent": "^9.0.0",
