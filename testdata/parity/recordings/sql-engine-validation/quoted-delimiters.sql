@@ -1,0 +1,17 @@
+DROP TABLE IF EXISTS `wp_posts`;
+CREATE TABLE `wp_posts` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `description` varchar(100) DEFAULT ' ENGINE=MyISAM',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB;
+INSERT INTO wp_posts VALUES (1,' engine = MyISAM');
+CREATE TABLE wp_帖子 (engine INT) ENGINE=InnoDB;
+DELIMITER '$$'
+SELECT 1$$
+CREATE TABLE wp_bad1 (id INT) ENGINE=MyISAM$$
+DELIMITER "//"
+SELECT 1//
+CREATE TABLE wp_bad2 (id INT) ENGINE=MyISAM//
+DELIMITER `;;`
+SELECT 1;;
+CREATE TABLE wp_bad3 (id INT) ENGINE=MyISAM;;

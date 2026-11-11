@@ -68,11 +68,20 @@ export class SqlEngineScanner {
 	private ansiQuotes = false;
 	private sqlModeValueHasAnsi = false;
 	private delimiter = ';';
+	private nextDelimiter = -1;
+	private invalidDelimiter = false;
 	private started = false;
 	private partitionClause = false;
 	private partitionDefinitionDepth = 0;
 	private partitionPrevious = '';
+	private partitionNeedsName = false;
 	private sqlModeAssignment = false;
+	private sqlModeLiteral = false;
+	private setValue = false;
+	private setDepth = 0;
+	private pendingSqlModeUncertain = false;
+	private sqlModeUncertain = false;
+	private sqlModeValidationUncertain = false;
 	private setAtCount = 0;
 	private setGlobalScope = false;
 	private sqlModeSegment = '';
@@ -80,6 +89,14 @@ export class SqlEngineScanner {
 	private sqlModeValueHasMode = false;
 
 	private resetStatement(): void {
+		if ( this.pendingSqlModeUncertain ) {
+			this.sqlModeUncertain = true;
+		}
+		this.pendingSqlModeUncertain = false;
+		this.setValue = false;
+		this.setDepth = 0;
+		this.sqlModeLiteral = false;
+		this.partitionNeedsName = false;
 		this.phase = 'start';
 		this.depth = 0;
 		this.sawCreateBody = false;
@@ -165,6 +182,9 @@ export class SqlEngineScanner {
 	}
 
 	private startToken( upper: string, quoted: boolean ): void {
+		if ( this.sqlModeUncertain && ! quoted && [ 'CREATE', 'ALTER' ].includes( upper ) ) {
+			this.sqlModeValidationUncertain = true;
+		}
 		this.phase = 'other';
 		if ( ! quoted && 'CREATE' === upper ) {
 			this.phase = 'create';
@@ -179,35 +199,72 @@ export class SqlEngineScanner {
 
 	private setToken( upper: string, quoted: boolean ): void {
 		if ( quoted ) {
+			if ( ! this.setValue ) {
+				this.setAssignmentToken( upper );
+				return;
+			}
+			if ( this.sqlModeLiteral ) {
+				this.pendingSqlModeUncertain = true;
+			}
 			if ( this.sqlModeAssignment ) {
 				this.noBackslashEscapes = this.sqlModeValueHasMode;
 				this.ansiQuotes = this.sqlModeValueHasAnsi;
+				this.sqlModeUncertain = false;
+				this.pendingSqlModeUncertain = false;
 				this.sqlModeAssignment = false;
+				this.sqlModeLiteral = true;
 			}
 			return;
 		}
+		// Only a literal RHS has known quote rules. References inside expressions
+		// must never be mistaken for new session assignments.
+		if ( this.sqlModeAssignment && this.setValue && '=' !== upper ) {
+			this.pendingSqlModeUncertain = true;
+			this.sqlModeAssignment = false;
+		}
+		if ( this.sqlModeLiteral && ! ( ',' === upper && ! this.setDepth ) ) {
+			this.pendingSqlModeUncertain = true;
+		}
+		if ( this.setValue ) {
+			this.setValueToken( upper );
+			return;
+		}
+		this.setAssignmentToken( upper );
+	}
+
+	private setValueToken( upper: string ): void {
+		if ( '(' === upper ) {
+			this.setDepth++;
+		}
+		if ( ')' === upper ) {
+			this.setDepth = Math.max( 0, this.setDepth - 1 );
+		}
+		if ( ',' === upper && ! this.setDepth ) {
+			this.setValue = false;
+			this.setAtCount = 0;
+			this.setGlobalScope = false;
+			this.sqlModeAssignment = false;
+			this.sqlModeLiteral = false;
+		}
+	}
+
+	private setAssignmentToken( upper: string ): void {
 		switch ( upper ) {
 			case '@':
-				this.setAtCount += 1;
-				break;
-			case 'SQL_MODE':
-				// User variables and GLOBAL assignments do not change session modes.
-				this.sqlModeAssignment = 1 !== this.setAtCount && ! this.setGlobalScope;
-				this.setAtCount = 0;
+				this.setAtCount++;
 				break;
 			case 'GLOBAL':
 				this.setGlobalScope = true;
 				this.setAtCount = 0;
 				break;
-			case ',':
-				this.setGlobalScope = false;
+			case 'SQL_MODE':
+				this.sqlModeAssignment = 1 !== this.setAtCount && ! this.setGlobalScope;
 				this.setAtCount = 0;
-				this.sqlModeAssignment = false;
 				break;
 			case '=':
+				this.setValue = true;
 				break;
 			default:
-				this.sqlModeAssignment = false;
 				this.setAtCount = 0;
 		}
 	}
@@ -245,7 +302,7 @@ export class SqlEngineScanner {
 		) {
 			return;
 		}
-		this.partitionToken( text, upper, line, quoted );
+		this.partitionToken( upper, line, quoted );
 		if ( this.parenthesisToken( text, quoted ) ) {
 			return;
 		}
@@ -291,33 +348,52 @@ export class SqlEngineScanner {
 		return false;
 	}
 
-	private partitionToken( text: string, upper: string, line: number, quoted: boolean ): void {
-		if ( quoted ) {
-			if ( this.partitionClause ) {
-				this.partitionPrevious = text;
-			}
-			return;
-		}
+	private partitionToken( upper: string, line: number, quoted: boolean ): void {
 		if (
+			! quoted &&
 			! this.depth &&
 			'PARTITION' === upper &&
 			( this.sawCreateBody || ( 'alter-table' === this.phase && 'actions' === this.alterStage ) )
 		) {
 			this.partitionClause = true;
 		}
-		if ( this.partitionClause ) {
-			if (
-				this.depth &&
-				[ 'PARTITION', 'SUBPARTITION' ].includes( upper ) &&
-				[ '(', ',' ].includes( this.partitionPrevious )
-			) {
-				this.partitionDefinitionDepth = this.depth;
-			}
-			if ( this.partitionDefinitionDepth === this.depth && this.depth && 'ENGINE' === upper ) {
-				this.engineLine = line;
-			}
-			this.partitionPrevious = text;
+		if ( ! this.partitionClause ) {
+			return;
 		}
+		if ( this.partitionDefinitionToken( upper, quoted ) ) {
+			return;
+		}
+		if (
+			this.partitionDefinitionDepth === this.depth &&
+			this.depth &&
+			! quoted &&
+			'ENGINE' === upper &&
+			! isOptionValuePrefix( this.partitionPrevious ) &&
+			'DIRECTORY' !== this.partitionPrevious
+		) {
+			this.engineLine = line;
+		}
+		this.partitionPrevious = quoted || '=' === this.partitionPrevious ? '<value>' : upper;
+	}
+
+	private partitionDefinitionToken( upper: string, quoted: boolean ): boolean {
+		if (
+			! quoted &&
+			this.depth &&
+			[ 'PARTITION', 'SUBPARTITION' ].includes( upper ) &&
+			[ '(', ',' ].includes( this.partitionPrevious )
+		) {
+			this.partitionDefinitionDepth = this.depth;
+			this.partitionNeedsName = true;
+			this.partitionPrevious = upper;
+			return true;
+		}
+		if ( this.partitionDefinitionDepth === this.depth && this.partitionNeedsName ) {
+			this.partitionNeedsName = false;
+			this.partitionPrevious = '<name>';
+			return true;
+		}
+		return false;
 	}
 
 	private parenthesisToken( text: string, quoted: boolean ): boolean {
@@ -462,7 +538,7 @@ export class SqlEngineScanner {
 		const suffix = multiline ? '\n' : '';
 		if ( this.sqlModeAssignment ) {
 			this.appendSqlMode( span + suffix );
-		} else if ( this.engineLine ) {
+		} else if ( this.engineLine || ( 'set' === this.phase && ! this.setValue ) ) {
 			this.quotedValue = ( this.quotedValue + span.slice( 0, 128 ) + suffix ).slice( 0, 128 );
 		}
 	}
@@ -525,6 +601,9 @@ export class SqlEngineScanner {
 	}
 
 	private openQuote( quote: string ): void {
+		if ( this.sqlModeUncertain && ! ( this.sqlModeAssignment && this.setValue ) ) {
+			this.sqlModeValidationUncertain = true;
+		}
 		this.quote = quote;
 		this.quotedValue = '';
 		this.sqlModeSegment = '';
@@ -533,12 +612,62 @@ export class SqlEngineScanner {
 		this.sqlModeValueHasAnsi = false;
 	}
 
+	// Cache suffix searches: each byte is searched at most once per line.
+	private findDelimiter( line: string, index: number ): number {
+		if ( this.nextDelimiter >= 0 && this.nextDelimiter < index ) {
+			this.nextDelimiter = line.indexOf( this.delimiter, index );
+		}
+		return this.nextDelimiter;
+	}
+
+	private delimiterCommand( line: string ): boolean {
+		const directive = /^[ \t]*DELIMITER/i.exec( line );
+		if ( ! directive ) {
+			return false;
+		}
+		const remainder = line.slice( directive[ 0 ].length );
+		if ( remainder && ! ' \t'.includes( remainder[ 0 ] ) ) {
+			return false;
+		}
+		const argument = remainder.replace( /^[ \t]+/, '' );
+		const delimiter = this.parseDelimiter( argument );
+		if ( delimiter ) {
+			this.delimiter = delimiter;
+		} else {
+			this.invalidDelimiter = true;
+		}
+		this.resetStatement();
+		return true;
+	}
+
+	private parseDelimiter( argument: string ): string {
+		if ( ! argument ) {
+			return '';
+		}
+		const quote = argument[ 0 ];
+		if ( ! '\'"`'.includes( quote ) ) {
+			return argument.split( /[ \t]/, 1 )[ 0 ];
+		}
+		let delimiter = '';
+		for ( let index = 1; index < argument.length; index++ ) {
+			const character = argument[ index ];
+			if ( character === quote ) {
+				return delimiter;
+			}
+			if ( '\\' === character && index + 1 < argument.length ) {
+				index++;
+			}
+			delimiter += argument[ index ];
+		}
+		return '';
+	}
+
 	private scanToken( line: string, index: number, lineNumber: number, findings: number[] ): number {
 		if ( 'other' === this.phase && ';' !== line[ index ] ) {
 			const special = /['"`;#/-]/g;
 			special.lastIndex = index + 1;
 			const match = special.exec( line );
-			const delimiterIndex = line.indexOf( this.delimiter, index + 1 );
+			const delimiterIndex = this.findDelimiter( line, index + 1 );
 			return Math.min(
 				match?.index ?? line.length,
 				-1 === delimiterIndex ? line.length : delimiterIndex
@@ -546,8 +675,12 @@ export class SqlEngineScanner {
 		}
 		const word = /^[A-Za-z0-9_$\u0080-\uFFFF]+/.exec( line.slice( index ) );
 		if ( word ) {
-			const delimiterIndex = word[ 0 ].indexOf( this.delimiter );
-			const text = -1 === delimiterIndex ? word[ 0 ] : word[ 0 ].slice( 0, delimiterIndex );
+			const delimiterIndex = this.findDelimiter( line, index );
+			const end =
+				delimiterIndex < 0
+					? index + word[ 0 ].length
+					: Math.min( index + word[ 0 ].length, delimiterIndex );
+			const text = line.slice( index, end );
 			this.token( text, lineNumber, findings );
 			return index + text.length;
 		}
@@ -595,14 +728,11 @@ export class SqlEngineScanner {
 			this.started = true;
 			line = line.replace( /^(?:\uFEFF|\u00EF\u00BB\u00BF)/, '' );
 		}
-		if ( ! this.quote && ! this.block && ! this.executable ) {
-			const directive = /^[ \t]*DELIMITER[ \t]+([^ \t\r\n]+)[ \t]*$/i.exec( line );
-			if ( directive ) {
-				this.delimiter = directive[ 1 ];
-				this.resetStatement();
-				return findings;
-			}
+		if ( ! this.quote && ! this.block && ! this.executable && this.delimiterCommand( line ) ) {
+			return findings;
 		}
+		this.nextDelimiter = line.indexOf( this.delimiter );
+
 		let index = 0;
 		while ( index < line.length ) {
 			if ( this.block ) {
@@ -622,6 +752,14 @@ export class SqlEngineScanner {
 	}
 
 	public finish(): void {
+		if ( this.invalidDelimiter ) {
+			throw new Error( 'SQL engine validation could not finish: invalid DELIMITER command.' );
+		}
+		if ( this.sqlModeValidationUncertain ) {
+			throw new Error(
+				'SQL engine validation could not finish: session SQL_MODE could not be determined.'
+			);
+		}
 		if ( this.quote || this.block || this.executable ) {
 			throw new Error(
 				'SQL engine validation could not finish: unterminated quoted value or block comment.'

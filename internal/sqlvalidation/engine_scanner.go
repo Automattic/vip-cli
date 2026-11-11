@@ -6,10 +6,18 @@ import (
 	"strings"
 )
 
-var delimiterDirective = regexp.MustCompile(`(?i)^[ \t]*DELIMITER[ \t]+([^ \t\r\n]+)[ \t]*$`)
+var delimiterDirective = regexp.MustCompile(`(?i)^[ \t]*DELIMITER`)
 
 // engineScanner recognizes table engine options without retaining row data.
 type engineScanner struct {
+	sqlModeLiteral                  bool
+	invalidDelimiter                bool
+	partitionNeedsName              bool
+	setValue                        bool
+	setDepth                        int
+	pendingSQLModeUncertain         bool
+	sqlModeUncertain                bool
+	sqlModeValidationUncertain      bool
 	phase, alterStage, createStage  string
 	quote                           byte
 	quotedValue                     string
@@ -38,6 +46,12 @@ type engineScanner struct {
 }
 
 func (s *engineScanner) reset() {
+	if s.pendingSQLModeUncertain {
+		s.sqlModeUncertain = true
+	}
+	s.pendingSQLModeUncertain = false
+	s.setValue, s.setDepth, s.partitionNeedsName = false, 0, false
+	s.sqlModeLiteral = false
 	s.phase, s.alterStage, s.createStage = "", "", ""
 	s.depth, s.engineLine = 0, 0
 	s.sawCreateBody, s.alterCanEngine, s.engineEquals = false, false, false
@@ -89,6 +103,9 @@ func (s *engineScanner) token(text string, line int, findings *[]int, quoted boo
 	}
 	switch s.phase {
 	case "":
+		if s.sqlModeUncertain && !quoted && (upper == "CREATE" || upper == "ALTER") {
+			s.sqlModeValidationUncertain = true
+		}
 		if !quoted && upper == "CREATE" {
 			s.phase = "create"
 		} else if !quoted && upper == "ALTER" {
@@ -100,30 +117,7 @@ func (s *engineScanner) token(text string, line int, findings *[]int, quoted boo
 		}
 		return
 	case "set":
-		if quoted && s.sqlModeAssignment {
-			// The streamed segments already decided whether the mode is present.
-			s.noBackslashEscapes = s.sqlModeValueHasMode
-			s.ansiQuotes = s.sqlModeValueHasAnsi
-			s.sqlModeAssignment = false
-		} else if !quoted && text == "@" {
-			s.setAtCount++
-		} else if !quoted && upper == "SQL_MODE" {
-			// Single-@ user variables and GLOBAL assignments never change the
-			// importing session, so only session assignments count.
-			s.sqlModeAssignment = s.setAtCount != 1 && !s.setGlobalScope
-			s.setAtCount = 0
-		} else if !quoted && upper == "GLOBAL" {
-			s.setGlobalScope = true
-			s.setAtCount = 0
-		} else if !quoted && text == "," {
-			// Each comma-separated assignment carries its own scope.
-			s.setGlobalScope = false
-			s.setAtCount = 0
-			s.sqlModeAssignment = false
-		} else if !quoted && text != "=" {
-			s.sqlModeAssignment = false
-			s.setAtCount = 0
-		}
+		s.setToken(upper, quoted)
 		return
 	case "create":
 		if !quoted && upper == "TEMPORARY" {
@@ -193,20 +187,7 @@ func (s *engineScanner) token(text string, line int, findings *[]int, quoted boo
 			s.sawCreateBody = true
 		}
 	}
-	// Partition definitions have their own ENGINE options, outside column
-	// bodies and partitioning expressions.
-	if s.depth == 0 && !quoted && upper == "PARTITION" && (s.sawCreateBody || (s.phase == "alter-table" && s.alterStage == "actions")) {
-		s.partitionClause = true
-	}
-	if s.partitionClause {
-		if s.depth > 0 && !quoted && (upper == "PARTITION" || upper == "SUBPARTITION") && (s.partitionPrevious == "(" || s.partitionPrevious == ",") {
-			s.partitionDefinitionDepth = s.depth
-		}
-		if s.partitionDefinitionDepth == s.depth && s.depth > 0 && !quoted && upper == "ENGINE" {
-			s.engineLine = line
-		}
-		s.partitionPrevious = text
-	}
+	s.partitionToken(upper, line, quoted)
 	if !quoted && text == "(" {
 		s.depth++
 		s.sawCreateBody = true
@@ -337,13 +318,11 @@ func (s *engineScanner) scan(line string, lineNumber int) []int {
 	if s.delimiter == "" {
 		s.delimiter = ";"
 	}
-	if s.quote == 0 && !s.block && !s.executable {
-		if directive := delimiterDirective.FindStringSubmatch(line); directive != nil {
-			s.delimiter = directive[1]
-			s.reset()
-			return findings
-		}
+	if s.quote == 0 && !s.block && !s.executable && s.delimiterCommand(line) {
+		return findings
 	}
+
+	nextDelimiter := strings.Index(line, s.delimiter)
 	for i := 0; i < len(line); {
 		if s.block {
 			end := strings.Index(line[i:], "*/")
@@ -359,7 +338,7 @@ func (s *engineScanner) scan(line string, lineNumber int) []int {
 			if end < 0 {
 				if s.sqlModeAssignment {
 					s.appendSQLMode(line[i:] + "\n")
-				} else if s.engineLine != 0 {
+				} else if s.engineLine != 0 || (s.phase == "set" && !s.setValue) {
 					s.quotedValue += line[i:min(len(line), i+128)] + "\n"
 					if len(s.quotedValue) > 128 {
 						s.quotedValue = s.quotedValue[:128]
@@ -370,7 +349,7 @@ func (s *engineScanner) scan(line string, lineNumber int) []int {
 			end += i
 			if s.sqlModeAssignment {
 				s.appendSQLMode(line[i:end])
-			} else if s.engineLine != 0 {
+			} else if s.engineLine != 0 || (s.phase == "set" && !s.setValue) {
 				s.quotedValue += line[i:min(end, i+128)]
 				if len(s.quotedValue) > 128 {
 					s.quotedValue = s.quotedValue[:128]
@@ -428,6 +407,9 @@ func (s *engineScanner) scan(line string, lineNumber int) []int {
 			break
 		}
 		if strings.ContainsRune("'\"`", rune(line[i])) {
+			if s.sqlModeUncertain && !(s.sqlModeAssignment && s.setValue) {
+				s.sqlModeValidationUncertain = true
+			}
 			s.quote = line[i]
 			s.quotedValue = ""
 			s.sqlModeSegment = ""
@@ -445,9 +427,10 @@ func (s *engineScanner) scan(line string, lineNumber int) []int {
 		}
 		if s.phase == "other" && line[i] != ';' {
 			next := strings.IndexAny(line[i+1:], "'\"`;#/-")
-			delimiterIndex := strings.Index(line[i+1:], s.delimiter)
-			if delimiterIndex >= 0 && (next < 0 || delimiterIndex < next) {
-				next = delimiterIndex
+			// Cache the next delimiter so repeated values do not rescan the suffix.
+			nextDelimiter = advanceEngineDelimiter(line, s.delimiter, nextDelimiter, i+1)
+			if nextDelimiter >= 0 && (next < 0 || nextDelimiter < i+1+next) {
+				next = nextDelimiter - i - 1
 			}
 			if next < 0 {
 				break
@@ -460,8 +443,9 @@ func (s *engineScanner) scan(line string, lineNumber int) []int {
 			for end < len(line) && engineIdent(line[end]) {
 				end++
 			}
-			if delimiterIndex := strings.Index(line[i:end], s.delimiter); delimiterIndex >= 0 {
-				end = i + delimiterIndex
+			nextDelimiter = advanceEngineDelimiter(line, s.delimiter, nextDelimiter, i)
+			if nextDelimiter >= 0 && nextDelimiter < end {
+				end = nextDelimiter
 			}
 			s.token(line[i:end], lineNumber, &findings, false)
 			i = end
@@ -485,8 +469,162 @@ func (s *engineScanner) scan(line string, lineNumber int) []int {
 
 // finish prevents a lexical desynchronization from silently hiding later DDL.
 func (s *engineScanner) finish() error {
+	if s.invalidDelimiter {
+		return fmt.Errorf("SQL engine validation could not finish: invalid DELIMITER command.")
+	}
+	if s.sqlModeValidationUncertain {
+		return fmt.Errorf("SQL engine validation could not finish: session SQL_MODE could not be determined.")
+	}
 	if s.quote != 0 || s.block || s.executable {
 		return fmt.Errorf("SQL engine validation could not finish: unterminated quoted value or block comment.")
 	}
 	return nil
+}
+
+func (s *engineScanner) setToken(upper string, quoted bool) {
+	if quoted && !s.setValue {
+		s.setAssignmentToken(upper)
+		return
+	}
+	if quoted {
+		if s.sqlModeLiteral {
+			s.pendingSQLModeUncertain = true
+		}
+		if s.sqlModeAssignment && s.setValue {
+			s.noBackslashEscapes = s.sqlModeValueHasMode
+			s.ansiQuotes = s.sqlModeValueHasAnsi
+			s.sqlModeUncertain = false
+			s.pendingSQLModeUncertain = false
+			s.sqlModeAssignment = false
+			s.sqlModeLiteral = true
+		}
+		return
+	}
+	// Only literal right-hand sides establish known quote rules.
+	if s.sqlModeAssignment && s.setValue && upper != "=" {
+		s.pendingSQLModeUncertain = true
+		s.sqlModeAssignment = false
+	}
+	if s.sqlModeLiteral && !(upper == "," && s.setDepth == 0) {
+		s.pendingSQLModeUncertain = true
+	}
+	if s.setValue {
+		switch upper {
+		case "(":
+			s.setDepth++
+		case ")":
+			if s.setDepth > 0 {
+				s.setDepth--
+			}
+		case ",":
+			if s.setDepth == 0 {
+				s.setValue = false
+				s.setAtCount = 0
+				s.setGlobalScope = false
+				s.sqlModeAssignment = false
+				s.sqlModeLiteral = false
+			}
+		}
+		return
+	}
+	s.setAssignmentToken(upper)
+}
+
+func (s *engineScanner) setAssignmentToken(upper string) {
+	switch upper {
+	case "@":
+		s.setAtCount++
+	case "GLOBAL":
+		s.setGlobalScope = true
+		s.setAtCount = 0
+	case "SQL_MODE":
+		s.sqlModeAssignment = s.setAtCount != 1 && !s.setGlobalScope
+		s.setAtCount = 0
+	case "=":
+		s.setValue = true
+	default:
+		s.setAtCount = 0
+	}
+}
+
+func (s *engineScanner) partitionToken(upper string, line int, quoted bool) {
+	if !quoted && s.depth == 0 && upper == "PARTITION" && (s.sawCreateBody || (s.phase == "alter-table" && s.alterStage == "actions")) {
+		s.partitionClause = true
+	}
+	if !s.partitionClause {
+		return
+	}
+	if !quoted && s.depth > 0 && (upper == "PARTITION" || upper == "SUBPARTITION") && (s.partitionPrevious == "(" || s.partitionPrevious == ",") {
+		s.partitionDefinitionDepth = s.depth
+		s.partitionNeedsName = true
+		s.partitionPrevious = upper
+		return
+	}
+	if s.partitionDefinitionDepth == s.depth && s.partitionNeedsName {
+		s.partitionNeedsName = false
+		s.partitionPrevious = "<name>"
+		return
+	}
+	if s.partitionDefinitionDepth == s.depth && s.depth > 0 && !quoted && upper == "ENGINE" && !optionValuePrefix(s.partitionPrevious) && s.partitionPrevious != "DIRECTORY" {
+		s.engineLine = line
+	}
+	if quoted || s.partitionPrevious == "=" {
+		s.partitionPrevious = "<value>"
+	} else {
+		s.partitionPrevious = upper
+	}
+}
+
+// parseEngineDelimiter follows the client's quoted or first-word argument form.
+func parseEngineDelimiter(argument string) string {
+	if argument == "" {
+		return ""
+	}
+	quote := argument[0]
+	if !strings.ContainsRune("'\"`", rune(quote)) {
+		if end := strings.IndexAny(argument, " \t"); end >= 0 {
+			return argument[:end]
+		}
+		return argument
+	}
+	var delimiter strings.Builder
+	for i := 1; i < len(argument); i++ {
+		if argument[i] == quote {
+			return delimiter.String()
+		}
+		if argument[i] == '\\' && i+1 < len(argument) {
+			i++
+		}
+		delimiter.WriteByte(argument[i])
+	}
+	return ""
+}
+
+func advanceEngineDelimiter(line, delimiter string, current, index int) int {
+	if current < 0 || current >= index {
+		return current
+	}
+	if offset := strings.Index(line[index:], delimiter); offset >= 0 {
+		return index + offset
+	}
+	return -1
+}
+
+func (s *engineScanner) delimiterCommand(line string) bool {
+	marker := delimiterDirective.FindStringIndex(line)
+	if marker == nil {
+		return false
+	}
+	remainder := line[marker[1]:]
+	if remainder != "" && remainder[0] != ' ' && remainder[0] != '\t' {
+		return false
+	}
+	argument := strings.TrimLeft(remainder, " \t")
+	if delimiter := parseEngineDelimiter(argument); delimiter != "" {
+		s.delimiter = delimiter
+	} else {
+		s.invalidDelimiter = true
+	}
+	s.reset()
+	return true
 }

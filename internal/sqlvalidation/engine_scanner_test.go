@@ -2,8 +2,10 @@ package sqlvalidation
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -17,6 +19,7 @@ func TestEngineScannerSharedCases(t *testing.T) {
 		Lines      []string
 		Want       []int
 		Incomplete bool
+		Error      string
 	}
 	if err := json.Unmarshal(data, &cases); err != nil {
 		t.Fatal(err)
@@ -31,9 +34,31 @@ func TestEngineScannerSharedCases(t *testing.T) {
 			if !reflect.DeepEqual(got, tc.Want) {
 				t.Fatalf("got %v, want %v", got, tc.Want)
 			}
-			if err := scanner.finish(); (err != nil) != tc.Incomplete {
-				t.Fatalf("finish error = %v, want incomplete = %v", err, tc.Incomplete)
+			err := scanner.finish()
+			if (err != nil) != (tc.Incomplete || tc.Error != "") {
+				t.Fatalf("finish error = %v, want incomplete = %v or error %q", err, tc.Incomplete, tc.Error)
+			}
+			if tc.Error != "" && err.Error() != "SQL engine validation could not finish: "+tc.Error {
+				t.Fatalf("finish error = %v, want %q", err, tc.Error)
 			}
 		})
+	}
+}
+
+// Run with -bench BenchmarkEngineScannerExtendedInsert -benchmem. Doubling
+// rows should grow runtime proportionally, including with custom delimiters.
+func BenchmarkEngineScannerExtendedInsert(b *testing.B) {
+	for _, delimiter := range []string{";", "$$"} {
+		for _, rows := range []int{8192, 16384, 32768, 65536} {
+			b.Run(fmt.Sprintf("%s/%d", delimiter, rows), func(b *testing.B) {
+				line := "INSERT INTO t VALUES " + strings.TrimSuffix(strings.Repeat("('hello'),", rows), ",") + delimiter
+				b.SetBytes(int64(len(line)))
+				b.ResetTimer()
+				for b.Loop() {
+					scanner := engineScanner{delimiter: delimiter}
+					scanner.scan(line, 1)
+				}
+			})
+		}
 	}
 }
