@@ -80,6 +80,7 @@ export class SqlEngineScanner {
 	private setValue = false;
 	private setDepth = 0;
 	private pendingSqlModeUncertain = false;
+	private pendingSqlMode: { noBackslashEscapes: boolean; ansiQuotes: boolean } | undefined;
 	private sqlModeUncertain = false;
 	private sqlModeValidationUncertain = false;
 	private setAtCount = 0;
@@ -91,8 +92,13 @@ export class SqlEngineScanner {
 	private resetStatement(): void {
 		if ( this.pendingSqlModeUncertain ) {
 			this.sqlModeUncertain = true;
+		} else if ( this.pendingSqlMode ) {
+			this.noBackslashEscapes = this.pendingSqlMode.noBackslashEscapes;
+			this.ansiQuotes = this.pendingSqlMode.ansiQuotes;
+			this.sqlModeUncertain = false;
 		}
 		this.pendingSqlModeUncertain = false;
+		this.pendingSqlMode = undefined;
 		this.setValue = false;
 		this.setDepth = 0;
 		this.sqlModeLiteral = false;
@@ -136,13 +142,11 @@ export class SqlEngineScanner {
 				this.setToken( upper, quoted );
 				return;
 			case 'create':
+			case 'create-replace':
 				this.createPrefixToken( upper, quoted );
 				return;
 			case 'create-or':
 				this.phase = ! quoted && 'REPLACE' === upper ? 'create-replace' : 'other';
-				return;
-			case 'create-replace':
-				this.createPrefixToken( upper, quoted );
 				return;
 			case 'temporary':
 			case 'alter':
@@ -207,9 +211,11 @@ export class SqlEngineScanner {
 				this.pendingSqlModeUncertain = true;
 			}
 			if ( this.sqlModeAssignment ) {
-				this.noBackslashEscapes = this.sqlModeValueHasMode;
-				this.ansiQuotes = this.sqlModeValueHasAnsi;
-				this.sqlModeUncertain = false;
+				// The whole SET statement is parsed using the modes active when it began.
+				this.pendingSqlMode = {
+					noBackslashEscapes: this.sqlModeValueHasMode,
+					ansiQuotes: this.sqlModeValueHasAnsi,
+				};
 				this.pendingSqlModeUncertain = false;
 				this.sqlModeAssignment = false;
 				this.sqlModeLiteral = true;
@@ -313,10 +319,10 @@ export class SqlEngineScanner {
 		}
 	}
 
-	private createConditionalName( upper: string, quoted: boolean ): void {
-		if ( ! quoted && 'if-not' === this.createStage && 'NOT' === upper ) {
+	private createConditionalName( upper: string ): void {
+		if ( 'if-not' === this.createStage && 'NOT' === upper ) {
 			this.createStage = 'if-exists';
-		} else if ( ! quoted && 'if-exists' === this.createStage && 'EXISTS' === upper ) {
+		} else if ( 'if-exists' === this.createStage && 'EXISTS' === upper ) {
 			this.createStage = 'table';
 		} else {
 			this.phase = 'other';
@@ -329,7 +335,7 @@ export class SqlEngineScanner {
 			return true;
 		}
 		if ( 'if-not' === this.createStage || 'if-exists' === this.createStage ) {
-			this.createConditionalName( upper, quoted );
+			this.createConditionalName( quoted ? '' : upper );
 			return true;
 		}
 		if ( 'table' === this.createStage || 'qualified' === this.createStage ) {
@@ -353,7 +359,9 @@ export class SqlEngineScanner {
 			! quoted &&
 			! this.depth &&
 			'PARTITION' === upper &&
-			( this.sawCreateBody || ( 'alter-table' === this.phase && 'actions' === this.alterStage ) )
+			( this.sawCreateBody ||
+				( 'alter-table' === this.phase &&
+					[ 'after-name', 'actions' ].includes( this.alterStage ) ) )
 		) {
 			this.partitionClause = true;
 		}
@@ -591,13 +599,14 @@ export class SqlEngineScanner {
 	}
 
 	private isLineComment( line: string, index: number ): boolean {
-		return (
-			'#' === line[ index ] ||
-			( line.startsWith( '--', index ) &&
-				( index + 2 === line.length ||
-					line.charCodeAt( index + 2 ) <= 0x20 ||
-					0x7f === line.charCodeAt( index + 2 ) ) )
-		);
+		if ( '#' === line[ index ] ) {
+			return true;
+		}
+		if ( ! line.startsWith( '--', index ) ) {
+			return false;
+		}
+		const next = line.codePointAt( index + 2 );
+		return undefined === next || next <= 0x20 || 0x7f === next;
 	}
 
 	private openQuote( quote: string ): void {
@@ -664,7 +673,7 @@ export class SqlEngineScanner {
 
 	private scanToken( line: string, index: number, lineNumber: number, findings: number[] ): number {
 		if ( 'other' === this.phase && ';' !== line[ index ] ) {
-			const special = /['"`;#/-]/g;
+			const special = /['"`;#/*-]/g;
 			special.lastIndex = index + 1;
 			const match = special.exec( line );
 			const delimiterIndex = this.findDelimiter( line, index + 1 );

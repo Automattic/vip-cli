@@ -16,6 +16,9 @@ type engineScanner struct {
 	setValue                        bool
 	setDepth                        int
 	pendingSQLModeUncertain         bool
+	pendingSQLModeKnown             bool
+	pendingNoBackslashEscapes       bool
+	pendingANSIQuotes               bool
 	sqlModeUncertain                bool
 	sqlModeValidationUncertain      bool
 	phase, alterStage, createStage  string
@@ -48,8 +51,15 @@ type engineScanner struct {
 func (s *engineScanner) reset() {
 	if s.pendingSQLModeUncertain {
 		s.sqlModeUncertain = true
+	} else if s.pendingSQLModeKnown {
+		s.noBackslashEscapes = s.pendingNoBackslashEscapes
+		s.ansiQuotes = s.pendingANSIQuotes
+		s.sqlModeUncertain = false
 	}
 	s.pendingSQLModeUncertain = false
+	s.pendingSQLModeKnown = false
+	s.pendingNoBackslashEscapes = false
+	s.pendingANSIQuotes = false
 	s.setValue, s.setDepth, s.partitionNeedsName = false, 0, false
 	s.sqlModeLiteral = false
 	s.phase, s.alterStage, s.createStage = "", "", ""
@@ -426,7 +436,7 @@ func (s *engineScanner) scan(line string, lineNumber int) []int {
 			continue
 		}
 		if s.phase == "other" && line[i] != ';' {
-			next := strings.IndexAny(line[i+1:], "'\"`;#/-")
+			next := strings.IndexAny(line[i+1:], "'\"`;#/*-")
 			// Cache the next delimiter so repeated values do not rescan the suffix.
 			nextDelimiter = advanceEngineDelimiter(line, s.delimiter, nextDelimiter, i+1)
 			if nextDelimiter >= 0 && (next < 0 || nextDelimiter < i+1+next) {
@@ -491,9 +501,9 @@ func (s *engineScanner) setToken(upper string, quoted bool) {
 			s.pendingSQLModeUncertain = true
 		}
 		if s.sqlModeAssignment && s.setValue {
-			s.noBackslashEscapes = s.sqlModeValueHasMode
-			s.ansiQuotes = s.sqlModeValueHasAnsi
-			s.sqlModeUncertain = false
+			s.pendingSQLModeKnown = true
+			s.pendingNoBackslashEscapes = s.sqlModeValueHasMode
+			s.pendingANSIQuotes = s.sqlModeValueHasAnsi
 			s.pendingSQLModeUncertain = false
 			s.sqlModeAssignment = false
 			s.sqlModeLiteral = true
@@ -548,7 +558,7 @@ func (s *engineScanner) setAssignmentToken(upper string) {
 }
 
 func (s *engineScanner) partitionToken(upper string, line int, quoted bool) {
-	if !quoted && s.depth == 0 && upper == "PARTITION" && (s.sawCreateBody || (s.phase == "alter-table" && s.alterStage == "actions")) {
+	if !quoted && s.depth == 0 && upper == "PARTITION" && (s.sawCreateBody || (s.phase == "alter-table" && (s.alterStage == "after-name" || s.alterStage == "actions"))) {
 		s.partitionClause = true
 	}
 	if !s.partitionClause {

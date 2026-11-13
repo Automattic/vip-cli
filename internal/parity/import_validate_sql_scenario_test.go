@@ -113,6 +113,9 @@ func TestImportValidateSQLEngineDifferential(t *testing.T) {
 		{"adversarial-clean", "ENGINE != InnoDB was found 0 times.", 0, true},
 		{"quoted-delimiters", "ENGINE != InnoDB on line(s) 11, 14, 17.", 1, false},
 		{"uncertain-mode", "SQL engine validation could not finish: session SQL_MODE could not be determined.", 1, false},
+		{"review-comments-clean", "ENGINE != InnoDB was found 0 times.", 0, true},
+		{"review-comments-partition", "ENGINE != InnoDB on line(s) 8, 9.", 1, false},
+		{"review-comments-uncertain", "SQL engine validation could not finish: session SQL_MODE could not be determined.", 1, false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			scenario := &Scenario{Name: "sql-engine-" + tc.name, Argv: []string{"import", "validate-sql", "../../testdata/parity/recordings/sql-engine-validation/" + tc.name + ".sql"}, Env: map[string]string{"DO_NOT_TRACK": "1", "NODE_ENV": "test"}}
