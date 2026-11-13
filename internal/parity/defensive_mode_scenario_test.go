@@ -23,6 +23,13 @@ import (
 // This test runs the actual vip-next Go binary end-to-end (not just the
 // in-process middleware), which is what makes it the acceptance gate for M3.
 func TestDefensiveModeEnableWithRechallenge(t *testing.T) {
+	goBin := buildVipNextWithVersion(t, "test", "test")
+	for _, source := range []string{"environment", "stored"} {
+		t.Run(source, func(t *testing.T) { testDefensiveModeRechallenge(t, goBin, source) })
+	}
+}
+
+func testDefensiveModeRechallenge(t *testing.T, goBin, source string) {
 	read := func(name string) []byte {
 		b, err := os.ReadFile("../../testdata/parity/recordings/defensive-mode-enable-rechallenge/" + name)
 		if err != nil {
@@ -37,6 +44,7 @@ func TestDefensiveModeEnableWithRechallenge(t *testing.T) {
 	exchange := read("parker-exchange.json")
 
 	mutationHits := int32(0)
+	sessionHits := int32(0)
 	unauthenticatedParkerHits := int32(0)
 	var headerOnRetry string
 	var expectedAuthorization string
@@ -66,10 +74,9 @@ func TestDefensiveModeEnableWithRechallenge(t *testing.T) {
 			w.Write(resolveAppByNameBody)
 			return
 		}
-		// Mutation path: first hit returns elevated-required, second hit
-		// (after step-up + retry) returns success.
-		n := atomic.AddInt32(&mutationHits, 1)
-		if n == 1 {
+		// Require elevation on every invocation, including a new CLI process.
+		atomic.AddInt32(&mutationHits, 1)
+		if r.Header.Get("x-elevated-token") != "elev-token-xyz" {
 			w.Write(mutationElevated)
 			return
 		}
@@ -80,6 +87,7 @@ func TestDefensiveModeEnableWithRechallenge(t *testing.T) {
 		if !requirePrimaryAuth(w, r) {
 			return
 		}
+		atomic.AddInt32(&sessionHits, 1)
 		w.Write(createSession)
 	})
 	mux.HandleFunc("/parker/sessions/c1", func(w http.ResponseWriter, r *http.Request) {
@@ -108,9 +116,18 @@ func TestDefensiveModeEnableWithRechallenge(t *testing.T) {
 	scenario.Env["API_HOST"] = srv.URL
 	token := makeTestToken(t)
 	expectedAuthorization = "Bearer " + token
-	scenario.Env["VIP_TOKEN_OVERRIDE"] = token
-
-	goBin := buildVipNextWithVersion(t, "test", "test")
+	scenario.Env["VIP_CLI_TOKEN"] = token
+	if source == "stored" {
+		scenario.Env["VIP_CLI_TOKEN"] = ""
+		t.Cleanup(func() {
+			if err := goKeychainOp(srv.URL, "clear", ""); err != nil {
+				t.Error(err)
+			}
+		})
+		if err := goKeychainOp(srv.URL, "seed", token); err != nil {
+			t.Fatal(err)
+		}
+	}
 	res, err := Run(RunSpec{Binary: goBin, Argv: scenario.Argv, Env: FixtureEnv(scenario.Env)})
 	if err != nil {
 		t.Fatalf("Run: %v", err)
@@ -129,5 +146,21 @@ func TestDefensiveModeEnableWithRechallenge(t *testing.T) {
 	}
 	if !strings.Contains(res.Stdout, "Defensive mode enabled for parityapp.develop") {
 		t.Errorf("stdout missing success line; got=%q", res.Stdout)
+	}
+
+	// A second process must reuse only a stored session's persisted elevation.
+	res, err = Run(RunSpec{Binary: goBin, Argv: scenario.Argv, Env: FixtureEnv(scenario.Env)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.ExitCode != 0 || !strings.Contains(res.Stdout, "Defensive mode enabled for parityapp.develop") {
+		t.Fatalf("second invocation: exit=%d stderr=%q stdout=%q", res.ExitCode, res.Stderr, res.Stdout)
+	}
+	wantMutations, wantSessions := int32(4), int32(2)
+	if source == "stored" {
+		wantMutations, wantSessions = 3, 1
+	}
+	if mutationHits != wantMutations || sessionHits != wantSessions || unauthenticatedParkerHits != 0 {
+		t.Fatalf("%s across two processes: mutations=%d sessions=%d unauthenticated=%d; want %d/%d/0", source, mutationHits, sessionHits, unauthenticatedParkerHits, wantMutations, wantSessions)
 	}
 }
