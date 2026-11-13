@@ -38,6 +38,31 @@ function freshValidate() {
 }
 
 describe( 'lib/validations/sql', () => {
+	it( 'rejects incomplete engine scans', async () => {
+		const validate = freshValidate();
+		const dir = await mkdtemp( path.join( os.tmpdir(), 'vip-engine-eof-' ) );
+		try {
+			const file = path.join( dir, 'dump.sql' );
+			for ( const sql of [ "INSERT INTO t VALUES ('oops", '/* unfinished', '/*! unfinished' ] ) {
+				// eslint-disable-next-line no-await-in-loop -- Each scan reuses the same module state and file.
+				await writeFile( file, sql );
+				// eslint-disable-next-line no-await-in-loop -- Complete each scan before overwriting the input.
+				await expect( validate( file ) ).rejects.toThrow(
+					'SQL engine validation could not finish'
+				);
+				// eslint-disable-next-line no-await-in-loop -- Verify the explicit skip on the same input.
+				await expect(
+					validate( file, {
+						isImport: false,
+						skipChecks: [ 'engineInnoDB', 'dropTable', 'createTable', 'autoIncrement' ],
+						extraCheckParams: {},
+					} )
+				).resolves.toBeUndefined();
+			}
+		} finally {
+			await rm( dir, { recursive: true, force: true } );
+		}
+	} );
 	describe( 'it validates SQL for dev-env without false-positive USE statements', () => {
 		let tempDir;
 		let sqlBytes;
@@ -126,8 +151,8 @@ describe( 'lib/validations/sql', () => {
 		it( 'no instances of CREATE TABLE statements', () => {
 			expect( output ).toContain( 'CREATE TABLE was not found' );
 		} );
-		it( 'instances of ENGINE != InnoDB', () => {
-			expect( output ).toContain( 'ENGINE != InnoDB on line(s) 14' );
+		it( 'ignores ENGINE in commented-out definitions', () => {
+			expect( output ).toContain( 'ENGINE != InnoDB was found 0 times.' );
 		} );
 		it( 'use statement should be ok', () => {
 			expect( output ).not.toContain(

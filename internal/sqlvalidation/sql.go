@@ -4,6 +4,7 @@ import (
 	"io"
 	"os"
 	"regexp"
+	"slices"
 	"strings"
 )
 
@@ -270,14 +271,10 @@ func allChecks() []*Check {
 			Formatter:      FormatterGeneral,
 			MatchHandler:   handlerSiteHomeURLLando,
 		},
-		// sql.ts:370-380 — engineInnoDB
-		//   /\sENGINE\s?=(?!(\s?InnoDB))/i  — has negative lookahead, NOT
-		//   supported by RE2. Express the same intent with two-step matching:
-		//   match ENGINE= then check the following token is NOT 'InnoDB'.
-		//   See engineInnoDBMatcher below for the override.
+		// engineInnoDB uses the streaming DDL scanner in engine_scanner.go.
 		{
 			Key:     "engineInnoDB",
-			Matcher: nil, // sentinel: dispatch uses engineInnoDBMatch directly
+			Matcher: nil, // sentinel: dispatch uses engineScanner directly
 			Message: "ENGINE != InnoDB",
 			Recommendation: "Ensure your application works with InnoDB and update your SQL " +
 				"dump to include only 'ENGINE=InnoDB' engine definitions in 'CREATE TABLE' " +
@@ -365,28 +362,6 @@ func handlerSiteHomeURLLando(lineNum int, matches []string, expectedDomain strin
 	}
 }
 
-// engineInnoDBHasMatch checks whether a line should be flagged as
-// non-InnoDB. Replicates Node's /\sENGINE\s?=(?!(\s?InnoDB))/i which uses
-// a negative lookahead RE2 cannot express. We approximate: find every
-// `<space>ENGINE<optional space>=` occurrence and inspect what follows.
-var engineInnoDBPrefix = regexp.MustCompile(`(?i)\sENGINE\s?=`)
-
-func engineInnoDBMatch(line string) bool {
-	indexes := engineInnoDBPrefix.FindAllStringIndex(line, -1)
-	for _, idx := range indexes {
-		tail := line[idx[1]:]
-		// Node's negative lookahead: NOT followed by (optional space + "InnoDB")
-		trimmed := tail
-		if len(trimmed) > 0 && trimmed[0] == ' ' {
-			trimmed = trimmed[1:]
-		}
-		if !strings.HasPrefix(strings.ToLower(trimmed), "innodb") {
-			return true
-		}
-	}
-	return false
-}
-
 // checkForTableNamePattern mirrors sql.ts:514 — captures the wp_-prefixed
 // table name from a CREATE TABLE line:
 //
@@ -441,6 +416,7 @@ func ValidateWithLineHook(r io.Reader, hook func(line string, lineNum int)) (*Re
 func ValidateWith(r io.Reader, opts Options, hook func(line string, lineNum int)) (*Result, error) {
 	res := &Result{Checks: newChecks(opts)}
 	var optionsScanner optionsInsertScanner
+	var engineScanner engineScanner
 
 	err := ScanLines(r, func(line string, lineNum int) error {
 		if hook != nil {
@@ -462,6 +438,7 @@ func ValidateWith(r io.Reader, opts Options, hook func(line string, lineNum int)
 		}
 
 		optionMatches := optionsScanner.scan(line)
+		engineLines := engineScanner.scan(line, lineNum)
 		for _, check := range res.Checks {
 			extraParam := opts.ExtraCheckParams[check.Key]
 			if check.Key == "siteHomeUrl" || check.Key == CheckSiteHomeURLLando {
@@ -470,11 +447,9 @@ func ValidateWith(r io.Reader, opts Options, hook func(line string, lineNum int)
 				}
 				continue
 			}
-			// engineInnoDB uses a custom matcher because Node's pattern uses
-			// a negative lookahead RE2 can't express directly.
 			if check.Key == "engineInnoDB" {
-				if engineInnoDBMatch(line) {
-					check.Results = append(check.Results, check.MatchHandler(lineNum, nil, extraParam))
+				for _, engineLine := range engineLines {
+					check.Results = append(check.Results, check.MatchHandler(engineLine, nil, extraParam))
 				}
 				continue
 			}
@@ -487,6 +462,11 @@ func ValidateWith(r io.Reader, opts Options, hook func(line string, lineNum int)
 	})
 	if err != nil {
 		return nil, err
+	}
+	if !slices.Contains(opts.SkipChecks, "engineInnoDB") {
+		if err := engineScanner.finish(); err != nil {
+			return nil, err
+		}
 	}
 	return res, nil
 }

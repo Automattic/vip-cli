@@ -5,6 +5,7 @@ package sqlvalidation
 
 import (
 	"bufio"
+	"bytes"
 	"io"
 )
 
@@ -29,10 +30,8 @@ const readBufSize = 256 * 1024
 // first non-nil error returned by fn (stops scanning on that line) or any
 // underlying read error.
 //
-// Line splitting matches bufio.ScanLines and Node's readline: '\n'
-// terminates a line and a single trailing '\r' is stripped, so CRLF dumps
-// behave identically. A final line without a trailing newline is still
-// delivered.
+// Line splitting matches Node's readline: LF, CRLF, and lone CR terminate
+// lines. A final line without a trailing newline is still delivered.
 //
 // Mirrors Node's src/lib/validations/line-by-line.ts getReadInterface +
 // the perLineValidations dispatch loop in sql.ts.
@@ -59,27 +58,35 @@ func ScanLines(r io.Reader, fn func(line string, lineNum int) error) error {
 	}
 }
 
-// readLine returns the next '\n'-terminated chunk, growing past the read
-// buffer when necessary. The returned slice may alias br's internal buffer
-// when the line fit in one read, so callers must copy (ScanLines converts
-// to string immediately) before the next read.
+// readLine reads through LF, CRLF, or CR, retaining only the current line.
+// Peek fills a bounded window; a CRLF pair may straddle two such windows.
 func readLine(br *bufio.Reader) ([]byte, error) {
-	frag, err := br.ReadSlice('\n')
-	if err != bufio.ErrBufferFull {
-		return frag, err
+	var line []byte
+	for {
+		if _, err := br.Peek(1); err != nil {
+			return line, err
+		}
+		window, _ := br.Peek(br.Buffered())
+		end := bytes.IndexAny(window, "\r\n")
+		if end < 0 {
+			line = append(line, window...)
+			_, _ = br.Discard(len(window))
+			continue
+		}
+		terminator := window[end]
+		line = append(line, window[:end+1]...)
+		_, _ = br.Discard(end + 1)
+		if terminator == '\r' {
+			if next, _ := br.Peek(1); len(next) > 0 && next[0] == '\n' {
+				_, _ = br.Discard(1)
+			}
+		}
+		return line, nil
 	}
-	// Long line: keep pulling fragments until the delimiter (or EOF).
-	// append copies frag out of br's buffer before it is reused.
-	buf := append([]byte(nil), frag...)
-	for err == bufio.ErrBufferFull {
-		frag, err = br.ReadSlice('\n')
-		buf = append(buf, frag...)
-	}
-	return buf, err
 }
 
 // trimEOL drops the trailing '\n' and an immediately preceding '\r',
-// matching bufio.ScanLines and Node's readline /\r?\n/ split.
+// matching Node's readline split.
 func trimEOL(b []byte) []byte {
 	if n := len(b); n > 0 && b[n-1] == '\n' {
 		b = b[:n-1]

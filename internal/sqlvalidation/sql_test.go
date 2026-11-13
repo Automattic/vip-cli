@@ -5,6 +5,17 @@ import (
 	"testing"
 )
 
+func TestValidateIncompleteEngineScan(t *testing.T) {
+	for _, sql := range []string{"INSERT INTO t VALUES ('oops", "/* unfinished", "/*! unfinished", "SET SESSION sql_mode=CONCAT(@@sql_mode, ',NO_BACKSLASH_ESCAPES');\nINSERT INTO t VALUES ('C:\\');\nCREATE TABLE bad (id INT) ENGINE=MyISAM;"} {
+		if _, err := Validate(strings.NewReader(sql)); err == nil || !strings.Contains(err.Error(), "SQL engine validation could not finish") {
+			t.Fatalf("SQL=%q err=%v", sql, err)
+		}
+		if _, err := ValidateWith(strings.NewReader(sql), Options{SkipChecks: []string{"engineInnoDB"}}, nil); err != nil {
+			t.Fatalf("skipped engine check: %v", err)
+		}
+	}
+}
+
 // findCheck returns the named check from the Result. Test helper.
 func findCheck(t *testing.T, res *Result, key string) *Check {
 	t.Helper()
@@ -111,7 +122,7 @@ func TestValidateSiteHomeUrl(t *testing.T) {
 
 func TestValidateEngineInnoDB(t *testing.T) {
 	// Non-InnoDB engine should be flagged.
-	in := strings.NewReader(") ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;\n")
+	in := strings.NewReader("CREATE TABLE t (id INT) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;\n")
 	res, _ := Validate(in)
 	c := findCheck(t, res, "engineInnoDB")
 	if len(c.Results) != 1 {
@@ -119,7 +130,7 @@ func TestValidateEngineInnoDB(t *testing.T) {
 	}
 
 	// InnoDB should NOT be flagged.
-	in = strings.NewReader(") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;\n")
+	in = strings.NewReader("CREATE TABLE t (id INT) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;\n")
 	res, _ = Validate(in)
 	c = findCheck(t, res, "engineInnoDB")
 	if len(c.Results) != 0 {
@@ -127,7 +138,7 @@ func TestValidateEngineInnoDB(t *testing.T) {
 	}
 
 	// Case-insensitive ENGINE=, and an optional space before InnoDB are OK.
-	in = strings.NewReader(") engine= InnoDB DEFAULT CHARSET=utf8mb4;\n")
+	in = strings.NewReader("CREATE TABLE t (id INT) engine= InnoDB DEFAULT CHARSET=utf8mb4;\n")
 	res, _ = Validate(in)
 	c = findCheck(t, res, "engineInnoDB")
 	if len(c.Results) != 0 {

@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import { once } from 'node:events';
 import path from 'node:path';
 
+import { SqlEngineScanner } from './sql-engine-scanner';
 import * as exit from '../../lib/cli/exit';
 import { getFileMeta } from '../../lib/client-file-uploader';
 import { trackEvent } from '../../lib/tracker';
@@ -35,6 +36,7 @@ let currentInsertStatementHasValues = false;
 let currentInsertStatementValuesFinished = false;
 let currentInsertStatementRowBuffer: string | undefined;
 let currentSqlCommentStripState: SqlCommentStripState = { inBlockComment: false };
+let engineScanner = new SqlEngineScanner();
 
 function formatError( message: string ): string {
 	return `${ chalk.red( 'SQL Error:' ) } ${ message }`;
@@ -383,7 +385,6 @@ const checks: Checks = {
 		recommendation: "Use search-replace to change environment's domain",
 	},
 	engineInnoDB: {
-		matcher: /\sENGINE\s?=(?!(\s?InnoDB))/i,
 		matchHandler: lineNumber => ( { lineNumber } ),
 		outputFormatter: lineNumberCheckFormatter,
 		results: [],
@@ -422,6 +423,9 @@ function findDuplicates< T >( arr: T[], where: Set< T > ) {
 }
 
 const postValidation = async ( options: ValidationOptions ): Promise< void > => {
+	if ( ! options.skipChecks.includes( 'engineInnoDB' ) ) {
+		engineScanner.finish();
+	}
 	await trackEvent( 'import_validate_sql_command_execute', { is_import: options.isImport } );
 
 	if ( ! options.isImport ) {
@@ -642,6 +646,28 @@ const resetFinishedInsertStatement = ( uncommentedLine: string ): void => {
 	}
 };
 
+const applyContextCheck = (
+	checkKey: string,
+	check: CheckType,
+	extraCheckParams: string,
+	engineLines: number[],
+	optionsInsertMatches: string[][]
+): boolean => {
+	if ( 'engineInnoDB' === checkKey ) {
+		for ( const engineLine of engineLines ) {
+			check.results.push( check.matchHandler( engineLine, [], extraCheckParams ) );
+		}
+		return true;
+	}
+	if ( checkRequiresOptionsInsertContext( checkKey ) ) {
+		for ( const results of optionsInsertMatches ) {
+			check.results.push( check.matchHandler( lineNum, results, extraCheckParams ) );
+		}
+		return true;
+	}
+	return false;
+};
+
 const perLineValidations = (
 	line: string,
 	options: ValidationOptions = DEFAULT_VALIDATION_OPTIONS
@@ -651,6 +677,7 @@ const perLineValidations = (
 	}
 
 	checkForTableName( line );
+	const engineLines = engineScanner.scan( line, lineNum );
 
 	const wasInQuotedValue = Boolean( currentSqlCommentStripState.quote );
 	const rawInsertInfo = wasInQuotedValue ? undefined : getInsertStatementInfo( line );
@@ -689,11 +716,9 @@ const perLineValidations = (
 	for ( const checkKey of checkKeys ) {
 		const check: CheckType = checks[ checkKey ];
 		const extraCheckParams = options.extraCheckParams[ checkKey ];
-
-		if ( checkRequiresOptionsInsertContext( checkKey ) ) {
-			for ( const results of optionsInsertMatches ) {
-				check.results.push( check.matchHandler( lineNum, results, extraCheckParams ) );
-			}
+		if (
+			applyContextCheck( checkKey, check, extraCheckParams, engineLines, optionsInsertMatches )
+		) {
 			continue;
 		}
 
@@ -736,6 +761,7 @@ export const validate = async (
 	currentInsertStatementValuesFinished = false;
 	currentInsertStatementRowBuffer = undefined;
 	currentSqlCommentStripState = { inBlockComment: false };
+	engineScanner = new SqlEngineScanner();
 
 	const fileMeta = await getFileMeta( filename );
 
