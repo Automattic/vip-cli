@@ -3,14 +3,41 @@ package devenv
 import (
 	"context"
 	"errors"
+	"io"
+	"os"
 	"strings"
 	"testing"
 )
 
 type sanitationRunner struct {
 	fakeImportRunner
-	events []string
-	fail   bool
+	events    []string
+	fail      bool
+	input     *os.File
+	importErr error
+}
+
+func (r *sanitationRunner) ComposeStdin(_ context.Context, _ string, input io.Reader, _ ...string) error {
+	r.input = input.(*os.File)
+	return r.importErr
+}
+
+func TestMyDumperClosesImportInput(t *testing.T) {
+	for _, importErr := range []error{nil, errors.New("import failed")} {
+		t.Run(map[bool]string{false: "success", true: "failure"}[importErr != nil], func(t *testing.T) {
+			r := &sanitationRunner{importErr: importErr}
+			err := importMyDumper(context.Background(), r, "e", writeDump(t), "wordpress", true)
+			if !errors.Is(err, importErr) {
+				t.Fatalf("error = %v, want %v", err, importErr)
+			}
+			if r.input == nil {
+				t.Fatal("import input was not passed to the runner")
+			}
+			if _, err := r.input.Stat(); !errors.Is(err, os.ErrClosed) {
+				t.Fatalf("input Stat error = %v, want closed file", err)
+			}
+		})
+	}
 }
 
 func (r *sanitationRunner) Compose(ctx context.Context, slug string, args ...string) error {
