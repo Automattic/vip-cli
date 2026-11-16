@@ -1,11 +1,14 @@
 import { expect, jest } from '@jest/globals';
 import enquirer from 'enquirer';
 import fs from 'node:fs';
-import { homedir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
 import path from 'node:path';
 
 import app from '../../../src/lib/api/app';
-import { DEV_ENVIRONMENT_NOT_FOUND } from '../../../src/lib/constants/dev-environment';
+import {
+	DEV_ENVIRONMENT_NOT_FOUND,
+	DEV_ENVIRONMENT_VERSION,
+} from '../../../src/lib/constants/dev-environment';
 import { resolvePath } from '../../../src/lib/dev-environment/dev-environment-cli';
 import {
 	getEnvironmentPath,
@@ -16,8 +19,10 @@ import {
 	resolveImportPath,
 	readEnvironmentData,
 } from '../../../src/lib/dev-environment/dev-environment-core';
+import * as lando from '../../../src/lib/dev-environment/dev-environment-lando';
 import { searchAndReplace } from '../../../src/lib/search-and-replace';
 import { xdgData } from '../../../src/lib/xdg-data';
+import * as xdg from '../../../src/lib/xdg-data';
 
 jest.mock( '../../../src/lib/api/app' );
 jest.mock( '../../../src/lib/search-and-replace' );
@@ -40,6 +45,47 @@ describe( 'lib/dev-environment/dev-environment-core', () => {
 		} );
 	} );
 	describe( 'startEnvironment', () => {
+		it( 'refreshes old images and rebuilds even with skipRebuild', async () => {
+			const temp = fs.mkdtempSync( path.join( tmpdir(), 'vip-version-refresh-' ) );
+			const stopped = new Error( 'stop before container operations' );
+			jest.spyOn( xdg, 'xdgData' ).mockReturnValue( temp );
+			jest.spyOn( lando, 'getProxyContainer' ).mockResolvedValue( { State: { Running: true } } );
+			jest.spyOn( lando, 'landoRebuild' ).mockRejectedValue( stopped );
+			jest.spyOn( lando, 'landoStart' ).mockRejectedValue( stopped );
+			const instancePath = getEnvironmentPath( 'old' );
+			fs.mkdirSync( instancePath, { recursive: true } );
+			fs.writeFileSync(
+				path.join( instancePath, 'instance_data.json' ),
+				JSON.stringify( {
+					siteSlug: 'old',
+					wpTitle: 'Old environment',
+					multisite: false,
+					mediaRedirectDomain: '',
+					version: '2.3.5',
+					pullAfter: Date.now() + 86400000,
+					wordpress: { mode: 'image', tag: '6.8' },
+					muPlugins: { mode: 'image' },
+					appCode: { mode: 'image' },
+				} )
+			);
+			try {
+				await expect(
+					startEnvironment( { config: { domain: 'vipdev.test' } }, 'old', {
+						skipRebuild: true,
+						skipWpVersionsCheck: true,
+					} )
+				).rejects.toBe( stopped );
+				expect( lando.landoRebuild ).toHaveBeenCalled();
+				expect( lando.landoStart ).not.toHaveBeenCalled();
+				expect( readEnvironmentData( 'old' ) ).toMatchObject( {
+					version: DEV_ENVIRONMENT_VERSION,
+					pullAfter: 0,
+				} );
+			} finally {
+				fs.rmSync( temp, { recursive: true, force: true } );
+			}
+		} );
+
 		it( 'should throw for NON existing folder', async () => {
 			const slug = 'foo';
 			const expectedPath = getEnvironmentPath( slug );

@@ -16,6 +16,7 @@ import {
 	dataCleanup,
 	executeQuery,
 	flushCache,
+	sanitizeImportedCredentials,
 	reIndexSearch,
 } from '../lib/dev-environment/dev-environment-database';
 import { bootstrapLando, isContainerRunning } from '../lib/dev-environment/dev-environment-lando';
@@ -100,10 +101,9 @@ export class DevEnvImportSQLCommand {
 			} );
 		}
 
-		const fd = await fs.promises.open( resolvedPath, 'r' );
 		const importArg = this.getImportArgs( dumpDetails );
-
 		const origIsTTY = process.stdin.isTTY;
+		const fd = await fs.promises.open( resolvedPath, 'r' );
 
 		try {
 			/**
@@ -114,7 +114,15 @@ export class DevEnvImportSQLCommand {
 			 * Therefore, for the things to work, we have to pretend that stdin is not a TTY :-)
 			 */
 			process.stdin.isTTY = false;
-			await exec( lando, this.slug, importArg, { stdio: [ fd.fd, 'pipe', 'pipe' ] } );
+			try {
+				await exec( lando, this.slug, importArg, { stdio: [ fd.fd, 'pipe', 'pipe' ] } );
+			} catch ( error ) {
+				// Preserve the import error if closing the input also fails.
+				await fd.close().catch( () => {} );
+				throw error;
+			}
+			await fd.close();
+			await sanitizeImportedCredentials( lando, this.slug );
 
 			if ( ! this.options.quiet ) {
 				console.log( `${ chalk.green.bold( 'Success:' ) } Database imported.` );

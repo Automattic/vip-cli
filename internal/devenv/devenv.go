@@ -128,6 +128,7 @@ func startStack(ctx context.Context, r *dockercli.Runner, deps lifecycle.Deps, s
 	if err != nil {
 		return err
 	}
+	upgrade := lifecycle.PrepareVersionUpdate(d)
 	view := compose.NewView(d, compose.Options{
 		Domain:              d.Domain,
 		Migrate:             len(d.ExternalVolumes) > 0,
@@ -168,10 +169,17 @@ func startStack(ctx context.Context, r *dockercli.Runner, deps lifecycle.Deps, s
 		InitServices: initServices(view),
 		SetupSteps:   adoptSetupSteps(compose.SetupSteps(view), opts.Lando != nil && opts.Lando.Detected),
 		Pull:         pull,
-		SkipRebuild:  opts.SkipRebuild,
+		SkipRebuild:  opts.SkipRebuild && !upgrade,
 		GOOS:         goos(),
 	})
-	return err
+	if err != nil {
+		return err
+	}
+	if upgrade && pull {
+		d.Version = lifecycle.EnvironmentVersion
+		return instancedata.Write(slug, d)
+	}
+	return nil
 }
 
 // Stop stops an env's containers.
