@@ -25,11 +25,11 @@ import (
 // A full upstream diff needs network access and the sibling checkout, so this
 // test does not attempt one. It pins the specific, cheap invariant that would
 // have caught the actual incident: no credential escape hatch anywhere in the
-// vendored Node trees. If a future harness needs to authenticate Node, seed a
-// real keychain entry (keychain.go) — do not edit the mirror.
+// vendored Node trees. Authenticate through the supported VIP_CLI_TOKEN source, or seed a real
+// credential for stored-session tests (keychain.go); do not add private hatches.
 func TestVendoredNodeSourceHasNoCredentialEscapeHatch(t *testing.T) {
 	// Env vars that would let a caller inject an identity without the OS
-	// credential store. Node's own supported hatch, WPVIP_DEPLOY_TOKEN, is
+	// credential store. The supported VIP_CLI_TOKEN and WPVIP_DEPLOY_TOKEN sources are
 	// deliberately absent from this list: it is real upstream surface.
 	forbidden := []string{
 		"VIP_TOKEN_OVERRIDE",
@@ -78,7 +78,7 @@ func TestVendoredNodeSourceHasNoCredentialEscapeHatch(t *testing.T) {
 	for _, h := range hits {
 		t.Errorf("vendored Node source carries a credential escape hatch: %s\n"+
 			"These trees mirror upstream Automattic/vip and must not be edited. "+
-			"To authenticate the Node binary in a test, seed a real keychain "+
-			"entry — see keychain.go.", h)
+			"Use VIP_CLI_TOKEN for command tests, or seed an isolated stored "+
+			"credential — see keychain.go.", h)
 	}
 }

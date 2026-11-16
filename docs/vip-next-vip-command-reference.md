@@ -8,7 +8,7 @@ Generated from the checked-out binaries on 2026-07-15.
 - `vip-next`: 72 help nodes including the root (71 non-root command paths).
 - `vip`: 61 help nodes including the root (60 non-root command paths).
 - Shared help-visible paths: 60. `vip-next`-only help paths: 11. `vip`-only help paths: 0.
-- Node help was run with `NODE_ENV=test`, `DO_NOT_TRACK=1`, and a synthetic local JWT via `VIP_TOKEN_OVERRIDE`. This bypassed keychain access; only `--help` was executed and no API payload was sent.
+- Historical collection used `NODE_ENV=test` and `DO_NOT_TRACK=1`; only `--help` was executed and no API payload was sent. The earlier claim that upstream Node supported `VIP_TOKEN_OVERRIDE` was incorrect (see `CUTOVER-BREAKING-CHANGES.md`). Current general command fixtures use `VIP_CLI_TOKEN` in both runtimes.
 - Angle brackets mean required positional arguments; square brackets mean optional arguments; `...` means repeatable/raw remainder.
 - The options column preserves the help text's value shape and constraints. Common flags are listed once below instead of repeated on every row.
 - Two accepted forms are not separate help children and are added from source cross-checks: `app <name>` in both CLIs and the Node-only hidden help case for `vip login`.

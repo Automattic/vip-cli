@@ -2,6 +2,7 @@ package commands
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -29,6 +30,9 @@ func LoginCmd() *cobra.Command {
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			if auth.EnvironmentTokenConfigured() {
+				return fmt.Errorf("%s is active. Unset it before using `vip login` to store a different token", auth.EnvironmentTokenName)
+			}
 			cfg := GetConfig()
 			store := auth.NewStore(keychain.New(cfg.APIHost))
 

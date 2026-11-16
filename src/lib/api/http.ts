@@ -46,7 +46,6 @@ export default async ( path: string, options: FetchOptions = {} ): Promise< Resp
 		url = `${ API_HOST }${ path }`;
 	}
 
-	const authToken = await Token.get();
 	const proxyDispatcher = createProxyDispatcher( url );
 	const shouldSerializeJsonBody = isPlainObjectBody( options.body );
 
@@ -54,6 +53,7 @@ export default async ( path: string, options: FetchOptions = {} ): Promise< Resp
 
 	const headers = new Headers( options.headers );
 	if ( ! headers.has( 'Authorization' ) ) {
+		const authToken = await Token.get();
 		headers.set( 'Authorization', `Bearer ${ authToken.raw }` );
 	}
 

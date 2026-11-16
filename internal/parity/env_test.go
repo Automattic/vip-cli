@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/Automattic/vip/internal/auth"
 )
 
 // hostileParent is the environment of a developer laptop that has live
@@ -16,7 +18,7 @@ func hostileParent() []string {
 	return []string{
 		"PATH=/usr/bin:/bin",
 		"HOME=/Users/developer",
-		"VIP_TOKEN_OVERRIDE=live.laptop.jwt",
+		"VIP_CLI_TOKEN=live.laptop.jwt",
 		"WPVIP_DEPLOY_TOKEN=live-deploy-key",
 		"API_HOST=https://api.wpvip.com",
 		"HTTP_PROXY=http://corp-proxy:8080",
@@ -41,13 +43,12 @@ func hostileParent() []string {
 func TestScenarioEnvPinsCredentialsRegardlessOfAmbient(t *testing.T) {
 	got := envMap(ScenarioEnv(hostileParent(), nil))
 
-	if got["VIP_TOKEN_OVERRIDE"] == "live.laptop.jwt" {
-		t.Error("ambient VIP_TOKEN_OVERRIDE leaked into the fixture environment")
+	if got["VIP_CLI_TOKEN"] == "live.laptop.jwt" {
+		t.Error("ambient VIP_CLI_TOKEN leaked into the fixture environment")
 	}
-	if got["VIP_TOKEN_OVERRIDE"] == "" {
+	if got["VIP_CLI_TOKEN"] == "" {
 		t.Error("fixture environment must pin a deterministic token so the Go binary never falls back " +
-			"to the host keychain (Node 4.1.0 ignores this variable; TestWhoamiBaselineParity seeds " +
-			"an ephemeral keychain entry for it instead)")
+			"to the host keychain in either runtime")
 	}
 	if _, present := got["WPVIP_DEPLOY_TOKEN"]; present {
 		t.Errorf("WPVIP_DEPLOY_TOKEN must be absent unless a scenario sets it; got %q", got["WPVIP_DEPLOY_TOKEN"])
@@ -97,8 +98,7 @@ func TestScenarioEnvPinsTestModeAndTelemetryOff(t *testing.T) {
 	got := envMap(ScenarioEnv(hostileParent(), nil))
 
 	if got["NODE_ENV"] != "test" {
-		t.Errorf("NODE_ENV = %q, want test (Node gates its update-notifier on it; Go accepts it "+
-			"as an alias for GO_ENV when gating VIP_TOKEN_OVERRIDE)", got["NODE_ENV"])
+		t.Errorf("NODE_ENV = %q, want test to suppress the update notifier", got["NODE_ENV"])
 	}
 	if got["DO_NOT_TRACK"] != "1" {
 		t.Errorf("DO_NOT_TRACK = %q, want 1", got["DO_NOT_TRACK"])
@@ -108,7 +108,7 @@ func TestScenarioEnvPinsTestModeAndTelemetryOff(t *testing.T) {
 func TestScenarioEnvOverridesWinOverPinnedValues(t *testing.T) {
 	got := envMap(ScenarioEnv(hostileParent(), map[string]string{
 		"API_HOST":           "http://127.0.0.1:65000",
-		"VIP_TOKEN_OVERRIDE": "scenario.jwt",
+		"VIP_CLI_TOKEN":      "scenario.jwt",
 		"WPVIP_DEPLOY_TOKEN": "deploy-tok",
 		"NO_COLOR":           "1",
 	}))
@@ -116,8 +116,8 @@ func TestScenarioEnvOverridesWinOverPinnedValues(t *testing.T) {
 	if got["API_HOST"] != "http://127.0.0.1:65000" {
 		t.Errorf("API_HOST = %q, want the scenario override", got["API_HOST"])
 	}
-	if got["VIP_TOKEN_OVERRIDE"] != "scenario.jwt" {
-		t.Errorf("VIP_TOKEN_OVERRIDE = %q, want the scenario override", got["VIP_TOKEN_OVERRIDE"])
+	if got["VIP_CLI_TOKEN"] != "scenario.jwt" {
+		t.Errorf("VIP_CLI_TOKEN = %q, want the scenario override", got["VIP_CLI_TOKEN"])
 	}
 	if got["WPVIP_DEPLOY_TOKEN"] != "deploy-tok" {
 		t.Errorf("WPVIP_DEPLOY_TOKEN = %q, want the scenario override", got["WPVIP_DEPLOY_TOKEN"])
@@ -140,10 +140,10 @@ func TestScenarioEnvIsAmbientIndependent(t *testing.T) {
 	// The pinned token is minted per call (it carries a live exp claim), so
 	// compare everything else exactly and assert the token is merely present.
 	for _, m := range []map[string]string{laptop, ci} {
-		if m["VIP_TOKEN_OVERRIDE"] == "" {
+		if m["VIP_CLI_TOKEN"] == "" {
 			t.Fatal("expected a pinned token in both environments")
 		}
-		delete(m, "VIP_TOKEN_OVERRIDE")
+		delete(m, "VIP_CLI_TOKEN")
 	}
 	if len(laptop) != len(ci) {
 		t.Fatalf("laptop env has %d vars, CI env has %d: %v vs %v", len(laptop), len(ci), laptop, ci)
@@ -156,13 +156,12 @@ func TestScenarioEnvIsAmbientIndependent(t *testing.T) {
 }
 
 func TestFixtureTokenIsAcceptedByTheCLI(t *testing.T) {
-	tok := FixtureToken()
-	if strings.Count(tok, ".") != 2 {
-		t.Fatalf("FixtureToken() = %q, want a three-segment JWT", tok)
+	tok, err := auth.ParseToken(FixtureToken())
+	if err != nil {
+		t.Fatal(err)
 	}
-	// Two calls must both be valid; they need not be byte-identical.
-	if other := FixtureToken(); strings.Count(other, ".") != 2 {
-		t.Fatalf("second FixtureToken() = %q, want a three-segment JWT", other)
+	if !tok.Valid() {
+		t.Fatal("fixture PAT must pass production claim and expiry checks")
 	}
 }
 

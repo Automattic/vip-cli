@@ -183,7 +183,7 @@ func TestPhpmyadminPrintParity(t *testing.T) {
 		scenario.Env = map[string]string{}
 	}
 	scenario.Env["API_HOST"] = srv.URL
-	scenario.Env["VIP_TOKEN_OVERRIDE"] = makeTestToken(t)
+	scenario.Env["VIP_CLI_TOKEN"] = makeTestToken(t)
 
 	goBin := buildVipNextWithVersion(t, "test", "test")
 	res, err := Run(RunSpec{Binary: goBin, Argv: scenario.Argv, Env: FixtureEnv(scenario.Env)})
@@ -223,7 +223,7 @@ func TestPhpmyadminSilentParity(t *testing.T) {
 		scenario.Env = map[string]string{}
 	}
 	scenario.Env["API_HOST"] = srv.URL
-	scenario.Env["VIP_TOKEN_OVERRIDE"] = makeTestToken(t)
+	scenario.Env["VIP_CLI_TOKEN"] = makeTestToken(t)
 
 	goBin := buildVipNextWithVersion(t, "test", "test")
 	res, err := Run(RunSpec{Binary: goBin, Argv: scenario.Argv, Env: FixtureEnv(scenario.Env)})
@@ -373,7 +373,7 @@ func TestPhpmyadminErrorParity(t *testing.T) {
 		scenario.Env = map[string]string{}
 	}
 	scenario.Env["API_HOST"] = srv.URL
-	scenario.Env["VIP_TOKEN_OVERRIDE"] = makeTestToken(t)
+	scenario.Env["VIP_CLI_TOKEN"] = makeTestToken(t)
 
 	goBin := buildVipNextWithVersion(t, "test", "test")
 	res, err := Run(RunSpec{Binary: goBin, Argv: scenario.Argv, Env: FixtureEnv(scenario.Env)})

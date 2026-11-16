@@ -41,9 +41,7 @@ func TestWhoamiBaselineParity(t *testing.T) {
 	}
 	scenario.Env = rig.scenarioEnv(scenario)
 
-	// If the shared keychain seed had silently done nothing, Node would fall
-	// through to its login banner and this would fail loudly — there is no path
-	// where a broken seed looks like a pass.
+	// Both binaries authenticate through the same production environment source.
 	t.Logf("test token id=%s", strconv.FormatInt(fixtureTokenUserID, 10))
 
 	d, err := CompareBinaries(scenario, rig.nodeBin, rig.goBin)
@@ -60,8 +58,7 @@ func TestWhoamiBaselineParity(t *testing.T) {
 // deterministic credential ScenarioEnv pins into the base environment. It
 // exists so a mock-only scenario can state its auth requirement explicitly at
 // the call site rather than relying on the base env. Differential scenarios use
-// the rig's token instead, so that Node's seeded credential and Go's env
-// override are the same string.
+// the rig's token instead, so both runtimes receive the same identity.
 func makeTestToken(t *testing.T) string {
 	t.Helper()
 	t.Logf("test token id=%s", strconv.FormatInt(fixtureTokenUserID, 10))

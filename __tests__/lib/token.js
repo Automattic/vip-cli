@@ -16,6 +16,12 @@ jest.resetModules();
 const { getKeychain } = require( '../../src/lib/keychain' );
 const { default: Token, SERVICE } = require( '../../src/lib/token' );
 
+function tokenWithClaims( claims ) {
+	return `eyJhbGciOiJub25lIn0.${ Buffer.from( JSON.stringify( claims ) ).toString(
+		'base64url'
+	) }.`;
+}
+
 describe( 'token tests', () => {
 	it( 'should correctly validate token', () => {
 		// Does not expire
@@ -105,5 +111,122 @@ describe( 'token tests', () => {
 
 			expect( name ).toBe( `${ SERVICE }:${ sanitizedHost }${ modifier }` );
 		} );
+	} );
+} );
+
+// Credential source selection must never touch a stored credential when an
+// environment PAT was explicitly supplied.
+describe( 'environment PAT resolution', () => {
+	const original = process.env.VIP_CLI_TOKEN;
+	const valid =
+		'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiaWQiOjcsImlhdCI6MTUxNjIzOTAyMn0.RTJMXHhhiaCxQberZ5Pre7SBU3Ci8EvCyaOXoqG3pNA';
+	let keychainSpy;
+
+	beforeEach( () => {
+		getKeychain.mockClear();
+		delete process.env.VIP_CLI_TOKEN;
+		keychainSpy = jest
+			.spyOn( require( '../../src/lib/keychain' ), 'getKeychain' )
+			.mockResolvedValue( {
+				getPassword: jest.fn().mockResolvedValue( valid ),
+				setPassword: jest.fn().mockResolvedValue( true ),
+				deletePassword: jest.fn().mockResolvedValue( true ),
+			} );
+	} );
+
+	afterEach( () => {
+		keychainSpy.mockRestore();
+		if ( original === undefined ) {
+			delete process.env.VIP_CLI_TOKEN;
+		} else {
+			process.env.VIP_CLI_TOKEN = original;
+		}
+	} );
+
+	it( 'uses the trimmed environment PAT without reading the keychain', async () => {
+		process.env.VIP_CLI_TOKEN = `  ${ valid }  `;
+		const resolved = await Token.resolve();
+		expect( resolved.source ).toBe( 'environment' );
+		expect( resolved.token.raw ).toBe( valid );
+		expect( keychainSpy ).not.toHaveBeenCalled();
+	} );
+
+	it( 'uses a process-local analytics ID without keychain access for an environment PAT', async () => {
+		process.env.VIP_CLI_TOKEN = valid;
+		const first = await Token.uuid();
+		const second = await Token.uuid();
+		expect( first ).toBeTruthy();
+		expect( second ).toBe( first );
+		expect( keychainSpy ).not.toHaveBeenCalled();
+	} );
+
+	it( 'uses the stored PAT when the environment value is blank', async () => {
+		process.env.VIP_CLI_TOKEN = '   ';
+		const resolved = await Token.resolve();
+		expect( resolved.source ).toBe( 'stored' );
+		expect( resolved.token.raw ).toBe( valid );
+		expect( keychainSpy ).toHaveBeenCalledTimes( 1 );
+	} );
+
+	it.each( [
+		[ 'malformed', 'not-a-jwt' ],
+		[
+			'expired',
+			'eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MiwiaWF0IjoxNTE1NzExMDY5LCJleHAiOjE1MTU3OTc0Njl9.signature',
+		],
+		[ 'missing id', 'eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1MTYyMzkwMjJ9.signature' ],
+	] )( 'rejects a %s environment PAT without falling back', async ( _label, raw ) => {
+		process.env.VIP_CLI_TOKEN = raw;
+		await expect( Token.resolve() ).rejects.toThrow( /VIP_CLI_TOKEN/ );
+		expect( keychainSpy ).not.toHaveBeenCalled();
+	} );
+
+	it.each( [
+		[ 'null issue time', { iat: null } ],
+		[ 'boolean issue time', { iat: true } ],
+		[ 'string issue time', { iat: 'bad' } ],
+		[ 'numeric string issue time', { iat: '1516239022' } ],
+		[ 'zero issue time', { iat: 0 } ],
+		[ 'negative issue time', { iat: -1 } ],
+		[ 'out-of-range issue time', { iat: 8.64e12 + 1 } ],
+		[ 'string identity', { id: '7' } ],
+		[ 'object identity', { id: {} } ],
+		[ 'boolean identity', { id: true } ],
+		[ 'fractional identity', { id: 0.5 } ],
+		[ 'negative identity', { id: -7 } ],
+		[ 'unsafe identity', { id: Number.MAX_SAFE_INTEGER + 1 } ],
+		[ 'zero expiry', { exp: 0 } ],
+		[ 'year-one expiry', { exp: -62135596800 } ],
+		[ 'null expiry', { exp: null } ],
+		[ 'boolean expiry', { exp: false } ],
+		[ 'string expiry', { exp: '2524608000' } ],
+		[ 'out-of-range expiry', { exp: 8.64e12 + 1 } ],
+	] )( 'rejects %s without reading stored credentials', async ( _label, changes ) => {
+		process.env.VIP_CLI_TOKEN = tokenWithClaims( {
+			id: 7,
+			iat: 1516239022,
+			exp: Date.now() / 1000 + 3600,
+			...changes,
+		} );
+		await expect( Token.resolve() ).rejects.toThrow( /VIP_CLI_TOKEN/ );
+		expect( keychainSpy ).not.toHaveBeenCalled();
+	} );
+
+	it( 'retains explicitly zero expiry as expired', () => {
+		const token = new Token( tokenWithClaims( { id: 7, iat: 1516239022, exp: 0 } ) );
+		expect( token.valid() ).toBe( false );
+		expect( token.expired() ).toBe( true );
+	} );
+
+	it( 'accepts fractional numeric dates with a safe integer identity', async () => {
+		process.env.VIP_CLI_TOKEN = tokenWithClaims( {
+			id: Number.MAX_SAFE_INTEGER,
+			iat: 1516239022.125,
+			exp: Date.now() / 1000 + 3600.5,
+		} );
+		const { token } = await Token.resolve();
+		expect( token.valid() ).toBe( true );
+		expect( token.id ).toBe( Number.MAX_SAFE_INTEGER );
+		expect( keychainSpy ).not.toHaveBeenCalled();
 	} );
 } );
