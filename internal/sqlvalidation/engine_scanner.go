@@ -8,6 +8,20 @@ import (
 
 var delimiterDirective = regexp.MustCompile(`(?i)^[ \t]*DELIMITER`)
 
+type sqlModeUpdateKind uint8
+
+const (
+	sqlModeUnchanged sqlModeUpdateKind = iota
+	sqlModeUnknown
+	sqlModeKnown
+)
+
+type sqlModeUpdate struct {
+	kind               sqlModeUpdateKind
+	noBackslashEscapes bool
+	ansiQuotes         bool
+}
+
 // engineScanner recognizes table engine options without retaining row data.
 type engineScanner struct {
 	sqlModeLiteral                  bool
@@ -15,10 +29,7 @@ type engineScanner struct {
 	partitionNeedsName              bool
 	setValue                        bool
 	setDepth                        int
-	pendingSQLModeUncertain         bool
-	pendingSQLModeKnown             bool
-	pendingNoBackslashEscapes       bool
-	pendingANSIQuotes               bool
+	pendingSQLMode                  sqlModeUpdate
 	sqlModeUncertain                bool
 	sqlModeValidationUncertain      bool
 	phase, alterStage, createStage  string
@@ -49,17 +60,15 @@ type engineScanner struct {
 }
 
 func (s *engineScanner) reset() {
-	if s.pendingSQLModeUncertain {
+	switch s.pendingSQLMode.kind {
+	case sqlModeUnknown:
 		s.sqlModeUncertain = true
-	} else if s.pendingSQLModeKnown {
-		s.noBackslashEscapes = s.pendingNoBackslashEscapes
-		s.ansiQuotes = s.pendingANSIQuotes
+	case sqlModeKnown:
+		s.noBackslashEscapes = s.pendingSQLMode.noBackslashEscapes
+		s.ansiQuotes = s.pendingSQLMode.ansiQuotes
 		s.sqlModeUncertain = false
 	}
-	s.pendingSQLModeUncertain = false
-	s.pendingSQLModeKnown = false
-	s.pendingNoBackslashEscapes = false
-	s.pendingANSIQuotes = false
+	s.pendingSQLMode = sqlModeUpdate{}
 	s.setValue, s.setDepth, s.partitionNeedsName = false, 0, false
 	s.sqlModeLiteral = false
 	s.phase, s.alterStage, s.createStage = "", "", ""
@@ -129,7 +138,7 @@ func (s *engineScanner) token(text string, line int, findings *[]int, quoted boo
 	case "set":
 		s.setToken(upper, quoted)
 		return
-	case "create":
+	case "create", "create-replace":
 		if !quoted && upper == "TEMPORARY" {
 			s.phase = "temporary"
 		} else if !quoted && upper == "OR" {
@@ -146,10 +155,6 @@ func (s *engineScanner) token(text string, line int, findings *[]int, quoted boo
 		} else {
 			s.phase = "other"
 		}
-		return
-	case "create-replace":
-		s.phase = "create"
-		s.token(text, line, findings, quoted)
 		return
 	case "temporary", "alter":
 		if s.phase == "alter" && !quoted && (upper == "IGNORE" || upper == "ONLINE" || upper == "OFFLINE") {
@@ -498,13 +503,14 @@ func (s *engineScanner) setToken(upper string, quoted bool) {
 	}
 	if quoted {
 		if s.sqlModeLiteral {
-			s.pendingSQLModeUncertain = true
+			s.pendingSQLMode = sqlModeUpdate{kind: sqlModeUnknown}
 		}
 		if s.sqlModeAssignment && s.setValue {
-			s.pendingSQLModeKnown = true
-			s.pendingNoBackslashEscapes = s.sqlModeValueHasMode
-			s.pendingANSIQuotes = s.sqlModeValueHasAnsi
-			s.pendingSQLModeUncertain = false
+			s.pendingSQLMode = sqlModeUpdate{
+				kind:               sqlModeKnown,
+				noBackslashEscapes: s.sqlModeValueHasMode,
+				ansiQuotes:         s.sqlModeValueHasAnsi,
+			}
 			s.sqlModeAssignment = false
 			s.sqlModeLiteral = true
 		}
@@ -512,11 +518,11 @@ func (s *engineScanner) setToken(upper string, quoted bool) {
 	}
 	// Only literal right-hand sides establish known quote rules.
 	if s.sqlModeAssignment && s.setValue && upper != "=" {
-		s.pendingSQLModeUncertain = true
+		s.pendingSQLMode = sqlModeUpdate{kind: sqlModeUnknown}
 		s.sqlModeAssignment = false
 	}
 	if s.sqlModeLiteral && !(upper == "," && s.setDepth == 0) {
-		s.pendingSQLModeUncertain = true
+		s.pendingSQLMode = sqlModeUpdate{kind: sqlModeUnknown}
 	}
 	if s.setValue {
 		switch upper {

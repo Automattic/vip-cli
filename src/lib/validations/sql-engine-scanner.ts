@@ -33,6 +33,8 @@ const ALTER_TABLE_OPTIONS = new Set( [
 const isOptionValuePrefix = ( word: string ): boolean =>
 	'=' === word || 'SET' === word || ( 'ENGINE' !== word && ALTER_TABLE_OPTIONS.has( word ) );
 
+type SqlModeUpdate = 'unchanged' | 'unknown' | { noBackslashEscapes: boolean; ansiQuotes: boolean };
+
 // A streaming scanner for CREATE/ALTER TABLE engine options. It never retains
 // row data; quoted text and comments can cross physical lines.
 export class SqlEngineScanner {
@@ -79,8 +81,7 @@ export class SqlEngineScanner {
 	private sqlModeLiteral = false;
 	private setValue = false;
 	private setDepth = 0;
-	private pendingSqlModeUncertain = false;
-	private pendingSqlMode: { noBackslashEscapes: boolean; ansiQuotes: boolean } | undefined;
+	private pendingSqlMode: SqlModeUpdate = 'unchanged';
 	private sqlModeUncertain = false;
 	private sqlModeValidationUncertain = false;
 	private setAtCount = 0;
@@ -90,15 +91,14 @@ export class SqlEngineScanner {
 	private sqlModeValueHasMode = false;
 
 	private resetStatement(): void {
-		if ( this.pendingSqlModeUncertain ) {
+		if ( 'unknown' === this.pendingSqlMode ) {
 			this.sqlModeUncertain = true;
-		} else if ( this.pendingSqlMode ) {
+		} else if ( 'unchanged' !== this.pendingSqlMode ) {
 			this.noBackslashEscapes = this.pendingSqlMode.noBackslashEscapes;
 			this.ansiQuotes = this.pendingSqlMode.ansiQuotes;
 			this.sqlModeUncertain = false;
 		}
-		this.pendingSqlModeUncertain = false;
-		this.pendingSqlMode = undefined;
+		this.pendingSqlMode = 'unchanged';
 		this.setValue = false;
 		this.setDepth = 0;
 		this.sqlModeLiteral = false;
@@ -208,7 +208,7 @@ export class SqlEngineScanner {
 				return;
 			}
 			if ( this.sqlModeLiteral ) {
-				this.pendingSqlModeUncertain = true;
+				this.pendingSqlMode = 'unknown';
 			}
 			if ( this.sqlModeAssignment ) {
 				// The whole SET statement is parsed using the modes active when it began.
@@ -216,7 +216,6 @@ export class SqlEngineScanner {
 					noBackslashEscapes: this.sqlModeValueHasMode,
 					ansiQuotes: this.sqlModeValueHasAnsi,
 				};
-				this.pendingSqlModeUncertain = false;
 				this.sqlModeAssignment = false;
 				this.sqlModeLiteral = true;
 			}
@@ -225,11 +224,11 @@ export class SqlEngineScanner {
 		// Only a literal RHS has known quote rules. References inside expressions
 		// must never be mistaken for new session assignments.
 		if ( this.sqlModeAssignment && this.setValue && '=' !== upper ) {
-			this.pendingSqlModeUncertain = true;
+			this.pendingSqlMode = 'unknown';
 			this.sqlModeAssignment = false;
 		}
 		if ( this.sqlModeLiteral && ! ( ',' === upper && ! this.setDepth ) ) {
-			this.pendingSqlModeUncertain = true;
+			this.pendingSqlMode = 'unknown';
 		}
 		if ( this.setValue ) {
 			this.setValueToken( upper );
