@@ -55,19 +55,29 @@ func TestEnvironmentPATNodeGoParity(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	envPAT := validEnvironmentFixtureToken(t)
-	scenario.Env = rig.scenarioEnv(scenario)
-	scenario.Env["VIP_CLI_TOKEN"] = envPAT
-	// Both stored credentials contain a different PAT.
-	diff, err := CompareBinaries(scenario, rig.nodeBin, rig.goBin)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !diff.Equal {
-		t.Fatalf("Node vs Go diverge: exit=%s stdout=%s stderr=%s", diff.ExitCodeDelta, diff.StdoutDelta, diff.StderrDelta)
-	}
-	if len(authorizations) != 2 || authorizations[0] != "Bearer "+envPAT || authorizations[1] != "Bearer "+envPAT {
-		t.Fatalf("API Authorization headers did not use the environment PAT in both runtimes: %d requests", len(authorizations))
+	for name, claims := range map[string]map[string]any{
+		"ordinary":         {"id": 84, "iat": time.Now().Add(-time.Hour).Unix(), "exp": time.Now().Add(time.Hour).Unix()},
+		"no-expiry":        {"id": 84, "iat": 1516239022},
+		"fractional-dates": {"id": 9007199254740991, "iat": 1516239022.125, "exp": float64(time.Now().Add(time.Hour).Unix()) + 0.5},
+		"maximum-expiry":   {"id": 84, "iat": 1516239022, "exp": 8.64e12},
+	} {
+		t.Run(name, func(t *testing.T) {
+			authorizations = nil
+			envPAT := environmentFixtureToken(t, claims)
+			scenario.Env = rig.scenarioEnv(scenario)
+			scenario.Env["VIP_CLI_TOKEN"] = envPAT
+			// Both stored credentials contain a different PAT.
+			diff, err := CompareBinaries(scenario, rig.nodeBin, rig.goBin)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !diff.Equal {
+				t.Fatalf("Node vs Go diverge: exit=%s stdout=%s stderr=%s", diff.ExitCodeDelta, diff.StdoutDelta, diff.StderrDelta)
+			}
+			if len(authorizations) != 2 || authorizations[0] != "Bearer "+envPAT || authorizations[1] != "Bearer "+envPAT {
+				t.Fatalf("API Authorization headers did not use the environment PAT in both runtimes: %d requests", len(authorizations))
+			}
+		})
 	}
 }
 
@@ -81,6 +91,24 @@ func TestEnvironmentPATInvalidFailsWithoutRequest(t *testing.T) {
 		"malformed":  "not-a-jwt",
 		"missing-id": environmentFixtureToken(t, map[string]any{"iat": time.Now().Add(-time.Minute).Unix()}),
 		"expired":    environmentFixtureToken(t, map[string]any{"id": 84, "iat": time.Now().Add(-2 * time.Hour).Unix(), "exp": time.Now().Add(-time.Hour).Unix()}),
+	}
+	for name, changes := range map[string]map[string]any{
+		"null-iat": {"iat": nil}, "boolean-iat": {"iat": true},
+		"string-iat": {"iat": "bad"}, "numeric-string-iat": {"iat": "1516239022"},
+		"zero-iat": {"iat": 0}, "negative-iat": {"iat": -1},
+		"out-of-range-iat": {"iat": 8.64e12 + 1},
+		"string-id":        {"id": "84"}, "object-id": {"id": map[string]any{}},
+		"boolean-id": {"id": true}, "fractional-id": {"id": 0.5},
+		"negative-id": {"id": -84}, "unsafe-id": {"id": 9007199254740992},
+		"zero-exp": {"exp": 0}, "year-one-exp": {"exp": -62135596800},
+		"null-exp": {"exp": nil}, "boolean-exp": {"exp": false},
+		"string-exp": {"exp": "2524608000"}, "out-of-range-exp": {"exp": 8.64e12 + 1},
+	} {
+		claims := map[string]any{"id": 84, "iat": time.Now().Add(-time.Hour).Unix(), "exp": time.Now().Add(time.Hour).Unix()}
+		for key, value := range changes {
+			claims[key] = value
+		}
+		cases[name] = environmentFixtureToken(t, claims)
 	}
 	for name, raw := range cases {
 		t.Run(name, func(t *testing.T) {

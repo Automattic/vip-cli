@@ -280,6 +280,32 @@ func TestResolveInvalidEnvironmentPATDoesNotFallBack(t *testing.T) {
 	}
 }
 
+func TestResolveInvalidClaimEnvironmentPATDoesNotFallBack(t *testing.T) {
+	past := time.Now().Add(-time.Hour).Unix()
+	stored := makeJWT(t, map[string]any{"id": 17, "iat": past})
+	for _, tc := range []struct {
+		name   string
+		claims map[string]any
+	}{
+		{"non-numeric id", map[string]any{"id": "7", "iat": past}},
+		{"unsafe id", map[string]any{"id": 9_007_199_254_740_992, "iat": past}},
+		{"non-numeric iat", map[string]any{"id": 7, "iat": "123"}},
+		{"non-numeric exp", map[string]any{"id": 7, "iat": past, "exp": "later"}},
+		{"zero exp", map[string]any{"id": 7, "iat": past, "exp": 0}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Setenv("VIP_CLI_TOKEN", makeJWT(t, tc.claims))
+			s := newTestStore()
+			if err := s.Save(stored); err != nil {
+				t.Fatalf("Save: %v", err)
+			}
+			if credential, err := s.Resolve(); err == nil || !strings.Contains(err.Error(), "VIP_CLI_TOKEN") {
+				t.Fatalf("Resolve = %+v, %v; want environment-token error without stored fallback", credential, err)
+			}
+		})
+	}
+}
+
 func TestResolveBlankEnvironmentPATUsesStoredToken(t *testing.T) {
 	t.Setenv("VIP_CLI_TOKEN", "   ")
 	s := newTestStore()

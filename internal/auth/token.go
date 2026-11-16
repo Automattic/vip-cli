@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
@@ -18,11 +19,18 @@ import (
 // Signature verification is skipped — the API server re-validates on every
 // request, matching the behavior of the Node CLI (src/lib/token.ts).
 type Token struct {
-	Raw string
-	ID  int64
-	IAT time.Time
-	Exp time.Time // zero value means "no exp claim"
+	Raw           string
+	ID            int64
+	IAT           time.Time
+	Exp           time.Time
+	hasExp        bool
+	invalidClaims bool
 }
+
+const (
+	maxSafeID           = 9_007_199_254_740_991 // Number.MAX_SAFE_INTEGER in Node.js
+	maxDateMilliseconds = 8_640_000_000_000_000 // JavaScript Date's TimeClip limit
+)
 
 // ParseToken decodes the JWT claims without verifying the signature.
 // Returns an error if raw is empty or the JWT is structurally invalid.
@@ -42,22 +50,41 @@ func ParseToken(raw string) (*Token, error) {
 	tok := &Token{Raw: raw}
 
 	if id, ok := claims["id"]; ok {
-		switch v := id.(type) {
-		case float64:
-			tok.ID = int64(v)
-		case int64:
-			tok.ID = v
-		case int:
-			tok.ID = int64(v)
+		n, numeric := id.(float64)
+		if !numeric || !finite(n) || n <= 0 || n > maxSafeID || math.Trunc(n) != n {
+			tok.invalidClaims = true
+			return tok, nil
 		}
+		tok.ID = int64(n)
 	}
 
 	if iat, ok := claims["iat"]; ok {
-		tok.IAT = time.Unix(int64(toFloat(iat)), 0)
+		n, numeric := iat.(float64)
+		if !numeric || !finite(n) || n <= 0 {
+			tok.invalidClaims = true
+			return tok, nil
+		}
+		var valid bool
+		tok.IAT, valid = jsDate(n)
+		if !valid {
+			tok.invalidClaims = true
+			return tok, nil
+		}
 	}
 
 	if exp, ok := claims["exp"]; ok {
-		tok.Exp = time.Unix(int64(toFloat(exp)), 0)
+		n, numeric := exp.(float64)
+		if !numeric || !finite(n) {
+			tok.invalidClaims = true
+			return tok, nil
+		}
+		var valid bool
+		tok.Exp, valid = jsDate(n)
+		if !valid {
+			tok.invalidClaims = true
+			return tok, nil
+		}
+		tok.hasExp = true
 	}
 
 	return tok, nil
@@ -69,11 +96,11 @@ func ParseToken(raw string) (*Token, error) {
 //   - if no exp: true iff now > iat
 //   - if exp:    true iff now > iat AND now < exp
 func (t *Token) Valid() bool {
-	if t == nil || t.ID == 0 || t.IAT.IsZero() {
+	if t == nil || t.invalidClaims || t.ID == 0 || t.IAT.IsZero() {
 		return false
 	}
 	now := time.Now()
-	if t.Exp.IsZero() {
+	if !t.hasExp && t.Exp.IsZero() {
 		return now.After(t.IAT)
 	}
 	return now.After(t.IAT) && now.Before(t.Exp)
@@ -83,22 +110,27 @@ func (t *Token) Valid() bool {
 //   - false if no exp
 //   - true iff now > exp  (strict greater-than, matching Node's `now > this.exp`)
 func (t *Token) Expired() bool {
-	if t == nil || t.Exp.IsZero() {
+	if t == nil || (!t.hasExp && t.Exp.IsZero()) {
 		return false
 	}
 	return time.Now().After(t.Exp)
 }
 
-func toFloat(v any) float64 {
-	switch x := v.(type) {
-	case float64:
-		return x
-	case int64:
-		return float64(x)
-	case int:
-		return float64(x)
+func finite(n float64) bool {
+	return !math.IsNaN(n) && !math.IsInf(n, 0)
+}
+
+// jsDate applies JavaScript Date's millisecond precision and TimeClip range
+// before converting to time.Time. This avoids overflowing int64 on hostile
+// numeric claims and keeps fractional seconds consistent with Node.js.
+func jsDate(seconds float64) (time.Time, bool) {
+	milliseconds := seconds * 1000
+	if !finite(milliseconds) || math.Abs(milliseconds) > maxDateMilliseconds {
+		return time.Time{}, false
 	}
-	return 0
+	milliseconds = math.Trunc(milliseconds)
+	ms := int64(milliseconds)
+	return time.Unix(ms/1000, (ms%1000)*int64(time.Millisecond)), true
 }
 
 // encodeUnsignedJWT crafts an alg:none JWT from a claims map via base64url

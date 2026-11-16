@@ -5,9 +5,14 @@ import { API_HOST, PRODUCTION_API_HOST } from './api/constants';
 import { getKeychain } from './keychain';
 
 interface Payload {
-	id?: number;
-	iat?: number;
-	exp?: number;
+	id?: unknown;
+	iat?: unknown;
+	exp?: unknown;
+}
+
+// JWT NumericDate values use seconds; keep both runtimes within JS Date's range.
+function isNumericDate( value: unknown ): value is number {
+	return typeof value === 'number' && Number.isFinite( value ) && Math.abs( value ) <= 8.64e12;
 }
 
 // Config
@@ -40,19 +45,28 @@ export default class Token {
 			return;
 		}
 
-		const decodedToken = jwtDecode< Payload >( token );
+		const decodedToken = jwtDecode< Payload | null >( token );
 		this._raw = token;
 
-		if ( decodedToken.id ) {
-			this._id = decodedToken.id;
+		if ( ! decodedToken || typeof decodedToken !== 'object' || Array.isArray( decodedToken ) ) {
+			return;
+		}
+		const { id, iat, exp } = decodedToken;
+		if (
+			typeof id !== 'number' ||
+			! Number.isSafeInteger( id ) ||
+			id <= 0 ||
+			! isNumericDate( iat ) ||
+			iat <= 0 ||
+			( 'exp' in decodedToken && ! isNumericDate( exp ) )
+		) {
+			return;
 		}
 
-		if ( decodedToken.iat ) {
-			this.iat = new Date( decodedToken.iat * 1000 );
-		}
-
-		if ( decodedToken.exp ) {
-			this.exp = new Date( decodedToken.exp * 1000 );
+		this._id = id;
+		this.iat = new Date( iat * 1000 );
+		if ( typeof exp === 'number' ) {
+			this.exp = new Date( exp * 1000 );
 		}
 	}
 
