@@ -1,6 +1,6 @@
 import { prompt } from 'enquirer';
 
-import { appDeployCmd } from '../../src/bin/vip-app-deploy';
+import { appDeployCmd, parseDeployTargets } from '../../src/bin/vip-app-deploy';
 import API from '../../src/lib/api';
 import * as exit from '../../src/lib/cli/exit';
 import { uploadImportFileToS3 } from '../../src/lib/client-file-uploader';
@@ -131,6 +131,9 @@ describe( 'vip-app-deploy', () => {
 
 			expect( uploadImportFileToS3 ).toHaveBeenCalledTimes( 1 );
 			expect( mutate ).toHaveBeenCalledTimes( 1 );
+			const { input } = mutate.mock.calls[ 0 ][ 0 ].variables;
+			expect( input ).toMatchObject( { id: 123, environmentId: 124 } );
+			expect( input ).not.toHaveProperty( 'environmentIds' );
 		} );
 
 		it( 'skips large file verification when requested', async () => {
@@ -181,6 +184,152 @@ describe( 'vip-app-deploy', () => {
 			expect( prompt ).not.toHaveBeenCalled();
 			expect( uploadImportFileToS3 ).toHaveBeenCalledTimes( 1 );
 			expect( mutate ).toHaveBeenCalledTimes( 1 );
+		} );
+	} );
+
+	describe( 'parseDeployTargets', () => {
+		beforeEach( () => {
+			exitSpy.mockReset();
+			exitSpy.mockImplementation( message => {
+				throw new Error( message );
+			} );
+		} );
+
+		afterAll( () => {
+			exitSpy.mockReset();
+		} );
+
+		it( 'falls back to --app/--env when --to is not set', () => {
+			expect( parseDeployTargets( { app: 'my-app', env: 'develop' } ) ).toEqual( [
+				{ app: 'my-app', env: 'develop' },
+			] );
+		} );
+
+		it( 'parses repeated, comma-separated, and duplicate targets', () => {
+			expect(
+				parseDeployTargets( {
+					to: [ 'Example-App.production', 'other-app.develop,example-app.production' ],
+				} )
+			).toEqual( [
+				{ app: 'example-app', env: 'production' },
+				{ app: 'other-app', env: 'develop' },
+			] );
+		} );
+
+		it( 'keeps instance suffixes in the environment name', () => {
+			expect( parseDeployTargets( { to: 'app.develop.instance-01' } ) ).toEqual( [
+				{ app: 'app', env: 'develop.instance-01' },
+			] );
+		} );
+
+		it.each( [ true, 'example-app', '.develop', 'example-app.', 'app/x.develop', '' ] )(
+			'rejects invalid target %p',
+			target => {
+				expect( () => parseDeployTargets( { to: target } ) ).toThrow( 'Invalid --to value.' );
+			}
+		);
+
+		it.each( [ { app: 'x' }, { env: 'develop' } ] )( 'rejects --to combined with %p', extra => {
+			expect( () => parseDeployTargets( { to: 'a.develop', ...extra } ) ).toThrow(
+				'The --to option cannot be used with --app, --env, or an @app.env alias.'
+			);
+		} );
+	} );
+
+	describe( 'appDeployCmd with multiple targets', () => {
+		const mutate = jest.fn().mockResolvedValue( {} );
+		const envs = {
+			'example-app.production': {
+				success: true,
+				appId: 123,
+				envId: 200,
+				envType: 'production',
+				envUniqueLabel: 'production',
+				primaryDomainName: 'example.com',
+				launched: true,
+			},
+			'other-app.develop': {
+				success: true,
+				appId: 456,
+				envId: 300,
+				envType: 'develop',
+				envUniqueLabel: 'develop',
+				primaryDomainName: 'other.example.com',
+				launched: false,
+			},
+		};
+
+		beforeEach( () => {
+			jest.clearAllMocks();
+			exitSpy.mockReset();
+			API.mockReturnValue( { mutate } );
+			validateCustomDeployKey.mockImplementation(
+				async ( app, env ) => envs[ `${ app }.${ env }` ]
+			);
+			uploadImportFileToS3.mockResolvedValue( {
+				fileMeta: { basename: 'skeleton.zip' },
+				checksum: 'checksum',
+				result: {},
+			} );
+		} );
+
+		const multiOpts = {
+			to: [ 'example-app.production', 'other-app.develop' ],
+			skipConfirmation: true,
+		};
+
+		it( 'uploads once and starts one deploy with every environment ID', async () => {
+			await appDeployCmd( args, multiOpts );
+
+			expect( validateCustomDeployKey ).toHaveBeenCalledTimes( 2 );
+			expect( validateCustomDeployKey ).toHaveBeenCalledWith(
+				'other-app',
+				'develop',
+				'other-app.develop'
+			);
+			expect( uploadImportFileToS3 ).toHaveBeenCalledTimes( 1 );
+			expect( uploadImportFileToS3.mock.calls[ 0 ][ 0 ] ).toMatchObject( {
+				app: { id: 123 },
+				env: { id: 200 },
+			} );
+			expect( mutate ).toHaveBeenCalledTimes( 1 );
+			const { input } = mutate.mock.calls[ 0 ][ 0 ].variables;
+			expect( input ).toMatchObject( { id: 123, environmentIds: [ 200, 300 ] } );
+			expect( input ).not.toHaveProperty( 'environmentId' );
+		} );
+
+		it( 'deploys an environment addressed twice only once', async () => {
+			validateCustomDeployKey.mockResolvedValue( envs[ 'other-app.develop' ] );
+			await appDeployCmd( args, { ...multiOpts, to: [ 'other-app.develop', '456.develop' ] } );
+
+			const { input } = mutate.mock.calls[ 0 ][ 0 ].variables;
+			expect( input ).toMatchObject( { id: 456, environmentId: 300 } );
+			expect( input ).not.toHaveProperty( 'environmentIds' );
+		} );
+
+		it( 'confirms every target before uploading', async () => {
+			prompt
+				.mockResolvedValueOnce( { confirmedDomain: 'EXAMPLE.COM' } )
+				.mockResolvedValueOnce( { confirmedDomain: 'OTHER.EXAMPLE.COM' } );
+			await appDeployCmd( args, { ...multiOpts, skipConfirmation: false } );
+
+			expect( prompt ).toHaveBeenCalledTimes( 2 );
+			expect( uploadImportFileToS3 ).toHaveBeenCalledTimes( 1 );
+		} );
+
+		it( 'deploys nothing when any confirmation is rejected', async () => {
+			prompt
+				.mockResolvedValueOnce( { confirmedDomain: 'EXAMPLE.COM' } )
+				.mockResolvedValueOnce( { confirmedDomain: 'wrong' } );
+			exitSpy.mockImplementationOnce( () => {
+				throw new Error( 'deploy aborted' );
+			} );
+			await expect(
+				appDeployCmd( args, { ...multiOpts, skipConfirmation: false } )
+			).rejects.toThrow( 'deploy aborted' );
+
+			expect( uploadImportFileToS3 ).not.toHaveBeenCalled();
+			expect( mutate ).not.toHaveBeenCalled();
 		} );
 	} );
 } );

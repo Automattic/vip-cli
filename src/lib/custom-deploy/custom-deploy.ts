@@ -20,7 +20,7 @@ const DEPLOY_MAX_FILE_SIZE = 4 * GB_IN_BYTES;
 const WPVIP_DEPLOY_TOKEN = process.env.WPVIP_DEPLOY_TOKEN;
 const SKIP_LARGE_FILE_VALIDATION_FLAG = '--skip-large-file-validation';
 
-type CustomDeployInfo = {
+export type CustomDeployInfo = {
 	success: boolean;
 	appId: number;
 	envId: number;
@@ -52,7 +52,8 @@ function getLargeArchiveFilesMessage( largeArchiveFiles: LargeArchiveFile[] ): s
 
 export async function validateCustomDeployKey(
 	app: string | number,
-	env: string | number
+	env: string | number,
+	targetLabel?: string
 ): Promise< CustomDeployInfo > {
 	if ( ! WPVIP_DEPLOY_TOKEN ) {
 		exit.withError( 'Valid custom deploy key is required.' );
@@ -89,7 +90,11 @@ export async function validateCustomDeployKey(
 
 		return result.data?.validateCustomDeployAccess;
 	} catch {
-		exit.withError( `Unauthorized: Invalid or non-existent custom deploy key for environment.` );
+		exit.withError(
+			`Unauthorized: Invalid or non-existent custom deploy key for environment${
+				targetLabel ? ` ${ targetLabel }` : ''
+			}.`
+		);
 	}
 }
 

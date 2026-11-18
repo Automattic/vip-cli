@@ -63,7 +63,7 @@ var nodeShortFlags = map[string]map[string]string{
 
 	"vip-next app":                 {"format": "f"}, // src/bin/vip-app.js
 	"vip-next app list":            {"format": "f"}, // src/bin/vip-app-list.js
-	"vip-next app deploy":          {"message": "m", "skip-confirmation": "s", "force": "f", "app": "a", "env": "e"},
+	"vip-next app deploy":          {"message": "m", "skip-confirmation": "s", "force": "f", "app": "a", "env": "e", "to": "t"},
 	"vip-next app deploy validate": {}, // src/bin/vip-app-deploy-validate.ts
 
 	"vip-next config":                 {},

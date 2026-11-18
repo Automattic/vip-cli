@@ -203,6 +203,7 @@ var surfaceDifferentialScenarios = map[string]surfaceCase{
 	"app-deploy-validate-clean":          {mux: nullMux},
 	"app-deploy-validate-missing-themes": {mux: nullMux},
 	"app-deploy-missing-token":           {mux: nullMux},
+	"app-deploy-target-conflict":         {mux: nullMux},
 
 	// --- import sql gates -------------------------------------------------
 	// Every one aborts at a client-side gate, so no import is ever started;
@@ -308,6 +309,7 @@ var surfaceDifferentialExclusions = map[string]string{
 		"presigned URL derived from the response; the mock's presign endpoint is written for " +
 		"vip-next's request shape only. Converting needs Node's upload contract mirrored " +
 		"first — a real piece of work, not a fixture tweak.",
+	"app-deploy-multi-target-completed": "same Node upload-contract gap as app-deploy-completed.",
 	"sync-baseline": "argv is not valid for Node: `vip @app.env sync --skip-confirmation` exits " +
 		"1 with `The option \"skip-confirmation\" is unknown` (observed). Node's confirmation " +
 		"gate is `requireConfirm`, which registers `--force` and nothing else " +
