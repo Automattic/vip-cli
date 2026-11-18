@@ -77,7 +77,8 @@ type deployKeyCheck struct {
 // validateDeployTargets ports validateDeployTargets (vip-app-deploy.ts): it
 // checks the deploy key against every target before touching any of them and,
 // if any is rejected, fails with a per-environment summary. The same
-// environment addressed twice (name and ID) is returned once.
+// environment addressed twice (name and ID) is returned once. The API enforces
+// deploy-key access on its own; see validateCustomDeployKey.
 func validateDeployTargets(ctx context.Context, client graphql.Client, targets []deployTarget) ([]*customdeploy.DeployInfo, error) {
 	checks := make([]deployKeyCheck, len(targets))
 	var firstErr error
@@ -181,8 +182,12 @@ func deployGQLClient(cfg Config, deployToken string) graphql.Client {
 	return graphql.NewClient(cfg.APIHost+"/graphql", httpClient)
 }
 
-// validateCustomDeployKey ports validateCustomDeployKey
-// (custom-deploy.ts:28).
+// validateCustomDeployKey ports checkCustomDeployKey (custom-deploy.ts).
+//
+// This is not the access check that protects an environment: the API validates
+// the deploy key again for every environment when the deploy starts.
+// Checking here lets the CLI fail before the upload with a clear message for
+// each environment, and returns the IDs and domain the rest of the command needs.
 func validateCustomDeployKey(ctx context.Context, client graphql.Client, app, env string) (*customdeploy.DeployInfo, error) {
 	resp, err := gql.ValidateCustomDeployAccess(gql.WithAllowGQLErrors(ctx), client,
 		&gql.ValidateCustomDeployAccessInput{App: app, Env: env})

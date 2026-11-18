@@ -59,6 +59,11 @@ export type CustomDeployKeyCheck = { info: CustomDeployInfo } | { error: string 
 /**
  * Ask the API whether WPVIP_DEPLOY_TOKEN can deploy to an environment. A
  * rejection is returned, not printed, so callers can check several environments.
+ *
+ * This is not the access check that protects an environment: the API validates
+ * the deploy key again for every environment when the deploy starts.
+ * Checking here lets the CLI fail before the upload with a clear message for
+ * each environment, and returns the IDs and domain the rest of the command needs.
  */
 export async function checkCustomDeployKey(
 	app: string | number,
@@ -105,6 +110,10 @@ export async function checkCustomDeployKey(
 	}
 }
 
+/**
+ * Like checkCustomDeployKey, but exits with the API's message on rejection.
+ * The API enforces deploy-key access on its own; see checkCustomDeployKey.
+ */
 export async function validateCustomDeployKey(
 	app: string | number,
 	env: string | number
