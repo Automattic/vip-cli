@@ -1,0 +1,14 @@
+name: app-deploy-multi-target-completed
+description: |
+  Multi-target deploy with --skip-confirmation and a comma-separated
+  --to: validate access for each environment, upload the archive once (to the first target), then one
+  StartCustomDeploy with environmentIds [7, 8] (vip-go-api#8478). Exit 0.
+argv: ["app", "deploy", "../../testdata/parity/recordings/app-deploy-validate/clean.tar.gz", "--skip-confirmation", "--to=parityapp.develop,parityapp.production"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+  WPVIP_DEPLOY_TOKEN: "deploy-tok"
+recording: app-deploy-completed
+expect:
+  exit_code: 0

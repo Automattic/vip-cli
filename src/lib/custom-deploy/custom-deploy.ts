@@ -1,8 +1,12 @@
+import { CombinedGraphQLErrors } from '@apollo/client/core';
 import chalk from 'chalk';
 import fs from 'fs';
 import gql from 'graphql-tag';
 
-import API from '../../lib/api';
+import API, {
+	disableGlobalGraphQLErrorHandling,
+	enableGlobalGraphQLErrorHandling,
+} from '../../lib/api';
 import * as exit from '../../lib/cli/exit';
 import { checkFileAccess, getFileSize, isFile, FileMeta } from '../../lib/client-file-uploader';
 import { GB_IN_BYTES } from '../../lib/constants/file-size';
@@ -20,7 +24,7 @@ const DEPLOY_MAX_FILE_SIZE = 4 * GB_IN_BYTES;
 const WPVIP_DEPLOY_TOKEN = process.env.WPVIP_DEPLOY_TOKEN;
 const SKIP_LARGE_FILE_VALIDATION_FLAG = '--skip-large-file-validation';
 
-type CustomDeployInfo = {
+export type CustomDeployInfo = {
 	success: boolean;
 	appId: number;
 	envId: number;
@@ -50,10 +54,21 @@ function getLargeArchiveFilesMessage( largeArchiveFiles: LargeArchiveFile[] ): s
 	) } to skip this check.`;
 }
 
-export async function validateCustomDeployKey(
+export type CustomDeployKeyCheck = { info: CustomDeployInfo } | { error: string };
+
+/**
+ * Ask the API whether WPVIP_DEPLOY_TOKEN can deploy to an environment. A
+ * rejection is returned, not printed, so callers can check several environments.
+ *
+ * This is not the access check that protects an environment: the API validates
+ * the deploy key again for every environment when the deploy starts.
+ * Checking here lets the CLI fail before the upload with a clear message for
+ * each environment, and returns the IDs and domain the rest of the command needs.
+ */
+export async function checkCustomDeployKey(
 	app: string | number,
 	env: string | number
-): Promise< CustomDeployInfo > {
+): Promise< CustomDeployKeyCheck > {
 	if ( ! WPVIP_DEPLOY_TOKEN ) {
 		exit.withError( 'Valid custom deploy key is required.' );
 	}
@@ -73,6 +88,9 @@ export async function validateCustomDeployKey(
 `;
 
 	const api = API( { exitOnError: true } );
+	// Handle GraphQL errors here instead of letting the global handler print
+	// and exit, so a rejection can be reported per environment.
+	disableGlobalGraphQLErrorHandling();
 	try {
 		const result = await api.mutate< ValidateMutationPayload >( {
 			mutation: VALIDATE_CUSTOM_DEPLOY_ACCESS_MUTATION,
@@ -83,14 +101,44 @@ export async function validateCustomDeployKey(
 			},
 		} );
 
-		if ( ! result.data?.validateCustomDeployAccess ) {
-			throw new Error( 'Not found' );
-		}
-
-		return result.data?.validateCustomDeployAccess;
-	} catch {
-		exit.withError( `Unauthorized: Invalid or non-existent custom deploy key for environment.` );
+		const info = result.data?.validateCustomDeployAccess;
+		return info ? { info } : { error: describeCustomDeployKeyError( null ) };
+	} catch ( error ) {
+		return { error: describeCustomDeployKeyError( error ) };
+	} finally {
+		enableGlobalGraphQLErrorHandling();
 	}
+}
+
+/**
+ * Like checkCustomDeployKey, but exits with the API's message on rejection.
+ * The API enforces deploy-key access on its own; see checkCustomDeployKey.
+ */
+export async function validateCustomDeployKey(
+	app: string | number,
+	env: string | number
+): Promise< CustomDeployInfo > {
+	const check = await checkCustomDeployKey( app, env );
+	if ( 'error' in check ) {
+		exit.withError( check.error );
+	}
+
+	return check.info;
+}
+
+/**
+ * The API's own message for a failed validateCustomDeployAccess call.
+ * Mirrored by deployKeyError in cmd/vip-next/commands/app_deploy.go.
+ */
+export function describeCustomDeployKeyError( error: unknown ): string {
+	if ( CombinedGraphQLErrors.is( error ) && error.errors.length ) {
+		return error.errors.map( graphQLError => graphQLError.message ).join( '; ' );
+	}
+	if ( error instanceof Error ) {
+		return error.message;
+	}
+
+	return 'Unauthorized: Invalid or non-existent custom deploy key for environment.';
 }
 
 /**

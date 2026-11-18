@@ -463,6 +463,16 @@ describe( 'utils/cli/command', () => {
 			expect( withErrorSpy ).not.toHaveBeenCalled();
 		} );
 
+		it( 'treats a closed readline (Ctrl+C at a prompt on Node 24) as a cancellation', () => {
+			const err = Object.assign( new Error( 'readline was closed' ), {
+				code: 'ERR_USE_AFTER_CLOSE',
+			} );
+
+			expect( () => uncaughtError( err ) ).toThrow( 'exit.withError called' );
+			expect( withErrorSpy ).toHaveBeenCalledWith( 'Command cancelled by user.' );
+			expect( console.log ).not.toHaveBeenCalled();
+		} );
+
 		it( 'exits with a UserError without asking the user to contact support', () => {
 			const err = new UserError( 'Update canceled' );
 

@@ -26,14 +26,25 @@ func Rewrite(argv []string) (rewritten []string, app, env string, err error) {
 			rewritten = append(rewritten, argv[i:]...)
 			return rewritten, app, env, nil
 		}
-		if !consumed && aliasRE.MatchString(tok) {
-			app, env = parseAlias(tok)
-			consumed = true
-			continue
+		if !consumed {
+			if a, e, ok := Parse(tok); ok {
+				app, env, consumed = a, e, true
+				continue
+			}
 		}
 		rewritten = append(rewritten, tok)
 	}
 	return rewritten, app, env, nil
+}
+
+// Parse validates and splits a single "@app[.env]" token, mirroring
+// src/lib/cli/envAlias.ts:parseEnvAlias. ok is false when tok is not an alias.
+func Parse(tok string) (app, env string, ok bool) {
+	if !aliasRE.MatchString(tok) {
+		return "", "", false
+	}
+	app, env = parseAlias(tok)
+	return app, env, true
 }
 
 // parseAlias strips "@", lowercases the remainder, splits on the first ".".

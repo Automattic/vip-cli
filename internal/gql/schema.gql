@@ -1299,8 +1299,13 @@ input AppEnvironmentCustomDeployInput {
   """The application ID, when required by the caller."""
   id: Int
 
-  """The environment ID to deploy to."""
-  environmentId: Int
+  """Deprecated: use `environmentIds`. The environment ID to deploy to."""
+  environmentId: Int @deprecated(reason: "Use environmentIds instead")
+
+  """
+  The environment IDs to deploy to. Takes precedence over `environmentId` when provided.
+  """
+  environmentIds: [Int!]
 
   """The deployment artifact filename."""
   basename: String
