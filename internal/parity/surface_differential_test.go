@@ -4,6 +4,7 @@ package parity
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -81,6 +82,24 @@ func nullMux(t *testing.T, _ string) (http.Handler, func() map[string]int32) {
 	return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"data":null}`))
+	}), func() map[string]int32 { return map[string]int32{} }
+}
+
+// partialDeployKeyMux answers validateCustomDeployAccess the way Parker does
+// when the deploy token covers production but not develop: a GraphQL
+// access-denied error (HTTP 200) for develop, environment data otherwise.
+// Node inlines the env in the query text and Go sends it as a variable, so the
+// match is on the bare env name.
+func partialDeployKeyMux(t *testing.T, _ string) (http.Handler, func() map[string]int32) {
+	t.Helper()
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		w.Header().Set("Content-Type", "application/json")
+		if strings.Contains(string(body), "develop") {
+			_, _ = w.Write([]byte(`{"data":{"validateCustomDeployAccess":null},"errors":[{"message":"You cannot perform this action in this session","extensions":{"code":"access-denied"}}]}`))
+			return
+		}
+		_, _ = w.Write([]byte(`{"data":{"validateCustomDeployAccess":{"success":true,"appId":42,"envId":8,"envType":"production","envUniqueLabel":"production","primaryDomainName":"prod.example.com","launched":true}}}`))
 	}), func() map[string]int32 { return map[string]int32{} }
 }
 
@@ -204,6 +223,7 @@ var surfaceDifferentialScenarios = map[string]surfaceCase{
 	"app-deploy-validate-missing-themes": {mux: nullMux},
 	"app-deploy-missing-token":           {mux: nullMux},
 	"app-deploy-target-conflict":         {mux: nullMux},
+	"app-deploy-key-summary":             {mux: partialDeployKeyMux},
 
 	// --- import sql gates -------------------------------------------------
 	// Every one aborts at a client-side gate, so no import is ever started;

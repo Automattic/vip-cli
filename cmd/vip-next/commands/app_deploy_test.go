@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -17,6 +18,7 @@ import (
 
 	"github.com/Khan/genqlient/graphql"
 	"github.com/spf13/cobra"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
 // deployStub serves ValidateCustomDeployAccess + StartCustomDeploy +
@@ -28,9 +30,12 @@ type deployStub struct {
 	startReq      string
 	uploadedBody  []byte
 	validateFails bool
+	rejectEnv     string // reject validation only for this env
 	srvURL        string
 	uploadCount   int
 }
+
+const parkerAccessDenied = `{"data":{"validateCustomDeployAccess":null},"errors":[{"message":"You cannot perform this action in this session","extensions":{"code":"access-denied"}}]}`
 
 func (s *deployStub) start(t *testing.T) *httptest.Server {
 	t.Helper()
@@ -47,10 +52,10 @@ func (s *deployStub) start(t *testing.T) *httptest.Server {
 		case strings.Contains(bs, `"operationName":"ValidateCustomDeployAccess"`):
 			s.mu.Lock()
 			s.validateAuth = r.Header.Get("Authorization")
-			fails := s.validateFails
+			fails := s.validateFails || (s.rejectEnv != "" && strings.Contains(bs, `"env":"`+s.rejectEnv+`"`))
 			s.mu.Unlock()
 			if fails {
-				_, _ = w.Write([]byte(`{"data":null,"errors":[{"message":"Not found"}]}`))
+				_, _ = w.Write([]byte(parkerAccessDenied))
 				return
 			}
 			if strings.Contains(bs, `"env":"production"`) {
@@ -162,7 +167,7 @@ func TestAppDeployInvalidKey(t *testing.T) {
 	cmd.SetErr(io.Discard)
 
 	err := runAppDeploy(cmd, []string{deployArchive(t, "rel.tar.gz")})
-	if err == nil || err.Error() != "Unauthorized: Invalid or non-existent custom deploy key for environment." {
+	if err == nil || err.Error() != "You cannot perform this action in this session" {
 		t.Errorf("err = %v", err)
 	}
 }
@@ -430,10 +435,31 @@ func TestAppDeployMultiTargetRejectedConfirmationDeploysNothing(t *testing.T) {
 	}
 }
 
-func TestAppDeployMultiTargetInvalidKeyNamesTarget(t *testing.T) {
-	cmd, _ := newMultiTargetDeploy(t, &deployStub{validateFails: true}, "myapp.develop", "myapp.production")
+func TestAppDeployMultiTargetSummarizesKeyValidation(t *testing.T) {
+	stub := &deployStub{rejectEnv: "develop"}
+	cmd, _ := newMultiTargetDeploy(t, stub, "myapp.develop", "myapp.production")
+
 	err := runAppDeploy(cmd, []string{deployArchive(t, "rel.tar.gz")})
-	if err == nil || err.Error() != "Unauthorized: Invalid or non-existent custom deploy key for environment myapp.develop." {
-		t.Errorf("err = %v", err)
+	want := "The deploy key could not be validated for 1 of 2 environments:\n" +
+		"  ✕ myapp.develop: You cannot perform this action in this session\n" +
+		"  ✓ myapp.production"
+	if err == nil || err.Error() != want {
+		t.Fatalf("err = %v\nwant %s", err, want)
+	}
+	stub.mu.Lock()
+	defer stub.mu.Unlock()
+	if stub.uploadCount != 0 || stub.startReq != "" {
+		t.Errorf("uploads=%d start=%q; want nothing", stub.uploadCount, stub.startReq)
+	}
+}
+
+func TestDeployKeyError(t *testing.T) {
+	list := gqlerror.List{{Message: "first"}, {Message: "second"}}
+	if got := deployKeyError(list).Error(); got != "first; second" {
+		t.Errorf("GraphQL errors = %q", got)
+	}
+	network := errors.New("dial tcp: connection refused")
+	if got := deployKeyError(network); got != network {
+		t.Errorf("network error = %v, want it unchanged", got)
 	}
 }

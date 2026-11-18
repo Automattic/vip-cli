@@ -11,6 +11,7 @@ import (
 	"github.com/Khan/genqlient/graphql"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 
 	"github.com/Automattic/vip/internal/customdeploy"
 	"github.com/Automattic/vip/internal/debuglog"
@@ -50,6 +51,76 @@ func AppDeployCmd() *cobra.Command {
 }
 
 var errInvalidDeployKey = errors.New("Unauthorized: Invalid or non-existent custom deploy key for environment.")
+
+// deployKeyError keeps the API's own message for a failed
+// validateCustomDeployAccess call. Ports describeCustomDeployKeyError
+// (custom-deploy.ts).
+func deployKeyError(err error) error {
+	var list gqlerror.List
+	if !errors.As(err, &list) || len(list) == 0 {
+		return err
+	}
+	messages := make([]string, len(list))
+	for i, item := range list {
+		messages[i] = item.Message
+	}
+	return errors.New(strings.Join(messages, "; "))
+}
+
+// deployKeyCheck is the result of checking the deploy key against one target.
+type deployKeyCheck struct {
+	label string
+	info  *customdeploy.DeployInfo
+	err   error
+}
+
+// validateDeployTargets ports validateDeployTargets (vip-app-deploy.ts): it
+// checks the deploy key against every target before touching any of them and,
+// if any is rejected, fails with a per-environment summary. The same
+// environment addressed twice (name and ID) is returned once.
+func validateDeployTargets(ctx context.Context, client graphql.Client, targets []deployTarget) ([]*customdeploy.DeployInfo, error) {
+	checks := make([]deployKeyCheck, len(targets))
+	var firstErr error
+	for i, t := range targets {
+		info, err := validateCustomDeployKey(ctx, client, t.app, t.env)
+		checks[i] = deployKeyCheck{label: t.label(), info: info, err: err}
+		if err != nil && firstErr == nil {
+			firstErr = err
+		}
+	}
+	if firstErr != nil {
+		if len(targets) == 1 {
+			return nil, firstErr
+		}
+		return nil, errors.New(formatDeployKeySummary(checks))
+	}
+
+	var infos []*customdeploy.DeployInfo
+	seenEnvIDs := map[int64]bool{}
+	for _, c := range checks {
+		if !seenEnvIDs[c.info.EnvID] {
+			seenEnvIDs[c.info.EnvID] = true
+			infos = append(infos, c.info)
+		}
+	}
+	return infos, nil
+}
+
+// formatDeployKeySummary ports formatDeployKeySummary (vip-app-deploy.ts).
+func formatDeployKeySummary(checks []deployKeyCheck) string {
+	failed := 0
+	lines := make([]string, len(checks))
+	for i, c := range checks {
+		if c.err != nil {
+			failed++
+			lines[i] = fmt.Sprintf("  ✕ %s: %s", c.label, c.err.Error())
+		} else {
+			lines[i] = "  ✓ " + c.label
+		}
+	}
+	return fmt.Sprintf("The deploy key could not be validated for %d of %d environments:\n%s",
+		failed, len(checks), strings.Join(lines, "\n"))
+}
 
 const (
 	deployTargetFormatError   = "Invalid --to value. Targets are in the format of app-name.environment-name (e.g. example-app.production)."
@@ -115,7 +186,10 @@ func deployGQLClient(cfg Config, deployToken string) graphql.Client {
 func validateCustomDeployKey(ctx context.Context, client graphql.Client, app, env string) (*customdeploy.DeployInfo, error) {
 	resp, err := gql.ValidateCustomDeployAccess(gql.WithAllowGQLErrors(ctx), client,
 		&gql.ValidateCustomDeployAccessInput{App: app, Env: env})
-	if err != nil || resp == nil || resp.ValidateCustomDeployAccess == nil {
+	if err != nil {
+		return nil, deployKeyError(err)
+	}
+	if resp == nil || resp.ValidateCustomDeployAccess == nil {
 		return nil, errInvalidDeployKey
 	}
 	v := resp.ValidateCustomDeployAccess
@@ -170,24 +244,9 @@ func runAppDeploy(cmd *cobra.Command, args []string) error {
 
 	client := deployGQLClient(cfg, deployToken)
 
-	// Validate access to every target before touching any of them; the
-	// same environment addressed twice (name and ID) is deployed once.
-	var infos []*customdeploy.DeployInfo
-	seenEnvIDs := map[int64]bool{}
-	nameTargetInErrors := len(targets) > 1
-	for _, t := range targets {
-		info, err := validateCustomDeployKey(cmd.Context(), client, t.app, t.env)
-		if err != nil {
-			if nameTargetInErrors {
-				return fmt.Errorf("Unauthorized: Invalid or non-existent custom deploy key for environment %s.", t.label())
-			}
-			return err
-		}
-		if seenEnvIDs[info.EnvID] {
-			continue
-		}
-		seenEnvIDs[info.EnvID] = true
-		infos = append(infos, info)
+	infos, err := validateDeployTargets(cmd.Context(), client, targets)
+	if err != nil {
+		return err
 	}
 	multi := len(infos) > 1
 	// The archive is uploaded once, to the first target; the API builds

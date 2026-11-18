@@ -25,8 +25,9 @@ import {
 	UploadArguments,
 } from '../lib/client-file-uploader';
 import {
+	checkCustomDeployKey,
 	CustomDeployInfo,
-	validateCustomDeployKey,
+	CustomDeployKeyCheck,
 	validateFile,
 	validateLargeArchiveFiles,
 } from '../lib/custom-deploy/custom-deploy';
@@ -137,6 +138,55 @@ export function parseDeployTargets( opts: Record< string, unknown > ): DeployTar
 	return targets;
 }
 
+type DeployKeyCheckResult = CustomDeployKeyCheck & { label: string };
+
+/**
+ * List which environments the deploy key was validated for and which it was not.
+ * Mirrored by formatDeployKeySummary in cmd/vip-next/commands/app_deploy.go.
+ */
+export function formatDeployKeySummary( checks: DeployKeyCheckResult[] ): string {
+	const failed = checks.filter( check => 'error' in check ).length;
+	const lines = checks.map( check =>
+		'error' in check ? `  ✕ ${ check.label }: ${ check.error }` : `  ✓ ${ check.label }`
+	);
+
+	return `The deploy key could not be validated for ${ failed } of ${
+		checks.length
+	} environments:\n${ lines.join( '\n' ) }`;
+}
+
+/**
+ * Check the deploy key against every target before touching any of them, and
+ * exit with a per-environment summary if any is rejected. The same environment
+ * can be addressed by name and by ID; it is returned only once.
+ */
+async function validateDeployTargets( targets: DeployTarget[] ): Promise< CustomDeployInfo[] > {
+	debug( 'Validating custom deploy key...' );
+	const checks: DeployKeyCheckResult[] = [];
+	for ( const { app, env } of targets ) {
+		// eslint-disable-next-line no-await-in-loop
+		const check = await checkCustomDeployKey( app, env );
+		debug( 'Deploy key check: ', check );
+		checks.push( { label: `${ app }.${ env }`, ...check } );
+	}
+
+	const [ firstFailure ] = checks.filter( check => 'error' in check );
+	if ( firstFailure && 'error' in firstFailure ) {
+		exit.withError( targets.length === 1 ? firstFailure.error : formatDeployKeySummary( checks ) );
+	}
+
+	const validatedTargets: CustomDeployInfo[] = [];
+	const seenEnvIds = new Set< number >();
+	for ( const check of checks ) {
+		if ( 'info' in check && ! seenEnvIds.has( check.info.envId ) ) {
+			seenEnvIds.add( check.info.envId );
+			validatedTargets.push( check.info );
+		}
+	}
+
+	return validatedTargets;
+}
+
 // `environmentIds` was added to Parker's AppEnvironmentCustomDeployInput (vip-go-api#8478).
 // Drop this once src/graphqlTypes.d.ts is regenerated from a schema that includes it.
 type CustomDeployInput = AppEnvironmentCustomDeployInput & {
@@ -152,27 +202,7 @@ export async function appDeployCmd( arg: string[] = [], opts: Record< string, un
 	debug( 'Options: ', opts );
 	debug( 'Args: ', arg );
 
-	// Validate access to every target before touching any of them.
-	debug( 'Validating custom deploy key...' );
-	const validatedTargets: CustomDeployInfo[] = [];
-	const seenEnvIds = new Set< number >();
-	const nameTargetInErrors = targets.length > 1;
-	for ( const { app, env } of targets ) {
-		// eslint-disable-next-line no-await-in-loop
-		const validated = await validateCustomDeployKey(
-			app,
-			env,
-			nameTargetInErrors ? `${ app }.${ env }` : undefined
-		);
-		debug( 'Validated environment data: ', validated );
-
-		// The same environment can be addressed by name and by ID; deploy to it only once.
-		if ( seenEnvIds.has( validated.envId ) ) {
-			continue;
-		}
-		seenEnvIds.add( validated.envId );
-		validatedTargets.push( validated );
-	}
+	const validatedTargets = await validateDeployTargets( targets );
 
 	const isMultiTarget = validatedTargets.length > 1;
 	// The archive is uploaded once, to the first target; the API builds every target from it.
