@@ -39,3 +39,6 @@ ALTER TABLE wp_options
 	ADD KEY `autoload` (`autoload`);
 
 SET UNIQUE_CHECKS = 0;
+
+INSERT INTO wp_posts (ID, post_content) VALUES (1, 'Try our search engine = the best! ENGINE=MyISAM');
+,(2, 'mydumper continuation row with ENGINE = SPAM content')
