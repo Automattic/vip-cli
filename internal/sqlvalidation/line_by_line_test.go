@@ -133,9 +133,7 @@ func TestScanLinesResumesAfterOversizeLine(t *testing.T) {
 	}
 }
 
-// bufio.Scanner's ScanLines strips a trailing \r; Node's readline splits on
-// /\r?\n/ and does the same. CRLF dumps (Windows-authored mysqldump output)
-// must keep behaving that way after the Scanner is replaced.
+// CRLF dumps must keep behaving like Node's readline.
 func TestScanLinesStripsCarriageReturn(t *testing.T) {
 	in := strings.NewReader("one\r\ntwo\r\n")
 	var got []string
@@ -161,5 +159,33 @@ func TestScanLinesNoTrailingNewline(t *testing.T) {
 	}
 	if len(got) != 2 || got[0] != "one" || got[1] != "two" {
 		t.Errorf("got %#v, want [one two]", got)
+	}
+}
+
+func TestScanLinesMixedTerminators(t *testing.T) {
+	for _, input := range []string{"one\rtwo\rthree\n", "one\r\ntwo\rthree", "one\ntwo\r\nthree\r"} {
+		var got []string
+		err := ScanLines(strings.NewReader(input), func(line string, lineNum int) error {
+			if lineNum != len(got)+1 {
+				t.Fatalf("line number = %d", lineNum)
+			}
+			got = append(got, line)
+			return nil
+		})
+		if err != nil || strings.Join(got, ",") != "one,two,three" {
+			t.Fatalf("input=%q got=%q err=%v", input, got, err)
+		}
+	}
+}
+
+func TestScanLinesCRLFAtBufferBoundary(t *testing.T) {
+	input := strings.Repeat("x", readBufSize-1) + "\r\nlast\r"
+	var lengths []int
+	err := ScanLines(strings.NewReader(input), func(line string, _ int) error {
+		lengths = append(lengths, len(line))
+		return nil
+	})
+	if err != nil || len(lengths) != 2 || lengths[0] != readBufSize-1 || lengths[1] != 4 {
+		t.Fatalf("lengths=%v err=%v", lengths, err)
 	}
 }

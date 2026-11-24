@@ -1,0 +1,18 @@
+DROP TABLE IF EXISTS `wp_posts`;
+CREATE TABLE `wp_posts` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `description` varchar(100) DEFAULT ' ENGINE=MyISAM',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB;
+INSERT INTO wp_posts VALUES (1,' engine = MyISAM');
+/*!50001 CREATE VIEW v AS SELECT 1 */;
+/*M!100100 CREATE VIEW v2 AS SELECT 1*/;
+SET SQL_MODE='NO_BACKSLASH_ESCAPES', @v='it\'s';
+INSERT INTO wp_posts VALUES (2,'C:\');
+SET SQL_MODE='', @v='C:\';
+INSERT INTO wp_posts VALUES (3,'it\'s');
+DELIMITER $$
+SET SQL_MODE='NO_BACKSLASH_ESCAPES', SQL_MODE='', @v='it\'s'$$
+/*!50001 SELECT 1 */$$
+DELIMITER ;
+CREATE TABLE wp_more (id INT) ENGINE=InnoDB;
