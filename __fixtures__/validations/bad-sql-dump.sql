@@ -11,7 +11,7 @@ USE automatticians;
 --     lastName VARCHAR(255) NOT NULL,
 --     PRIMARY KEY (id),
 --     UNIQUE KEY (employeeNumber)
--- ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TRIGGER before_employee_update
         BEFORE UPDATE ON employees
@@ -39,3 +39,5 @@ ALTER TABLE wp_options
 	ADD KEY `autoload` (`autoload`);
 
 SET UNIQUE_CHECKS = 0;
+
+INSERT INTO wp_posts VALUES (1, 'Apps Engine => yes');

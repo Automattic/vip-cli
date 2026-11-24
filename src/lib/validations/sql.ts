@@ -383,7 +383,8 @@ const checks: Checks = {
 		recommendation: "Use search-replace to change environment's domain",
 	},
 	engineInnoDB: {
-		matcher: /\sENGINE\s?=(?!(\s?InnoDB))/i,
+		// Anchored to table definitions so "engine =" text in INSERT rows doesn't match.
+		matcher: /^\s*(\)|CREATE TABLE).*\sENGINE\s*=(?!\s*InnoDB)/i,
 		matchHandler: lineNumber => ( { lineNumber } ),
 		outputFormatter: lineNumberCheckFormatter,
 		results: [],

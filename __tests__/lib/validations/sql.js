@@ -127,7 +127,7 @@ describe( 'lib/validations/sql', () => {
 			expect( output ).toContain( 'CREATE TABLE was not found' );
 		} );
 		it( 'instances of ENGINE != InnoDB', () => {
-			expect( output ).toContain( 'ENGINE != InnoDB on line(s) 14' );
+			expect( output ).toContain( 'ENGINE != InnoDB on line(s) 14.' );
 		} );
 		it( 'use statement should be ok', () => {
 			expect( output ).not.toContain(
