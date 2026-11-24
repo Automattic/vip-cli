@@ -270,11 +270,9 @@ func allChecks() []*Check {
 			Formatter:      FormatterGeneral,
 			MatchHandler:   handlerSiteHomeURLLando,
 		},
-		// sql.ts:370-380 — engineInnoDB
-		//   /\sENGINE\s?=(?!(\s?InnoDB))/i  — has negative lookahead, NOT
-		//   supported by RE2. Express the same intent with two-step matching:
-		//   match ENGINE= then check the following token is NOT 'InnoDB'.
-		//   See engineInnoDBMatcher below for the override.
+		// sql.ts:385-396 — engineInnoDB
+		//   /^\s*(\)|CREATE TABLE).*\sENGINE\s*=(?!\s*InnoDB)/i  — has negative
+		//   lookahead, NOT supported by RE2. See engineInnoDBMatch below.
 		{
 			Key:     "engineInnoDB",
 			Matcher: nil, // sentinel: dispatch uses engineInnoDBMatch directly
@@ -365,22 +363,22 @@ func handlerSiteHomeURLLando(lineNum int, matches []string, expectedDomain strin
 	}
 }
 
-// engineInnoDBHasMatch checks whether a line should be flagged as
-// non-InnoDB. Replicates Node's /\sENGINE\s?=(?!(\s?InnoDB))/i which uses
-// a negative lookahead RE2 cannot express. We approximate: find every
-// `<space>ENGINE<optional space>=` occurrence and inspect what follows.
-var engineInnoDBPrefix = regexp.MustCompile(`(?i)\sENGINE\s?=`)
+// engineInnoDBMatch checks whether a line should be flagged as non-InnoDB.
+// Replicates Node's /^\s*(\)|CREATE TABLE).*\sENGINE\s*=(?!\s*InnoDB)/i,
+// whose negative lookahead RE2 cannot express: on a table-definition line,
+// flag any ENGINE= whose value does not start with InnoDB. The anchor keeps
+// "engine =" text inside INSERT row data from matching.
+var (
+	engineTableDefinition = regexp.MustCompile(`(?i)^\s*(\)|CREATE TABLE)`)
+	engineValue           = regexp.MustCompile(`(?i)\sENGINE\s*=\s*(\w*)`)
+)
 
 func engineInnoDBMatch(line string) bool {
-	indexes := engineInnoDBPrefix.FindAllStringIndex(line, -1)
-	for _, idx := range indexes {
-		tail := line[idx[1]:]
-		// Node's negative lookahead: NOT followed by (optional space + "InnoDB")
-		trimmed := tail
-		if len(trimmed) > 0 && trimmed[0] == ' ' {
-			trimmed = trimmed[1:]
-		}
-		if !strings.HasPrefix(strings.ToLower(trimmed), "innodb") {
+	if !engineTableDefinition.MatchString(line) {
+		return false
+	}
+	for _, m := range engineValue.FindAllStringSubmatch(line, -1) {
+		if !strings.HasPrefix(strings.ToLower(m[1]), "innodb") {
 			return true
 		}
 	}

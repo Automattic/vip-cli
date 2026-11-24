@@ -133,6 +133,14 @@ func TestValidateEngineInnoDB(t *testing.T) {
 	if len(c.Results) != 0 {
 		t.Errorf("engineInnoDB case-insensitive: got %d results, want 0", len(c.Results))
 	}
+
+	// "engine =" text in INSERT row data is not a table definition.
+	in = strings.NewReader("INSERT INTO wp_posts VALUES (1, 'Apps Engine => yes');\n")
+	res, _ = Validate(in)
+	c = findCheck(t, res, "engineInnoDB")
+	if len(c.Results) != 0 {
+		t.Errorf("engineInnoDB INSERT row data: got %d results, want 0", len(c.Results))
+	}
 }
 
 func TestValidateAutoIncrement(t *testing.T) {
