@@ -384,7 +384,7 @@ const checks: Checks = {
 	},
 	engineInnoDB: {
 		// Anchored to table definitions so "engine =" text in INSERT rows doesn't match.
-		matcher: /^(\)|CREATE TABLE).*\sENGINE\s*=(?!\s*InnoDB)/i,
+		matcher: /^\s*(\)|CREATE TABLE).*\sENGINE\s*=(?!\s*InnoDB)/i,
 		matchHandler: lineNumber => ( { lineNumber } ),
 		outputFormatter: lineNumberCheckFormatter,
 		results: [],
