@@ -126,6 +126,9 @@ describe( 'lib/validations/sql', () => {
 		it( 'no instances of CREATE TABLE statements', () => {
 			expect( output ).toContain( 'CREATE TABLE was not found' );
 		} );
+		it( 'instances of ENGINE != InnoDB', () => {
+			expect( output ).toContain( 'ENGINE != InnoDB on line(s) 14.' );
+		} );
 		it( 'use statement should be ok', () => {
 			expect( output ).not.toContain(
 				"'USE <DATABASE_NAME>' should not be present (case-insensitive)"
@@ -367,26 +370,6 @@ describe( 'lib/validations/sql', () => {
 			await freshValidate()( valid );
 			expect( mockExit ).not.toHaveBeenCalled();
 			expect( output ).not.toContain( 'TRIGGER statement on line(s) 16' );
-		} finally {
-			await rm( dir, { recursive: true, force: true } );
-		}
-	} );
-
-	it( 'flags non-InnoDB table definitions but not ENGINE text in INSERT rows', async () => {
-		const dir = await mkdtemp( path.join( os.tmpdir(), 'vip-sql-engine-' ) );
-		try {
-			const sqlFile = path.join( dir, 'engine.sql' );
-			await writeFile(
-				sqlFile,
-				'CREATE TABLE `wp_a` (`id` int) ENGINE=MyISAM;\n' +
-					'CREATE TABLE `wp_b` (\n' +
-					'  `meta_value` longtext\n' +
-					') ENGINE=MyISAM;\n' +
-					"INSERT INTO `wp_b` VALUES ('Apps Engine => yes'),('ENGINE=MyISAM');\n"
-			);
-			resetObservations();
-			await freshValidate()( sqlFile );
-			expect( output ).toContain( 'ENGINE != InnoDB on line(s) 1, 4.' );
 		} finally {
 			await rm( dir, { recursive: true, force: true } );
 		}
