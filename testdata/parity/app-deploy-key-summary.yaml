@@ -1,0 +1,22 @@
+name: app-deploy-key-summary
+description: |
+  The deploy token covers production but not develop. Both environments are
+  checked, and the deploy stops before any upload with a summary of which
+  environments the key was validated for. Exit 1.
+argv: ["app", "deploy", "../../testdata/parity/recordings/app-deploy-validate/clean.tar.gz", "--to=parityapp.develop,parityapp.production"]
+env:
+  DO_NOT_TRACK: "1"
+  NODE_ENV: test
+  NO_COLOR: "1"
+  WPVIP_DEPLOY_TOKEN: "deploy-tok"
+expect:
+  exit_code: 1
+expected_drift:
+  signature: "ce18508baeb8fb3b3d84bfca707d1b9e13df14896bf77b204524ef265426bcf8"
+  reason: >-
+    parity register 1.10 (KEEP): vip-next emits a clean one-line error on
+    stderr; Node adds a second space after Error and a runtime Debug line on
+    stdout.
+normalize:
+  stdout:
+    - '(?m)^Debug:.*$ -> Debug: <RUNTIME>'

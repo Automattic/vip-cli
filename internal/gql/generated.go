@@ -1084,8 +1084,10 @@ func (v *AppEnvironmentAbortMediaImportInput) GetEnvironmentId() int64 { return 
 type AppEnvironmentCustomDeployInput struct {
 	// The application ID, when required by the caller.
 	Id *int64 `json:"id"`
-	// The environment ID to deploy to.
+	// Deprecated: use `environmentIds`. The environment ID to deploy to.
 	EnvironmentId *int64 `json:"environmentId"`
+	// The environment IDs to deploy to. Takes precedence over `environmentId` when provided.
+	EnvironmentIds []int64 `json:"environmentIds"`
 	// The deployment artifact filename.
 	Basename *string `json:"basename"`
 	// The checksum of the deployment artifact.
@@ -1099,6 +1101,9 @@ func (v *AppEnvironmentCustomDeployInput) GetId() *int64 { return v.Id }
 
 // GetEnvironmentId returns AppEnvironmentCustomDeployInput.EnvironmentId, and is useful for accessing the field via an interface.
 func (v *AppEnvironmentCustomDeployInput) GetEnvironmentId() *int64 { return v.EnvironmentId }
+
+// GetEnvironmentIds returns AppEnvironmentCustomDeployInput.EnvironmentIds, and is useful for accessing the field via an interface.
+func (v *AppEnvironmentCustomDeployInput) GetEnvironmentIds() []int64 { return v.EnvironmentIds }
 
 // GetBasename returns AppEnvironmentCustomDeployInput.Basename, and is useful for accessing the field via an interface.
 func (v *AppEnvironmentCustomDeployInput) GetBasename() *string { return v.Basename }

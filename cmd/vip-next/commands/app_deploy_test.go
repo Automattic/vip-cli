@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -16,6 +17,8 @@ import (
 	"testing"
 
 	"github.com/Khan/genqlient/graphql"
+	"github.com/spf13/cobra"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
 // deployStub serves ValidateCustomDeployAccess + StartCustomDeploy +
@@ -27,8 +30,12 @@ type deployStub struct {
 	startReq      string
 	uploadedBody  []byte
 	validateFails bool
+	rejectEnv     string // reject validation only for this env
 	srvURL        string
+	uploadCount   int
 }
+
+const parkerAccessDenied = `{"data":{"validateCustomDeployAccess":null},"errors":[{"message":"You cannot perform this action in this session","extensions":{"code":"access-denied"}}]}`
 
 func (s *deployStub) start(t *testing.T) *httptest.Server {
 	t.Helper()
@@ -45,10 +52,15 @@ func (s *deployStub) start(t *testing.T) *httptest.Server {
 		case strings.Contains(bs, `"operationName":"ValidateCustomDeployAccess"`):
 			s.mu.Lock()
 			s.validateAuth = r.Header.Get("Authorization")
-			fails := s.validateFails
+			fails := s.validateFails || (s.rejectEnv != "" && strings.Contains(bs, `"env":"`+s.rejectEnv+`"`))
 			s.mu.Unlock()
 			if fails {
-				_, _ = w.Write([]byte(`{"data":null,"errors":[{"message":"Not found"}]}`))
+				_, _ = w.Write([]byte(parkerAccessDenied))
+				return
+			}
+			if strings.Contains(bs, `"env":"production"`) {
+				_, _ = w.Write([]byte(`{"data":{"validateCustomDeployAccess":{"success":true,"appId":42,"envId":8,
+				"envType":"production","envUniqueLabel":"production","primaryDomainName":"prod.example.com","launched":true}}}`))
 				return
 			}
 			_, _ = w.Write([]byte(`{"data":{"validateCustomDeployAccess":{"success":true,"appId":42,"envId":7,
@@ -70,6 +82,7 @@ func (s *deployStub) start(t *testing.T) *httptest.Server {
 		body, _ := io.ReadAll(r.Body)
 		s.mu.Lock()
 		s.uploadedBody = body
+		s.uploadCount++
 		s.mu.Unlock()
 		w.WriteHeader(http.StatusOK)
 	})
@@ -154,7 +167,7 @@ func TestAppDeployInvalidKey(t *testing.T) {
 	cmd.SetErr(io.Discard)
 
 	err := runAppDeploy(cmd, []string{deployArchive(t, "rel.tar.gz")})
-	if err == nil || err.Error() != "Unauthorized: Invalid or non-existent custom deploy key for environment." {
+	if err == nil || err.Error() != "You cannot perform this action in this session" {
 		t.Errorf("err = %v", err)
 	}
 }
@@ -293,5 +306,160 @@ func TestAppDeployValidateMissingThemes(t *testing.T) {
 	err := runAppDeployValidate(cmd, []string{p})
 	if err == nil || !strings.Contains(err.Error(), "Missing `themes` directory from root folder.") {
 		t.Errorf("err = %v", err)
+	}
+}
+
+func TestParseDeployTargets(t *testing.T) {
+	cases := []struct {
+		name     string
+		to       []string
+		app, env string
+		want     []deployTarget
+		wantErr  string
+	}{
+		{name: "no --to falls back to --app/--env", app: "myapp", env: "develop",
+			want: []deployTarget{{app: "myapp", env: "develop"}}},
+		{name: "repeated, comma-separated, duplicate", to: []string{"Example-App.production", "other-app.develop,example-app.production"},
+			want: []deployTarget{{app: "example-app", env: "production"}, {app: "other-app", env: "develop"}}},
+		{name: "instance suffix", to: []string{"app.develop.instance-01"},
+			want: []deployTarget{{app: "app", env: "develop.instance-01"}}},
+		{name: "missing env", to: []string{"example-app"}, wantErr: deployTargetFormatError},
+		{name: "missing app", to: []string{".develop"}, wantErr: deployTargetFormatError},
+		{name: "trailing dot", to: []string{"example-app."}, wantErr: deployTargetFormatError},
+		{name: "bad chars", to: []string{"app/x.develop"}, wantErr: deployTargetFormatError},
+		{name: "empty", to: []string{""}, wantErr: deployTargetFormatError},
+		{name: "conflict with --app", to: []string{"a.develop"}, app: "x", wantErr: deployTargetConflictError},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			cmd := AppDeployCmd()
+			if tc.app != "" {
+				_ = cmd.Flags().Set("app", tc.app)
+			}
+			if tc.env != "" {
+				_ = cmd.Flags().Set("env", tc.env)
+			}
+			for _, v := range tc.to {
+				_ = cmd.Flags().Set("to", v)
+			}
+			got, err := parseDeployTargets(cmd)
+			if tc.wantErr != "" {
+				if err == nil || err.Error() != tc.wantErr {
+					t.Fatalf("err = %v, want %q", err, tc.wantErr)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatal(err)
+			}
+			if fmt.Sprint(got) != fmt.Sprint(tc.want) {
+				t.Errorf("got %+v, want %+v", got, tc.want)
+			}
+		})
+	}
+}
+
+// newMultiTargetDeploy wires a stub API, a deploy token, and a command with
+// the given --to values.
+func newMultiTargetDeploy(t *testing.T, stub *deployStub, to ...string) (*cobra.Command, *bytes.Buffer) {
+	t.Helper()
+	out := newDeployCmd(stub, t)
+	t.Setenv("WPVIP_DEPLOY_TOKEN", "deploy-tok")
+	cmd := AppDeployCmd()
+	cmd.SetContext(context.Background())
+	for _, v := range to {
+		_ = cmd.Flags().Set("to", v)
+	}
+	cmd.SetOut(out)
+	cmd.SetErr(io.Discard)
+	return cmd, out
+}
+
+func TestAppDeployMultiTargetSingleUploadAndEnvironmentIds(t *testing.T) {
+	stub := &deployStub{}
+	cmd, out := newMultiTargetDeploy(t, stub, "myapp.develop", "myapp.production")
+	_ = cmd.Flags().Set("skip-confirmation", "true")
+
+	if err := runAppDeploy(cmd, []string{deployArchive(t, "rel.tar.gz")}); err != nil {
+		t.Fatalf("runAppDeploy: %v\nout: %s", err, out.String())
+	}
+	stub.mu.Lock()
+	defer stub.mu.Unlock()
+	if stub.uploadCount != 1 {
+		t.Errorf("uploads = %d, want 1", stub.uploadCount)
+	}
+	if !strings.Contains(stub.startReq, `"environmentIds":[7,8]`) || !strings.Contains(stub.startReq, `"environmentId":null`) {
+		t.Errorf("start input = %s", stub.startReq)
+	}
+	for _, want := range []string{
+		"has been sent for deployment to 2 environments.",
+		"example.com: https://dashboard.wpvip.com/apps/42/develop/code/deployments",
+		"prod.example.com: https://dashboard.wpvip.com/apps/42/production/code/deployments",
+	} {
+		if !strings.Contains(out.String(), want) {
+			t.Errorf("out missing %q:\n%s", want, out.String())
+		}
+	}
+}
+
+func TestAppDeploySingleTargetKeepsEnvironmentId(t *testing.T) {
+	stub := &deployStub{}
+	// Two names for the same environment collapse to one deploy.
+	cmd, _ := newMultiTargetDeploy(t, stub, "myapp.develop", "42.develop")
+	_ = cmd.Flags().Set("skip-confirmation", "true")
+
+	if err := runAppDeploy(cmd, []string{deployArchive(t, "rel.tar.gz")}); err != nil {
+		t.Fatalf("runAppDeploy: %v", err)
+	}
+	stub.mu.Lock()
+	defer stub.mu.Unlock()
+	if !strings.Contains(stub.startReq, `"environmentId":7`) || !strings.Contains(stub.startReq, `"environmentIds":null`) {
+		t.Errorf("start input = %s", stub.startReq)
+	}
+}
+
+func TestAppDeployMultiTargetRejectedConfirmationDeploysNothing(t *testing.T) {
+	stub := &deployStub{}
+	cmd, _ := newMultiTargetDeploy(t, stub, "myapp.develop", "myapp.production")
+	restore := stubImportPrompts("WRONG.DOMAIN", true)
+	defer restore()
+
+	err := runAppDeploy(cmd, []string{deployArchive(t, "rel.tar.gz")})
+	if err == nil || !strings.Contains(err.Error(), "Deploy aborted.") {
+		t.Errorf("err = %v", err)
+	}
+	stub.mu.Lock()
+	defer stub.mu.Unlock()
+	if stub.uploadCount != 0 || stub.startReq != "" {
+		t.Errorf("uploads=%d start=%q; want nothing", stub.uploadCount, stub.startReq)
+	}
+}
+
+func TestAppDeployMultiTargetSummarizesKeyValidation(t *testing.T) {
+	stub := &deployStub{rejectEnv: "develop"}
+	cmd, _ := newMultiTargetDeploy(t, stub, "myapp.develop", "myapp.production")
+
+	err := runAppDeploy(cmd, []string{deployArchive(t, "rel.tar.gz")})
+	want := "The deploy key could not be validated for 1 of 2 environments:\n" +
+		"  ✕ myapp.develop: You cannot perform this action in this session\n" +
+		"  ✓ myapp.production"
+	if err == nil || err.Error() != want {
+		t.Fatalf("err = %v\nwant %s", err, want)
+	}
+	stub.mu.Lock()
+	defer stub.mu.Unlock()
+	if stub.uploadCount != 0 || stub.startReq != "" {
+		t.Errorf("uploads=%d start=%q; want nothing", stub.uploadCount, stub.startReq)
+	}
+}
+
+func TestDeployKeyError(t *testing.T) {
+	list := gqlerror.List{{Message: "first"}, {Message: "second"}}
+	if got := deployKeyError(list).Error(); got != "first; second" {
+		t.Errorf("GraphQL errors = %q", got)
+	}
+	network := errors.New("dial tcp: connection refused")
+	if got := deployKeyError(network); got != network {
+		t.Errorf("network error = %v, want it unchanged", got)
 	}
 }

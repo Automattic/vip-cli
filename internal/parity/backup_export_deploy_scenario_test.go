@@ -55,11 +55,12 @@ func m7cMux(t *testing.T, recordingDir string) (http.Handler, func(op string) in
 	}
 
 	hits := map[string]*int32{
-		"TriggerDatabaseBackup": new(int32),
-		"BackupDBCopy":          new(int32),
-		"StartCustomDeploy":     new(int32),
-		"backupStatus":          new(int32),
-		"exportStatus":          new(int32),
+		"TriggerDatabaseBackup":  new(int32),
+		"BackupDBCopy":           new(int32),
+		"StartCustomDeploy":      new(int32),
+		"StartCustomDeployMulti": new(int32),
+		"backupStatus":           new(int32),
+		"exportStatus":           new(int32),
 	}
 
 	var srvURL atomic.Value
@@ -89,10 +90,15 @@ func m7cMux(t *testing.T, recordingDir string) (http.Handler, func(op string) in
 		case strings.Contains(s, `"operationName":"GenerateDBBackupCopyUrl"`):
 			u, _ := srvURL.Load().(string)
 			serve(w, []byte(`{"data":{"generateDBBackupCopyUrl":{"url":"`+u+`/download","success":true}}}`))
+		case strings.Contains(s, `"operationName":"ValidateCustomDeployAccess"`) && strings.Contains(s, `"env":"production"`):
+			serve(w, []byte(`{"data":{"validateCustomDeployAccess":{"success":true,"appId":42,"envId":8,"envType":"production","envUniqueLabel":"production","primaryDomainName":"prod.example.com","launched":true}}}`))
 		case strings.Contains(s, `"operationName":"ValidateCustomDeployAccess"`):
 			serve(w, []byte(`{"data":{"validateCustomDeployAccess":{"success":true,"appId":42,"envId":7,"envType":"develop","envUniqueLabel":"develop","primaryDomainName":"example.com","launched":false}}}`))
 		case strings.Contains(s, `"operationName":"StartCustomDeploy"`):
 			atomic.AddInt32(hits["StartCustomDeploy"], 1)
+			if strings.Contains(s, `"environmentIds":[7,8]`) {
+				atomic.AddInt32(hits["StartCustomDeployMulti"], 1)
+			}
 			serve(w, []byte(`{"data":{"startCustomDeploy":{"success":true,"message":"queued"}}}`))
 		default:
 			serve(w, nil)
@@ -270,6 +276,15 @@ func TestM7cScenarios(t *testing.T) {
 				if !strings.Contains(combined, "has been sent for deployment to example.com.") ||
 					!strings.Contains(combined, "https://dashboard.wpvip.com/apps/42/develop/code/deployments") {
 					t.Errorf("missing success block:\n%s", combined)
+				}
+			case "app-deploy-multi-target-completed":
+				if opHits("StartCustomDeploy") != 1 || opHits("StartCustomDeployMulti") != 1 {
+					t.Errorf("StartCustomDeploy hits = %d (multi %d), want 1 call with environmentIds [7,8]",
+						opHits("StartCustomDeploy"), opHits("StartCustomDeployMulti"))
+				}
+				if !strings.Contains(combined, "has been sent for deployment to 2 environments.") ||
+					!strings.Contains(combined, "https://dashboard.wpvip.com/apps/42/production/code/deployments") {
+					t.Errorf("missing multi-target success block:\n%s", combined)
 				}
 			case "app-deploy-validate-clean":
 				if !strings.Contains(combined, "✓ Compressed file has been successfully validated with no errors.") {

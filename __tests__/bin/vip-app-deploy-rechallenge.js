@@ -54,13 +54,15 @@ describe( 'vip app deploy rechallenge smoke', () => {
 			validateFile: jest.fn().mockResolvedValue( true ),
 			validateLargeArchiveFiles: jest.fn().mockResolvedValue( true ),
 			promptToContinue: jest.fn().mockResolvedValue( true ),
-			validateCustomDeployKey: jest.fn().mockResolvedValue( {
-				appId: 123,
-				envId: 456,
-				envType: 'develop',
-				envUniqueLabel: 'develop',
-				primaryDomainName: 'example.com/develop',
-				launched: false,
+			checkCustomDeployKey: jest.fn().mockResolvedValue( {
+				info: {
+					appId: 123,
+					envId: 456,
+					envType: 'develop',
+					envUniqueLabel: 'develop',
+					primaryDomainName: 'example.com/develop',
+					launched: false,
+				},
 			} ),
 		} ) );
 

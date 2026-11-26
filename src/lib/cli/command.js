@@ -306,6 +306,12 @@ export function uncaughtError( err ) {
 	if ( err instanceof UserError ) {
 		exit.withError( err );
 	}
+	// Ctrl+C at an enquirer prompt on Node >= 24: enquirer's cleanup pauses a
+	// readline interface Node has already closed, which now throws instead of
+	// being a no-op (see src/lib/wp/readline.ts). The user cancelled; it is not a crash.
+	if ( readDiagnosticProperty( err, 'code' ) === 'ERR_USE_AFTER_CLOSE' ) {
+		exit.withError( 'Command cancelled by user.' );
+	}
 
 	console.log( chalk.red( '✕' ), 'Please contact VIP Support with the following information:' );
 	console.log( chalk.dim( formatFatalError( err ) ) );

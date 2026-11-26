@@ -11,9 +11,11 @@ import (
 	"github.com/Khan/genqlient/graphql"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 
 	"github.com/Automattic/vip/internal/customdeploy"
 	"github.com/Automattic/vip/internal/debuglog"
+	"github.com/Automattic/vip/internal/envalias"
 	"github.com/Automattic/vip/internal/gql"
 	"github.com/Automattic/vip/internal/tui"
 	"github.com/Automattic/vip/internal/upload"
@@ -41,7 +43,135 @@ func AppDeployCmd() *cobra.Command {
 	cmd.Flags().BoolP("skip-confirmation", "s", false, "Skip the confirmation prompt.")
 	cmd.Flags().BoolP("force", "f", false, "Skip confirmation prompt (deprecated)")
 	addAppEnvFlags(cmd)
+	cmd.Flags().StringArrayP("to", "t", nil,
+		"Deploy to an environment in the format app-name.environment-name. Repeat the option or separate values with commas to deploy to multiple environments.")
+	cmd.Example = "  WPVIP_DEPLOY_TOKEN=1234 vip app deploy file.tar.gz --to=example-app.production --to=other-app.develop\n" +
+		"  WPVIP_DEPLOY_TOKEN=1234 vip app deploy file.tar.gz --to=example-app.production,other-app.develop"
 	return cmd
+}
+
+var errInvalidDeployKey = errors.New("Unauthorized: Invalid or non-existent custom deploy key for environment.")
+
+// deployKeyError keeps the API's own message for a failed
+// validateCustomDeployAccess call. Ports describeCustomDeployKeyError
+// (custom-deploy.ts).
+func deployKeyError(err error) error {
+	var list gqlerror.List
+	if !errors.As(err, &list) || len(list) == 0 {
+		return err
+	}
+	messages := make([]string, len(list))
+	for i, item := range list {
+		messages[i] = item.Message
+	}
+	return errors.New(strings.Join(messages, "; "))
+}
+
+// deployKeyCheck is the result of checking the deploy key against one target.
+type deployKeyCheck struct {
+	label string
+	info  *customdeploy.DeployInfo
+	err   error
+}
+
+// validateDeployTargets ports validateDeployTargets (vip-app-deploy.ts): it
+// checks the deploy key against every target before touching any of them and,
+// if any is rejected, fails with a per-environment summary. The same
+// environment addressed twice (name and ID) is returned once. The API enforces
+// deploy-key access on its own; see validateCustomDeployKey.
+func validateDeployTargets(ctx context.Context, client graphql.Client, targets []deployTarget) ([]*customdeploy.DeployInfo, error) {
+	checks := make([]deployKeyCheck, len(targets))
+	var firstErr error
+	for i, t := range targets {
+		info, err := validateCustomDeployKey(ctx, client, t.app, t.env)
+		checks[i] = deployKeyCheck{label: t.label(), info: info, err: err}
+		if err != nil && firstErr == nil {
+			firstErr = err
+		}
+	}
+	if firstErr != nil {
+		if len(targets) == 1 {
+			return nil, firstErr
+		}
+		return nil, errors.New(formatDeployKeySummary(checks))
+	}
+
+	var infos []*customdeploy.DeployInfo
+	seenEnvIDs := map[int64]bool{}
+	for _, c := range checks {
+		if !seenEnvIDs[c.info.EnvID] {
+			seenEnvIDs[c.info.EnvID] = true
+			infos = append(infos, c.info)
+		}
+	}
+	return infos, nil
+}
+
+// formatDeployKeySummary ports formatDeployKeySummary (vip-app-deploy.ts).
+func formatDeployKeySummary(checks []deployKeyCheck) string {
+	failed := 0
+	lines := make([]string, len(checks))
+	for i, c := range checks {
+		if c.err != nil {
+			failed++
+			lines[i] = fmt.Sprintf("  ✕ %s: %s", c.label, c.err.Error())
+		} else {
+			lines[i] = "  ✓ " + c.label
+		}
+	}
+	return fmt.Sprintf("The deploy key could not be validated for %d of %d environments:\n%s",
+		failed, len(checks), strings.Join(lines, "\n"))
+}
+
+const (
+	deployTargetFormatError   = "Invalid --to value. Targets are in the format of app-name.environment-name (e.g. example-app.production)."
+	deployTargetConflictError = "The --to option cannot be used with --app, --env, or an @app.env alias."
+)
+
+// deployTarget is one environment named on the command line.
+type deployTarget struct {
+	app, env string
+}
+
+func (t deployTarget) label() string { return t.app + "." + t.env }
+
+// parseDeployTargets ports parseDeployTargets (vip-app-deploy.ts). Without
+// --to the single --app/--env (or @app.env alias) pair is used.
+func parseDeployTargets(cmd *cobra.Command) ([]deployTarget, error) {
+	appFlag := lookupRootFlag(cmd, "app")
+	envFlag := lookupRootFlag(cmd, "env")
+
+	f := cmd.Flags().Lookup("to")
+	if f == nil || !f.Changed {
+		return []deployTarget{{app: appFlag, env: envFlag}}, nil
+	}
+	if appFlag != "" || envFlag != "" {
+		return nil, errors.New(deployTargetConflictError)
+	}
+
+	raw, _ := cmd.Flags().GetStringArray("to")
+	var targets []deployTarget
+	seen := map[string]bool{}
+	for _, value := range raw {
+		for _, part := range strings.Split(value, ",") {
+			// Same grammar as the @app.env alias, minus the "@".
+			app, env, ok := envalias.Parse("@" + strings.TrimSpace(part))
+			if !ok || app == "" || env == "" {
+				return nil, errors.New(deployTargetFormatError)
+			}
+			t := deployTarget{app: app, env: env}
+			if seen[t.label()] {
+				continue
+			}
+			seen[t.label()] = true
+			targets = append(targets, t)
+		}
+	}
+	// pflag reads `--to=""` back as an empty array, so no part was checked.
+	if len(targets) == 0 {
+		return nil, errors.New(deployTargetFormatError)
+	}
+	return targets, nil
 }
 
 // deployGQLClient builds a genqlient client that authenticates with the
@@ -52,13 +182,20 @@ func deployGQLClient(cfg Config, deployToken string) graphql.Client {
 	return graphql.NewClient(cfg.APIHost+"/graphql", httpClient)
 }
 
-// validateCustomDeployKey ports validateCustomDeployKey
-// (custom-deploy.ts:28).
+// validateCustomDeployKey ports checkCustomDeployKey (custom-deploy.ts).
+//
+// This is not the access check that protects an environment: the API validates
+// the deploy key again for every environment when the deploy starts.
+// Checking here lets the CLI fail before the upload with a clear message for
+// each environment, and returns the IDs and domain the rest of the command needs.
 func validateCustomDeployKey(ctx context.Context, client graphql.Client, app, env string) (*customdeploy.DeployInfo, error) {
 	resp, err := gql.ValidateCustomDeployAccess(gql.WithAllowGQLErrors(ctx), client,
 		&gql.ValidateCustomDeployAccessInput{App: app, Env: env})
-	if err != nil || resp == nil || resp.ValidateCustomDeployAccess == nil {
-		return nil, errors.New("Unauthorized: Invalid or non-existent custom deploy key for environment.")
+	if err != nil {
+		return nil, deployKeyError(err)
+	}
+	if resp == nil || resp.ValidateCustomDeployAccess == nil {
+		return nil, errInvalidDeployKey
 	}
 	v := resp.ValidateCustomDeployAccess
 	info := &customdeploy.DeployInfo{}
@@ -93,6 +230,11 @@ func runAppDeploy(cmd *cobra.Command, args []string) error {
 	force, _ := cmd.Flags().GetBool("force")
 	skipConfirm := skipConfirmation || force
 
+	targets, err := parseDeployTargets(cmd)
+	if err != nil {
+		return err
+	}
+
 	meta, err := upload.GetFileMeta(fileName)
 	if err != nil {
 		return fmt.Errorf("Unable to access file %s", fileName)
@@ -105,14 +247,16 @@ func runAppDeploy(cmd *cobra.Command, args []string) error {
 		return errors.New("Valid custom deploy key is required.")
 	}
 
-	appFlag := lookupRootFlag(cmd, "app")
-	envFlag := lookupRootFlag(cmd, "env")
-
 	client := deployGQLClient(cfg, deployToken)
-	info, err := validateCustomDeployKey(cmd.Context(), client, appFlag, envFlag)
+
+	infos, err := validateDeployTargets(cmd.Context(), client, targets)
 	if err != nil {
 		return err
 	}
+	multi := len(infos) > 1
+	// The archive is uploaded once, to the first target; the API builds
+	// every target from it (vip-go-api#8478).
+	info := infos[0]
 
 	debuglog.Printf(cmd.Context(), "@automattic/vip:bin:vip-app-deploy", "Validating file...")
 	if err := customdeploy.ValidateFile(meta, 0); err != nil {
@@ -120,29 +264,40 @@ func runAppDeploy(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	trackEvent("deploy_app_command_execute", nil)
+	// One event per environment, matching Node's per-target tracking.
+	for range infos {
+		trackEvent("deploy_app_command_execute", nil)
+	}
 
 	// Date-prefix the basename to avoid overwriting same-named files
 	// (vip-app-deploy.ts:101-106).
 	datePrefix := time.Now().UTC().Format("20060102150405")
 	meta.BaseName = datePrefix + "-" + meta.BaseName
 
+	// Confirm every target up front so nothing deploys unless all are confirmed.
 	if !skipConfirm {
-		launchedLabel := "un-launched"
-		if info.Launched {
-			launchedLabel = "launched"
+		for _, ti := range infos {
+			launchedLabel := "un-launched"
+			if ti.Launched {
+				launchedLabel = "launched"
+			}
+			promptToMatch := strings.ToUpper(ti.PrimaryDomainName)
+			// vip-app-deploy.ts:66 — note "site" wording and "un-launched"
+			// (hyphenated, unlike import sql's "unlaunched").
+			promptMsg := fmt.Sprintf("You are about to deploy to a %s %s site %s.\nType '%s' (without the quotes) to continue:\n",
+				launchedLabel, formatEnvironment(ti.EnvType),
+				color.YellowString(ti.PrimaryDomainName), color.YellowString(promptToMatch))
+			answer, perr := importInputPrompt(cmd, promptMsg, "")
+			if perr != nil || strings.ToUpper(answer) != promptToMatch {
+				trackEvent("deploy_app_unexpected_input", nil)
+				return errors.New("The input did not match the expected environment label. Deploy aborted.")
+			}
 		}
-		promptToMatch := strings.ToUpper(info.PrimaryDomainName)
-		// vip-app-deploy.ts:66 — note "site" wording and "un-launched"
-		// (hyphenated, unlike import sql's "unlaunched").
-		promptMsg := fmt.Sprintf("You are about to deploy to a %s %s site %s.\nType '%s' (without the quotes) to continue:\n",
-			launchedLabel, formatEnvironment(info.EnvType),
-			color.YellowString(info.PrimaryDomainName), color.YellowString(promptToMatch))
-		answer, perr := importInputPrompt(cmd, promptMsg, "")
-		if perr != nil || strings.ToUpper(answer) != promptToMatch {
-			trackEvent("deploy_app_unexpected_input", nil)
-			return errors.New("The input did not match the expected environment label. Deploy aborted.")
-		}
+	}
+
+	destination := "your environment"
+	if multi {
+		destination = fmt.Sprintf("%d environments", len(infos))
 	}
 
 	// ===== progress phase; no stray prints below (js:122 WARNING) =====
@@ -150,7 +305,7 @@ func runAppDeploy(cmd *cobra.Command, args []string) error {
 		{ID: "upload", Name: "Uploading file"},
 		{ID: "deploy", Name: "Triggering deployment"},
 	})
-	pt.SetPrefix("\n=============================================================\nProcessing the file for deployment to your environment...\n")
+	pt.SetPrefix("\n=============================================================\nProcessing the file for deployment to " + destination + "...\n")
 	pt.SetSuffix("\n" + tui.GlyphForStatus(tui.StepRunning, tui.SpinnerGlyphs[0]) + " Running...")
 	renderer := startImportProgressRenderer(cmd, pt)
 	defer renderer.stop(cmd, false)
@@ -183,10 +338,17 @@ func runAppDeploy(cmd *cobra.Command, args []string) error {
 	checksum := res.Checksum
 	input := &gql.AppEnvironmentCustomDeployInput{
 		Id:            &info.AppID,
-		EnvironmentId: &info.EnvID,
 		Basename:      &basename,
 		Checksum:      &checksum,
 		DeployMessage: &message,
+	}
+	// Single-target deploys keep the original environmentId contract.
+	if multi {
+		for _, ti := range infos {
+			input.EnvironmentIds = append(input.EnvironmentIds, ti.EnvID)
+		}
+	} else {
+		input.EnvironmentId = &info.EnvID
 	}
 	if _, err := gql.StartCustomDeploy(gql.WithAllowGQLErrors(cmd.Context()), client, input); err != nil {
 		trackEvent("deploy_app_command_error", map[string]any{"error_type": "StartDeploy-failed"})
@@ -197,13 +359,25 @@ func runAppDeploy(cmd *cobra.Command, args []string) error {
 	pt.SetSuffix("")
 	renderer.stop(cmd, true)
 
-	// Final success block (vip-app-deploy.ts:240-249).
-	deploymentsURL := fmt.Sprintf("https://dashboard.wpvip.com/apps/%d/%s/code/deployments", info.AppID, info.EnvUniqueLabel)
-	fmt.Fprintf(out, "\n✅ %s has been sent for deployment to %s. \nTo check deployment status, go to %s: %s\n",
+	// Final success block (vip-app-deploy.ts).
+	deploymentsURL := func(ti *customdeploy.DeployInfo) string {
+		return fmt.Sprintf("https://dashboard.wpvip.com/apps/%d/%s/code/deployments", ti.AppID, ti.EnvUniqueLabel)
+	}
+	domainColor := color.New(color.Bold, color.FgBlue)
+	sentTo := destination
+	links := ": " + deploymentsURL(info)
+	if multi {
+		var lines []string
+		for _, ti := range infos {
+			lines = append(lines, fmt.Sprintf("  - %s: %s", domainColor.Sprint(ti.PrimaryDomainName), deploymentsURL(ti)))
+		}
+		links = ":\n" + strings.Join(lines, "\n")
+	} else {
+		sentTo = domainColor.Sprint(info.PrimaryDomainName)
+	}
+	fmt.Fprintf(out, "\n✅ %s has been sent for deployment to %s. \nTo check deployment status, go to %s%s\n",
 		color.New(color.Bold, color.Underline, color.FgMagenta).Sprint(meta.BaseName),
-		color.New(color.Bold, color.FgBlue).Sprint(info.PrimaryDomainName),
-		color.New(color.Bold).Sprint("VIP Dashboard"),
-		deploymentsURL)
+		sentTo, color.New(color.Bold).Sprint("VIP Dashboard"), links)
 	return nil
 }
 
